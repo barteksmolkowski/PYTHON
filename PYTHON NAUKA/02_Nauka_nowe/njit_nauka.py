@@ -105,4 +105,4 @@ class SilnikObliczeniowyJIT(__SilnikObliczeniowyJIT__, __BazaNauki__):
         print("Notatka: Funkcja .inspect_asm() pozwala sprawdzić, jak Numba zoptymalizowała pętle do instrukcji CPU (np. SIMD).")
 
 if __name__ == "__main__":
-    SilnikObliczeniowyJIT(aktywne=True)
+    SilnikObliczeniowyJIT(aktywne=False)
