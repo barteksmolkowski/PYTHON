@@ -1,0 +1,10 @@
+Rozdzielenie bna pliki:
+# conv
+# dot_product
+# Przeniesienie testów do odzielnego piliu o nazwie test/  (class Matrix)
+# Preprocesing:
+            - Resize, GrayScale, Normlize itp.
+# models/example
+      simple_cnn.py
+# Datloader - odczyytywanie obrazka
+              @async

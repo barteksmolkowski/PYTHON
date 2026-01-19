@@ -1,0 +1,11 @@
+| Tryb   | Odczyt | Zapis | Dopisywanie | Tworzenie pliku jeśli brak     | Kursor na starcie |
+| ------ | ------ | ----- | ----------- | ------------------------------ | ----------------- |
+| `"r"`  | tak    | nie   | nie         | nie                            | początek          |
+| `"w"`  | nie    | tak   | nie         | tak (nadpisuje)                | początek          |
+| `"a"`  | nie    | tak   | tak         | tak                            | koniec            |
+| `"r+"` | tak    | tak   | nie         | nie                            | początek          |
+| `"a+"` | tak    | tak   | tak         | tak                            | koniec            |
+| `"w+"` | tak    | tak   | nie         | tak (nadpisuje)                | początek          |
+| `"x"`  | nie    | tak   | nie         | nie (błąd jeśli plik istnieje) | początek          |
+
+a+ najbardziej opłacalne do programów na plikach

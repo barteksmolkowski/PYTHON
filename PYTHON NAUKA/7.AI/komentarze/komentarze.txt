@@ -1,0 +1,4 @@
+kolory w macierzach w ml nazywane są kanałami (chanels)
+liczba obrazków w sekwencji nazywane są batch-ami
+refactor - modyfikacja, ulepszenie, poprawa, optymalizacja kodu do istniejących zasad czystego kodu
+branch - gałąź odbita od jakiegoś brancha np main
