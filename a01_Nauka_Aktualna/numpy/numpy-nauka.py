@@ -3,7 +3,7 @@ from typing import Protocol
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
-from PYTHON_NAUKA import __BazaNauki__
+from a00_System_Baza.baza_nauki import __BazaNauki__
 
 
 class __WalidacjaIDetekcja__(Protocol):

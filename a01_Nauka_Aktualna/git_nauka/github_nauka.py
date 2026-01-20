@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from PYTHON_NAUKA import __BazaNauki__
+from a00_System_Baza.baza_nauki import __BazaNauki__
 
 
 class GitBasicCommands(Protocol):
@@ -23,7 +23,7 @@ class GitLogCommands(Protocol):
     def log(self): ...
 
 
-class GitBasic:
+class GitBasic(__BazaNauki__):
     def version(self):
         print("git --version\n- Pokazuje zainstalowaną wersję Gita.\n\nPrzykład:\ngit --version")
 
@@ -58,7 +58,7 @@ class GitBasic:
               "git pull")
 
 
-class GitDiff:
+class GitDiff(__BazaNauki__):
     def diff(self):
         print("Wyświetlenie różnic między plikami (working directory vs staging):\n"
               "git diff")
@@ -76,8 +76,13 @@ class GitDiff:
               "git diff -p")
 
 
-class GitLog:
+class GitLog(__BazaNauki__):
     def log(self):
         print("Wyświetlenie historii commitów:\n"
               "git log\n"
               "git log --oneline   # skrócona wersja historii")
+
+if __name__ == "__main__":
+    GitBasic(True)
+    GitDiff(True)
+    GitLog(True)
