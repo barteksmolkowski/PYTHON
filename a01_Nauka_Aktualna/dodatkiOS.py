@@ -1,7 +1,7 @@
 import os
 from typing import Protocol
 
-from baza_nauki import __BazaNauki__, bezpieczny_wrapper
+from PYTHON_NAUKA import __BazaNauki__, bezpieczny_wrapper
 
 
 class FileManagerProtocol(Protocol):

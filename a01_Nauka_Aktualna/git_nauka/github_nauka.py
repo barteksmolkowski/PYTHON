@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from baza_nauki import __BazaNauki__
+from PYTHON_NAUKA import __BazaNauki__
 
 
 class GitBasicCommands(Protocol):

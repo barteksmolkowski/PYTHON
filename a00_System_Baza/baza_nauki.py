@@ -3,7 +3,11 @@ import shutil
 from functools import wraps
 from typing import Optional
 
-__all__ = ["__BazaNauki__", "bezpieczny_wrapper"]
+__all__ = [
+    "__BazaNauki__", 
+    "AutoDekoruj", 
+    "bezpieczny_wrapper"
+]
 
 class __BazaNauki__:
     def __init__(self, aktywne=True, dekoratory: Optional[list] = None):

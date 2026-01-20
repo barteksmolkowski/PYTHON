@@ -3,18 +3,8 @@ from typing import Protocol
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
+from PYTHON_NAUKA import __BazaNauki__
 
-class __BazaNauki__:
-    def __init__(self, aktywne=True):
-        if not aktywne:
-            print(f">>> SEKCJA POMINIĘTA: {self.__class__.__name__}")
-            return
-            
-        print(f"\n>>> URUCHAMIAM SEKCJĘ: {self.__class__.__name__} <<<")
-        for nazwa in dir(self):
-            wartosc = getattr(self, nazwa)
-            if callable(wartosc) and not nazwa.startswith("_") and nazwa != "run":
-                wartosc()
 
 class __WalidacjaIDetekcja__(Protocol):
     """

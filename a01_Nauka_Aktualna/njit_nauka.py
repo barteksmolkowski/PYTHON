@@ -1,47 +1,26 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Protocol, runtime_checkable
 
 import numpy as np
 from numba import jit, njit
 
+from PYTHON_NAUKA.a00_System_Baza.baza_nauki import __BazaNauki__
 
-class __BazaNauki__(ABC):
-    def __init__(self, aktywne=True):
-        if not aktywne:
-            print(f">>> SEKCJA POMINIĘTA: {self.__class__.__name__}")
-            return
-            
-        print(f"\n>>> URUCHAMIAM SEKCJĘ: {self.__class__.__name__} <<<")
-        for nazwa in dir(self):
-            wartosc = getattr(self, nazwa)
-            if callable(wartosc) and not nazwa.startswith("_") and nazwa != "run":
-                wartosc()
-
-
-class __SilnikObliczeniowyJIT__(ABC):
-    @abstractmethod
-    def optymalizacja_jit_numba_podstawy(self): pass
-    @abstractmethod
-    def tryby_kompilacji_njit_vs_jit(self): pass
-    @abstractmethod
-    def dlaczego_zawsze_njit(self): pass
-    @abstractmethod
-    def inspekcja_niskopoziomowa(self): pass
 
 @runtime_checkable
-class SilnikObliczeniowyJIT(Protocol):
+class ISilnikJIT(Protocol):
     """
     optymalizacja_podstawy_njit                  -> @njit
     tryby_kompilacji_njit_vs_jit                 -> @njit vs @jit
     dlaczego_zawsze_njit                         -> @njit
     inspekcja_niskopoziomowa_metoda_inspect_asm  -> po @njit metoda.inspect_asm()
     """
-    def optymalizacja_podstawy_njit(self): ...
-    def tryby_kompilacji_njit_vs_jit(self): ...
+    def optymalizacja_podstawy_njit(self) -> None: ...
+    def tryby_kompilacji_njit_vs_jit(self) -> None: ...
     def dlaczego_zawsze_njit(self) -> None: ...
     def inspekcja_niskopoziomowa_metoda_inspect_asm(self) -> None: ...
 
-class SilnikObliczeniowyJIT(__SilnikObliczeniowyJIT__, __BazaNauki__):
+class SilnikObliczeniowyJIT(__BazaNauki__):
     def optymalizacja_jit_numba_podstawy(self):
         print(f"\n=> PODSTAWY OPTYMALIZACJI JIT (NUMBA) <=")
 
