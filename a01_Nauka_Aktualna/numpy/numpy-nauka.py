@@ -20,20 +20,24 @@ class __WalidacjaIDetekcja__(Protocol):
     def detekcja_brakow_isnan(self) -> None: ...
     def porownanie_bliskosci_allclose(self) -> None: ...
     def operacje_logiczne_greater(self) -> None: ...
-class __FabrykaDanych__(Protocol):
+class __GeneratorStaly__(Protocol):
     """
-    SEKCJA GENEROWANIA:
-    inicjalizacja_zeros_ones_full         -> np.zeros, np.ones, np.full
-    sekwencje_arange_reshape_eye          -> np.arange, np.reshape, np.eye
-    rozklady_rand_normal                  -> np.random.rand, np.random.normal
-    podzial_linspace                      -> np.linspace
-    losowosc_default_rng_choice           -> np.random.default_rng, rng.choice
-    struktury_diagonalne_diag             -> np.diag
+    GENEROWANIE DANYCH PRZEWIDYWALNYCH:
+    - inicjalizacja_zeros_ones_full  -> np.zeros, np.ones, np.full
+    - sekwencje_arange_reshape_eye -> np.arange, np.reshape, np.eye
+    - podzial_linspace             -> np.linspace
     """
     def inicjalizacja_zeros_ones_full(self) -> None: ...
     def sekwencje_arange_reshape_eye(self) -> None: ...
-    def rozklady_rand_normal(self) -> None: ...
     def podzial_linspace(self) -> None: ...
+class __GeneratorLosowy__(Protocol):
+    """
+    GENEROWANIE DANYCH NIEPRZEWIDYWALNYCH I SPECJALNYCH:
+    - rozklady_rand_normal         -> np.random.rand, np.random.normal
+    - losowosc_default_rng_choice  -> np.random.default_rng, rng.choice
+    - struktury_diagonalne_diag    -> np.diag
+    """
+    def rozklady_rand_normal(self) -> None: ...
     def losowosc_default_rng_choice(self) -> None: ...
     def struktury_diagonalne_diag(self) -> None: ...
 class __MagazynDanych__(Protocol):
@@ -53,6 +57,7 @@ class __MacierzowaGeometria__(Protocol):
     def otaczanie_marginesem_pad(self) -> None: ...
     def zmiana_ukladu_reshape_view(self) -> None: ...
     def okna_przesuwne_sliding_window_view(self) -> None: ...
+    def ekstrakcja_sliding_window_view(self) -> None: ...
     def zarzadzanie_pamiecia_copy(self) -> None: ...
 class __ProcesorAlgorytmow__(Protocol):
     """
@@ -61,9 +66,20 @@ class __ProcesorAlgorytmow__(Protocol):
     mnozenie_macierzowe_einsum            -> np.einsum
     pooling_window_plus_einsum            -> sliding_window_view + einsum
     """
-    def ekstrakcja_sliding_window_view(self) -> None: ...
     def mnozenie_macierzowe_einsum(self) -> None: ...
     def pooling_window_plus_einsum(self) -> None: ...
+class __AnalizaIZbiory__(Protocol):
+    """
+    INSPEKCJA WARTOŚCI I OPERACJE ZBIOROWE:
+    - detekcja_maksimow_argmax     -> np.argmax (pozycja największej wartości)
+    - unikalnosc_unique_all        -> np.unique (wyciąganie unikalnych elementów/kolumn)
+    - czesci_wspolne_intersect1d   -> np.intersect1d (szukanie wspólnych wartości)
+    - laczenie_macierzy_append     -> np.append (rozbudowa zbioru danych)
+    """
+    def detekcja_maksimow_argmax(self) -> None: ...
+    def unikalnosc_unique_all(self) -> None: ...
+    def czesci_wspolne_intersect1d(self) -> None: ...
+    def laczenie_macierzy_append(self) -> None: ...
 
 class WalidacjaIDetekcja(__WalidacjaIDetekcja__, __BazaNauki__):
     def weryfikacja_logiczna_all(self):
@@ -150,7 +166,7 @@ class WalidacjaIDetekcja(__WalidacjaIDetekcja__, __BazaNauki__):
         
         # Funkcjonalny odpowiednik (ufunc)
         print(f"np.greater(A, B): {np.greater(A, B)}")
-class FabrykaDanych(__FabrykaDanych__, __BazaNauki__):
+class GeneratorStaly(__GeneratorStaly__, __BazaNauki__):
     def inicjalizacja_zeros_ones_full(self):
         """
         Szybkie inicjowanie macierzy zerami, jedynkami lub stałymi wartościami.
@@ -181,6 +197,17 @@ class FabrykaDanych(__FabrykaDanych__, __BazaNauki__):
 
         # np.eye() - kluczowa dla algebry liniowej i inicjalizacji wag w NN
         print(f"Macierz jednostkowa 6x6 (np.eye):\n{np.eye(6, 6)}")
+    def podzial_linspace(self):
+        """
+        Efektywne przechodzenie przez struktury oraz nowoczesne 
+        generowanie próbek losowych.
+        """
+        print(f"\n=> ITERACJA I GENEROWANIE DANYCH <=")
+
+        # Tworzenie równomiernych przedziałów (np. do wykresów lub wag)
+        linia = np.linspace(0, 1, 11)
+        print(f"\n\nLinspace (0-1, 11 kroków):\n{linia}")
+class GeneratorLosowy(__GeneratorLosowy__, __BazaNauki__):
     def rozklady_rand_normal(self):
         """
         Generowanie danych z różnych rozkładów statystycznych.
@@ -195,16 +222,6 @@ class FabrykaDanych(__FabrykaDanych__, __BazaNauki__):
         srednia, wariancja = 100, 5
         probki_normalne = np.random.normal(loc=srednia, scale=np.sqrt(wariancja), size=(5, 2))
         print(f"Próbki z rozkładu normalnego (Mean={srednia}, Var={wariancja}):\n{probki_normalne}")
-    def podzial_linspace(self):
-        """
-        Efektywne przechodzenie przez struktury oraz nowoczesne 
-        generowanie próbek losowych.
-        """
-        print(f"\n=> ITERACJA I GENEROWANIE DANYCH <=")
-
-        # Tworzenie równomiernych przedziałów (np. do wykresów lub wag)
-        linia = np.linspace(0, 1, 11)
-        print(f"\n\nLinspace (0-1, 11 kroków):\n{linia}")
     def losowosc_default_rng_choice(self):
         """
         Zastosowanie Generatora (PCG64) zamiast starego interfejsu np.random.
@@ -293,7 +310,7 @@ class MacierzowaGeometria(__MacierzowaGeometria__, __BazaNauki__):
         B = np.zeros((10, 10))
         v2 = B.reshape(h_m, h_l, w_m, w_l)
         v2[:, 0, 0, 0] = 7  # Ustawia wartość na początku każdego głównego sektora
-        print(f"\nSiatka 10x10 (Sektorowa modyfikacja):\n{B}")
+        print(f"\nSiatka 10x10 (Sektorowa modyfikacja):\n{B}") 
     def okna_przesuwne_sliding_window_view(self):
         """
         Sliding window jako narzędzie do ekstrakcji cech lokalnych.
@@ -308,26 +325,6 @@ class MacierzowaGeometria(__MacierzowaGeometria__, __BazaNauki__):
         print(f"Kształt widoku okien: {windows.shape}") # Wynik: (3, 3, 2, 2)
         print(f"Pierwsze okno (lewy górny róg):\n{windows[0, 0]}")
         print(f"Ostatnie okno (prawy dolny róg):\n{windows[-1, -1]}")
-    def zarzadzanie_pamiecia_copy(self):
-        """
-        Zarządzanie flagami zapisu i bezpieczna modyfikacja danych.
-        Różnica między bezpośrednim widokiem (Read-Only) a kopią edytowalną.
-        """
-        print(f"\n\n=>MODYFIKACJA BUFORA PAMIĘCI (IN-PLACE VS COPY) <=")
-
-        A = np.arange(25).reshape(5, 5)
-        windows = sliding_window_view(A, (3, 3))
-
-        # Standardowo sliding_window_view w 2026 zwraca widok z flagą WRITEABLE=False
-        # Tworzymy kopię (deep copy) aby umożliwić niezależną edycję
-        editable_windows = windows.copy()
-
-        print("Akcja: Przypisanie stałej wartości do centrów wszystkich okien.")
-        editable_windows[:, :, 1, 1] = 99
-
-        print(f"Zmodyfikowany widok (Fragment):\n{editable_windows[0, 0]}")
-        print(f"Oryginał (Nienaruszony):\n{A}")
-class ProcesorAlgorytmow(__ProcesorAlgorytmow__, __BazaNauki__):        
     def ekstrakcja_sliding_window_view(self):
         """
         Analiza struktury 4D generowanej przez widok przesuwnego okna.
@@ -349,6 +346,26 @@ class ProcesorAlgorytmow(__ProcesorAlgorytmow__, __BazaNauki__):
         print("\nDOSTĘP DO PODMACIERZY:")
         print("windows[0, 0]    -> Pierwsze sąsiedztwo (Top-Left Patch).")
         print("windows[:, :, 1, 1] -> Wyodrębnienie wszystkich punktów centralnych.")
+    def zarzadzanie_pamiecia_copy(self):
+        """
+        Zarządzanie flagami zapisu i bezpieczna modyfikacja danych.
+        Różnica między bezpośrednim widokiem (Read-Only) a kopią edytowalną.
+        """
+        print(f"\n\n=>MODYFIKACJA BUFORA PAMIĘCI (IN-PLACE VS COPY) <=")
+
+        A = np.arange(25).reshape(5, 5)
+        windows = sliding_window_view(A, (3, 3))
+
+        # Standardowo sliding_window_view w 2026 zwraca widok z flagą WRITEABLE=False
+        # Tworzymy kopię (deep copy) aby umożliwić niezależną edycję
+        editable_windows = windows.copy()
+
+        print("Akcja: Przypisanie stałej wartości do centrów wszystkich okien.")
+        editable_windows[:, :, 1, 1] = 99
+
+        print(f"Zmodyfikowany widok (Fragment):\n{editable_windows[0, 0]}")
+        print(f"Oryginał (Nienaruszony):\n{A}")
+class ProcesorAlgorytmow(__ProcesorAlgorytmow__, __BazaNauki__):        
     def mnozenie_macierzowe_einsum(self):
         """
         Implementacja splotu (convolution) przy użyciu notacji Einsteina.
@@ -373,7 +390,7 @@ class ProcesorAlgorytmow(__ProcesorAlgorytmow__, __BazaNauki__):
         result = np.einsum('ij,klij->kl', kernel, windows)
 
         print(f"Wykonano: np.einsum('ij,klij->kl', kernel, windows)")
-        print(f"Mapa cech (Feature Map):\n{result}")
+        print(f"Mapa cech (Feature Map):\n{result}") 
     def pooling_window_plus_einsum(self):
         """
         Agregacja danych przy użyciu skoku (stride) oraz funkcji statystycznych.
@@ -394,67 +411,32 @@ class ProcesorAlgorytmow(__ProcesorAlgorytmow__, __BazaNauki__):
         max_pool = np.max(stride_windows, axis=(2, 3))
 
         print(f"Wynik Max Pooling (zmniejszenie wymiaru):\n{max_pool}")
+class AnalizaIZbiory(__AnalizaIZbiory__, __BazaNauki__):
+    def detekcja_maksimow_argmax(self):
+        A = np.array([[1, 8, 5], [3, 2, 9]])
+        print(f"Globalny max (indeks): {np.argmax(A)}")
+        print(f"Max w kolumnach: {np.argmax(A, axis=0)}")
+        print(f"Max w wierszach: {np.argmax(A, axis=1)}")
+    def unikalnosc_unique_all(self):
+        A = np.array([[1, 0, 1], [5, 2, 5]])
+        # Unikalne kolumny - bardzo ważne w czyszczeniu danych
+        u_cols, idx = np.unique(A, axis=1, return_index=True)
+        print(f"Unikalne kolumny:\n{u_cols}\nIndeksy: {idx}")
+    def czesci_wspolne_intersect1d(self):
+        A = np.arange(8)
+        B = np.array([6, 7, 8, 9])
+        print(f"Część wspólna A i B: {np.intersect1d(A, B)}")
+    def laczenie_macierzy_append(self):
+        A = np.ones((2, 2))
+        B = np.zeros((1, 2))
+        C = np.append(A, B, axis=0)
+        print(f"Macierz po dodaniu wierszy:\n{C}")
 
 if __name__ == "__main__":
-    WalidacjaIDetekcja(False)
-    FabrykaDanych(False)
-    MagazynDanych(False)
-    MacierzowaGeometria(False)
-    ProcesorAlgorytmow(False)
-
-A = np.arange(12).reshape(-1, 4)
-B = np.array([[4, 3, 7, 2],
-              [0, 5, 2, 6]])
-
-C = np.append(A, B, axis=0)
-print(C)
-###
-
-A = np.arange(8).reshape(-1, 4)
-B = np.array([[9, 10, 11, 3],
-              [2, 8, 0, 9]])
-C = np.intersect1d(A, B, return_indices=False)
-print(C)
-###
-A = np.array([[1, 0, 1],
-              [1, 2, 3],
-              [1, 0, 1]])
-zbior = np.unique_all(A)
-print(f"unikalne: {zbior[0]}")
-print(f"pierwsze wystapienia unikalnych: {zbior[1]}")
-print(f"mapa indeksow unikalnych: {zbior[2]}")
-print(f"liczba unikalnych: {zbior[3]}")
-A = np.array([[1, 0, 1],
-              [5, 2, 5]])
-
-zbior = np.unique(
-    A, 
-    axis=1, 
-    return_index=True, 
-    return_inverse=True, 
-    return_counts=True
-)
-
-unikalne, indeksy, odwrotnosc, liczniki = zbior
-print(f"\n1. Macierz unikalnych kolumn (uniques):\n{zbior[0]}")
-print(f"2. Indeksy pierwszych wystąpień (indices): {zbior[1]}")
-print(f"3. Liczba powtórzeń każdej kolumny (inverse): {zbior[2]}")
-print(f"4. Przepis na odbudowę (counts): {zbior[3]}")
-
-A = np.array([[0.4, 0.3, 0.3],
-              [0.1, 0.1, 0.8],
-              [0.2, 0.5, 0.3]])
-# print(f"np.argmax: {np.argmax(A, axis=1, )}")
-print(f"\n=> POZYCJA MAKSIMUM: np.argmax <=")
-A = np.array([[1, 8, 5],
-                [3, 2, 9]])
-
-print(f"Indeks największej liczby (globalnie): {np.argmax(A)}") # Wynik: 5 (liczba 9)
-print(f"Indeksy max w kolumnach: {np.argmax(A, axis=0)}") # Wynik: [1, 0, 1]
-print(f"Indeksy max w wierszach: {np.argmax(A, axis=1)}") # Wynik: [1, 2]
-
-A = np.array([[0.4, 0.3, 0.3],
-              [0.1, 0.1, 0.8],
-              [0.2, 0.5, 0.3]])
-
-print(np.arg)
+    WalidacjaIDetekcja(False)  # all, any, isnan, all_close, greater
+    GeneratorStaly(False)      # zeros, ones, full, arange, reshape, eye, linspace
+    GeneratorLosowy(False)     # rand_normal, default_rng -> rng.choice, diag
+    MagazynDanych(False)       # save, load, savetxt, loadtxt
+    MacierzowaGeometria(False) # pad, reshape, sliding_window_view, copy
+    ProcesorAlgorytmow(False)  # einsum, stride
+    AnalizaIZbiory(True)       # append, intersect1d, unique, argmax
