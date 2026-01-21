@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Protocol, runtime_checkable
 
 import numpy as np
@@ -84,4 +83,4 @@ class SilnikObliczeniowyJIT(__BazaNauki__):
         print("Notatka: Funkcja .inspect_asm() pozwala sprawdzić, jak Numba zoptymalizowała pętle do instrukcji CPU (np. SIMD).")
 
 if __name__ == "__main__":
-    SilnikObliczeniowyJIT(aktywne=False)
+    SilnikObliczeniowyJIT(aktywne=True)
