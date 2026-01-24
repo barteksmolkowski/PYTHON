@@ -16,24 +16,51 @@ from abc import ABC, abstractmethod
 
 class lenNumeryNoweNotEqualException(Exception):
     def __init__(self, numery, nowe):
-        super().__init__(f"Długość numery: {len(numery)} i długość nowe: {len(nowe)} są nie równe")
+        super().__init__(
+            f"Długość numery: {len(numery)} i długość nowe: {len(nowe)} są nie równe"
+        )
+
+
 class tooShortLenPytaniaException(Exception):
     def __init__(self, numer, pytania):
         super().__init__(f"Error: {numer} not in range (len={len(pytania)})")
+
+
 class numeryNotEqualIntException(Exception):
     def __init__(self):
         super().__init__("Error: numery zawiera nie-int")
+
+
 class NumeryInvalidTypeException(Exception):
     def __init__(self):
         super().__init__("numery musi być int lub list[int]")
 
+
 class __chat__(ABC):
     def __init__(self):
-        self.pytania = {"wynUsNaw": [],
-                        "sprawdzane": set(),
-                        "aktualne": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]}
+        self.pytania = {
+            "wynUsNaw": [],
+            "sprawdzane": set(),
+            "aktualne": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+            ],
+        }
         self.wynikUsunNawiasy = []
-        print("Stworzono klasę chat...\nSprawdź jej wyjaśnienie pod klasa.wyjasnienie()")
+        print(
+            "Stworzono klasę chat...\nSprawdź jej wyjaśnienie pod klasa.wyjasnienie()"
+        )
         print("wpisz klasa = chat()")
 
     @abstractmethod
@@ -51,6 +78,7 @@ class __chat__(ABC):
     @abstractmethod
     def wymienPyt(self, pierwsza: int | list = 0, ostatnia: int | list = None) -> list:
         pass
+
 
 class Chat(__chat__):
     def __init__(self):
@@ -154,7 +182,7 @@ class Chat(__chat__):
                         if paraLiczb not in sprawdzane:
                             sprawdzane.add(paraLiczb)
                             odpowiedz = self.wymienPyt(wartoscPierwsza, ostatnia)
-                            
+
                             if odpowiedz:
                                 wyniki.append(odpowiedz)
 
@@ -173,14 +201,15 @@ class Chat(__chat__):
             nWynik = wynik.copy()
         else:
             for el in wynik:
-                nWynik.extend(el) if isinstance(el, list) else nWynik.append(el)                    
+                nWynik.extend(el) if isinstance(el, list) else nWynik.append(el)
 
         wynik = nWynik
 
-        if isinstance(pierwsza,int) and isinstance(ostatnia, list):
-            return(wynik[0])
+        if isinstance(pierwsza, int) and isinstance(ostatnia, list):
+            return wynik[0]
 
         return wynik
+
 
 class __strona__(ABC):
     def __init__(self, zawartosc, aktualnyWiersz):
@@ -188,24 +217,30 @@ class __strona__(ABC):
         self.aktualnyWiersz = aktualnyWiersz
 
     @abstractmethod
-    def dodajWiersz(self, naDole: bool, konkretny: int, ):
+    def dodajWiersz(
+        self,
+        naDole: bool,
+        konkretny: int,
+    ):
         pass
 
     @abstractmethod
     def usunWiersz(self):
-        pass # usuwa ten aktualny wiersz
+        pass  # usuwa ten aktualny wiersz
 
     @abstractmethod
     def edytujWiersz(self):
-        pass # edytuje aktualny, odwołuje się do klasy Wiersz a tam implementacja
+        pass  # edytuje aktualny, odwołuje się do klasy Wiersz a tam implementacja
 
     @abstractmethod
     def zmienAktualnyWiersz(self, naNowy: bool, konkretny: int):
         pass
 
-class Strona(__strona__): # nie zrobione
+
+class Strona(__strona__):  # nie zrobione
     def __init__(self):
         0
+
 
 class __program__(ABC):
     def __init__(self, nazwa):
@@ -215,7 +250,8 @@ class __program__(ABC):
     def start(self):
         pass
 
-class Program(__program__): # nie zrobione
+
+class Program(__program__):  # nie zrobione
     def __init__(self):
         pass
 

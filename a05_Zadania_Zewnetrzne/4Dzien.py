@@ -7,15 +7,15 @@ for linia in sys.stdin:
         break
     lista.append(linia)
 
+
 def usun_pola(lista, do_usuniecia):
-    for (y, x) in do_usuniecia:
+    for y, x in do_usuniecia:
         lista[y][x] = "."
     return lista
 
+
 def policz_sasiadow(x, y, lista):
-    ruchy = [(-1,-1), (0,-1), (1,-1),
-             (-1, 0),         (1, 0),
-             (-1, 1), (0, 1), (1, 1)]
+    ruchy = [(-1, -1), (0, -1), (1, -1), (-1, 0), (1, 0), (-1, 1), (0, 1), (1, 1)]
     wysokosc = len(lista)
     szerokosc = len(lista[0])
     ilosc = 0
@@ -25,6 +25,7 @@ def policz_sasiadow(x, y, lista):
             if lista[ny][nx] == "@":
                 ilosc += 1
     return ilosc
+
 
 def usun_dostepnych_sasiadow(lista):
     lista = [list(wiersz) for wiersz in lista]
@@ -48,5 +49,5 @@ def usun_dostepnych_sasiadow(lista):
 
     return total_removed
 
-print(usun_dostepnych_sasiadow(lista))
 
+print(usun_dostepnych_sasiadow(lista))

@@ -2,6 +2,7 @@ import math
 import sys
 from typing import List
 
+
 def oblicz(linie: List[str]) -> int:
     max_dlugosc = max(len(l) for l in linie)
     siatka = [list(l.ljust(max_dlugosc)) for l in linie]
@@ -9,7 +10,7 @@ def oblicz(linie: List[str]) -> int:
     wiersze = len(siatka)
     cols = max_dlugosc
 
-    odzielacz = [all(siatka[r][c] == ' ' for r in range(wiersze)) for c in range(cols)]
+    odzielacz = [all(siatka[r][c] == " " for r in range(wiersze)) for c in range(cols)]
 
     grupy = []
     c = 0
@@ -28,10 +29,10 @@ def oblicz(linie: List[str]) -> int:
 
         liczby = []
         for kol in range(koniec, start - 1, -1):
-            znaki = ''.join(siatka[r][kol] for r in range(wiersze - 1))
-            num = znaki.replace(' ', '')
-            if num == '':
-                num = '0'
+            znaki = "".join(siatka[r][kol] for r in range(wiersze - 1))
+            num = znaki.replace(" ", "")
+            if num == "":
+                num = "0"
             liczby.append(num)
 
         wynik_liczby = [int(x) for x in liczby]
@@ -45,10 +46,11 @@ def oblicz(linie: List[str]) -> int:
 
     return wynik
 
+
 wejscie = []
 for linia in sys.stdin:
-    linia = linia.rstrip('\n')
-    if linia == '':
+    linia = linia.rstrip("\n")
+    if linia == "":
         break
     wejscie.append(linia)
 if wejscie:

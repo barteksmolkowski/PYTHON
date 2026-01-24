@@ -10,6 +10,7 @@ class __Dataset__(ABC):
     def __getitem__(self, index: int):
         pass
 
+
 class Dataset(__Dataset__):
     def __len__(self):
         0

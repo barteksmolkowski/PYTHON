@@ -1,1 +1,1 @@
-__all__ = [] # nazwy klas które chce się importować z tego modułu
+__all__ = []  # nazwy klas które chce się importować z tego modułu

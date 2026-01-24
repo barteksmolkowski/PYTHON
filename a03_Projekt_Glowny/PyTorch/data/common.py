@@ -13,5 +13,5 @@ __all__ = [
     "TypeMatrix",
     "TypeRandom",
     "TypeIMG",
-    "MatrixChannels"
+    "MatrixChannels",
 ]

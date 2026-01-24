@@ -11,6 +11,7 @@ class __ImageToMatrixConverter__(ABC):
     def get_channels_from_file(self, path: str) -> MatrixChannels:
         pass
 
+
 class ImageToMatrixConverter(__ImageToMatrixConverter__):
     def _separate_channels(self, M):
         return [M[:, :, i] for i in range(3)]
@@ -22,4 +23,3 @@ class ImageToMatrixConverter(__ImageToMatrixConverter__):
     def get_channels_from_file(self, path):
         M = self._convert_image_to_matrix(path)
         return self._separate_channels(M)
-    

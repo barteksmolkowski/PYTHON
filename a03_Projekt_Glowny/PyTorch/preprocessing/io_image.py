@@ -24,15 +24,20 @@ class __ImageHandler__(ABC):
 
     @overload
     @abstractmethod
-    def handle_file(self, path: str, data: None = None, is_save_mode: Literal[False] = False) -> np.ndarray: ...
+    def handle_file(
+        self, path: str, data: None = None, is_save_mode: Literal[False] = False
+    ) -> np.ndarray: ...
 
     @overload
     @abstractmethod
-    def handle_file(self, path: str, data: np.ndarray, is_save_mode: Literal[True]) -> None: ...
+    def handle_file(
+        self, path: str, data: np.ndarray, is_save_mode: Literal[True]
+    ) -> None: ...
 
     @abstractmethod
     def handle_file(self, path, data=None, is_save_mode=False):
         pass
+
 
 class ImageHandler(__ImageHandler__):
     def open_image(self, path):
@@ -42,7 +47,7 @@ class ImageHandler(__ImageHandler__):
         img_list = [[tuple(pixel) for pixel in row] for row in array.tolist()]
 
         return img_list, width, height
-    
+
     def save(self, data, path):
         array = np.array(data, dtype=np.uint8)
         imgpil = Image.fromarray(array)

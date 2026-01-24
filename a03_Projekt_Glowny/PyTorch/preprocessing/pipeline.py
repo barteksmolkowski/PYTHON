@@ -22,10 +22,12 @@ class __TransformPipeline__(ABC):
     def apply(self, matrix: TypeMatrix) -> TypeMatrix:
         pass
 
+
 class __ImageDataPreprocessing__(ABC):
     @abstractmethod
     def preprocess(self, path: str) -> Optional[MatrixChannels]:
         pass
+
 
 class TransformPipeline(__TransformPipeline__):
     def __init__(self):
@@ -42,6 +44,7 @@ class TransformPipeline(__TransformPipeline__):
         """def kolejności obróbki zdjęcia."""
         x = matrix
         return x
+
 
 class ImageDataPreprocessing(__ImageDataPreprocessing__):
     def __init__(self):

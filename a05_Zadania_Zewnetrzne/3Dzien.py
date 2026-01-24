@@ -7,6 +7,7 @@ for linia in sys.stdin:
         break
     lista.append(linia)
 
+
 def znajdz_max_liczbe(ciag_cyfr, dlugosc):
     wynik = ""
     pozycja = 0
@@ -14,7 +15,7 @@ def znajdz_max_liczbe(ciag_cyfr, dlugosc):
         ile_pozostalo = dlugosc - len(wynik)
         maksymalny_indeks = len(ciag_cyfr) - ile_pozostalo
 
-        najlepsza_cyfra = '0'
+        najlepsza_cyfra = "0"
         indeks_najlepszej = -1
         for i in range(pozycja, maksymalny_indeks + 1):
             if ciag_cyfr[i] > najlepsza_cyfra:
@@ -23,6 +24,7 @@ def znajdz_max_liczbe(ciag_cyfr, dlugosc):
         wynik += najlepsza_cyfra
         pozycja = indeks_najlepszej + 1
     return int(wynik)
+
 
 suma = 0
 for el in lista:

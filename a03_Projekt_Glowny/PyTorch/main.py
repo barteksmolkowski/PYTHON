@@ -6,10 +6,17 @@ from preprocessing import ImageDataPreprocessing
 
 def check_dependencies():
     needed = {"numpy": "numpy", "PIL": "pillow", "matplotlib": "matplotlib"}
-    missing = [pip_name for imp_name, pip_name in needed.items() if not __import_check(imp_name)]
+    missing = [
+        pip_name
+        for imp_name, pip_name in needed.items()
+        if not __import_check(imp_name)
+    ]
     if missing:
-        print(f"\n[!!!] BRAK: {', '.join(missing)} | Komenda: pip install {' '.join(missing)}")
+        print(
+            f"\n[!!!] BRAK: {', '.join(missing)} | Komenda: pip install {' '.join(missing)}"
+        )
         sys.exit(1)
+
 
 def __import_check(name):
     try:
@@ -18,9 +25,10 @@ def __import_check(name):
     except ImportError:
         return False
 
+
 def main():
     input_path = "data/input_images"
-    
+
     if not os.path.exists(input_path):
         os.makedirs(input_path)
         print(f"[*] Stworzono folder: {input_path}. Wrzuć tam zdjęcia!")
@@ -33,6 +41,7 @@ def main():
     else:
         print("[INFO] Brak pliku wejściowego. Uruchamiam test integracyjny...")
         preprocessor.preprocess("dry_run_test", test_mode=True)
+
 
 if __name__ == "__main__":
     check_dependencies()

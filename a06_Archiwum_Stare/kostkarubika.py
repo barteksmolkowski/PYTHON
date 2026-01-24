@@ -68,4 +68,3 @@ Krzyz(tablica)
 # def ruch(numer):
 #     if numer == 0:
 #         0
-

@@ -36,28 +36,56 @@ from thresholding import Thresholding
 
 def verify(name, result, expected=None, shape=None, binary=False):
     try:
-        if expected is not None: assert np.array_equal(result, expected)
-        if shape is not None: assert result.shape == shape
-        if binary: assert np.all(np.isin(result, [0, 255]))
+        if expected is not None:
+            assert np.array_equal(result, expected)
+        if shape is not None:
+            assert result.shape == shape
+        if binary:
+            assert np.all(np.isin(result, [0, 255]))
         print(f"✅ {name}")
         return True
     except Exception as e:
         print(f"❌ {name} | Błąd: {e}")
         return False
 
+
 def test_thresholding():
     th = Thresholding()
     print("Test Thresholding")
 
-    m_grad = np.zeros((10, 10), dtype=np.uint8); m_grad[:, 5:] = 200
-    verify("Th: Gradient 10x10", th.adaptive_threshold(m_grad, 3), shape=(10, 10), binary=True)
-    
-    m_noise = np.random.randint(0, 255, (20, 20), dtype=np.uint8)
-    verify("Th: Noise 20x20", th.adaptive_threshold(m_noise, 5, c=10), shape=(20, 20), binary=True)
+    m_grad = np.zeros((10, 10), dtype=np.uint8)
+    m_grad[:, 5:] = 200
+    verify(
+        "Th: Gradient 10x10",
+        th.adaptive_threshold(m_grad, 3),
+        shape=(10, 10),
+        binary=True,
+    )
 
-    verify("Edge: Big Block 5x5 on 3x3", th.adaptive_threshold(np.ones((3,3))*100, 5), shape=(3,3))
-    verify("Edge: Even Block 4", th.adaptive_threshold(np.ones((10,10)), 4), shape=(10,10))
-    verify("Edge: Flat Matrix", th.adaptive_threshold(np.ones((5,5))*100, 3, c=2), expected=np.ones((5,5))*255)    
+    m_noise = np.random.randint(0, 255, (20, 20), dtype=np.uint8)
+    verify(
+        "Th: Noise 20x20",
+        th.adaptive_threshold(m_noise, 5, c=10),
+        shape=(20, 20),
+        binary=True,
+    )
+
+    verify(
+        "Edge: Big Block 5x5 on 3x3",
+        th.adaptive_threshold(np.ones((3, 3)) * 100, 5),
+        shape=(3, 3),
+    )
+    verify(
+        "Edge: Even Block 4",
+        th.adaptive_threshold(np.ones((10, 10)), 4),
+        shape=(10, 10),
+    )
+    verify(
+        "Edge: Flat Matrix",
+        th.adaptive_threshold(np.ones((5, 5)) * 100, 3, c=2),
+        expected=np.ones((5, 5)) * 255,
+    )
+
 
 def test_pooling():
     p = Pooling()
@@ -66,7 +94,12 @@ def test_pooling():
     m_p = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 1, 2, 3], [4, 5, 6, 7]]
     verify("Pool: Standard 2x2", p.max_pool(m_p), expected=[[6, 8], [9, 7]])
 
-    verify("Pool: Padding 1x1", p.max_pool([[10]], 2, stride=2, pad_width=1), expected=[[10, 0], [0, 0]])
+    verify(
+        "Pool: Padding 1x1",
+        p.max_pool([[10]], 2, stride=2, pad_width=1),
+        expected=[[10, 0], [0, 0]],
+    )
+
 
 def test_normalization():
     norm = Normalization()
@@ -86,13 +119,17 @@ def test_normalization():
     res_flat = norm.process(m_flat, use_z_score=True)
     verify("Norm: Zero Variance", res_flat, expected=np.array([0.0, 0.0, 0.0]))
 
-    res_custom = norm.process([0, 255], use_z_score=False, old_r=(0, 255), new_r=(-1, 1))
+    res_custom = norm.process(
+        [0, 255], use_z_score=False, old_r=(0, 255), new_r=(-1, 1)
+    )
     verify("Norm: Custom Range (-1, 1)", res_custom, expected=np.array([-1.0, 1.0]))
+
 
 def run_all_tests():
     test_thresholding()
     test_pooling()
     test_normalization()
+
 
 if __name__ == "__main__":
     run_all_tests()

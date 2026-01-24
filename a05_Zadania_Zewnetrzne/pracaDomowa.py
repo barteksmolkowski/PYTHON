@@ -3,6 +3,7 @@ import math
 from datetime import datetime
 import time
 
+
 class Losowanie:
     def __init__(self, od, do, ile):
         self.od = od
@@ -43,16 +44,20 @@ class Losowanie:
                 wygenerowane = []
 
                 for _ in range(10):
-                    liczba_glowna = (liczba_glowna * 7397510893 + rejestr_pomocniczy) % (2**32)
-                    rejestr_pomocniczy = (rejestr_pomocniczy * 1664525 + 1013904223) % (2**32)
+                    liczba_glowna = (
+                        liczba_glowna * 7397510893 + rejestr_pomocniczy
+                    ) % (2**32)
+                    rejestr_pomocniczy = (rejestr_pomocniczy * 1664525 + 1013904223) % (
+                        2**32
+                    )
                     wartosc = (liczba_glowna ^ rejestr_pomocniczy) & 0xF
                     wygenerowane.append(wartosc)
 
-                dobre = [x for x in wygenerowane if x in [5,6,7,8]]
+                dobre = [x for x in wygenerowane if x in [5, 6, 7, 8]]
 
                 if dobre:
                     wybrana = dobre[0]
-                    bit = 0 if wybrana in [5,8] else 1
+                    bit = 0 if wybrana in [5, 8] else 1
                     wynik.append(bit)
                     break
         return wynik
@@ -85,6 +90,7 @@ class Losowanie:
 
         return wyniki
 
+
 # los = Losowanie(1, 10, 300)
 
 # slownik = {}
@@ -96,7 +102,7 @@ class Losowanie:
 
 # Stwórz liste zawierającą 100 randomowo generowanych elementow w zakaresie od 1-20
 # jezeli chętny mozesz zaimplementwoać generator liczb pseudolosowych
-# Celem zadania jest znalezienie sumy liczb o nieokreślonej ilości, których wartośc jest równa 
+# Celem zadania jest znalezienie sumy liczb o nieokreślonej ilości, których wartośc jest równa
 # target,
 # 1. że znajdź pierwszą możliwą kombinacje, nastepnie wypisz indeksy tych elementów
 # 2. znajdź liczbę kombinacji których suma jest równa targetowi
@@ -107,6 +113,7 @@ class Losowanie:
 
 import random
 
+
 class KombinacjeSum:
     def __init__(self, od_, do_, ilosc, target, max_wynikow):
         self.od = od_
@@ -116,7 +123,7 @@ class KombinacjeSum:
         self.max_wynikow = max_wynikow
         self.losowe = []
         self.wynik = []
-    
+
     def __str__(self):
         self.generuj_losowe()
         self.run()
@@ -159,7 +166,7 @@ class KombinacjeSum:
                     znalezione += 1
                     if znalezione >= max_wynikow:
                         return
-                    
+
             if n % 100 == 0:
                 print(f"Sprawdzono {n} możliwości.")
 
@@ -186,6 +193,7 @@ class KombinacjeSum:
             self.wynik.append(indeksy)
 
         print(f"\nLiczba znalezionych kombinacji: {licznik}")
+
 
 kombinacje_sum = KombinacjeSum(od_=1, do_=20, ilosc=100, target=20, max_wynikow=100)
 print(f"Ostateczne wyniki: {kombinacje_sum}")

@@ -10,6 +10,7 @@ class __FeatureExtraction__(ABC):
     def extract_features(self, matrix: TypeMatrix) -> List[float]:
         pass
 
+
 class FeatureExtraction(__FeatureExtraction__):
     def __init__(self):
         0

@@ -16,17 +16,17 @@ from .thresholding import Thresholding
 from .utils import *
 
 __all__ = [
-    "DataAugmentation", 
-    "ImageToMatrixConverter", 
+    "DataAugmentation",
+    "ImageToMatrixConverter",
     "ConvolutionActions",
-    "ImageGeometry", 
-    "GrayScaleProcessing", 
+    "ImageGeometry",
+    "GrayScaleProcessing",
     "ImageHandler",
-    "Normalization", 
-    "ImageDataPreprocessing", 
+    "Normalization",
+    "ImageDataPreprocessing",
     "TransformPipeline",
-    "Pooling", 
-    "Thresholding"
+    "Pooling",
+    "Thresholding",
 ]
 
 __all__.extend(_dec.__all__)

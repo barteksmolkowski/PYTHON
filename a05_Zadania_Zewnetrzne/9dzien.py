@@ -7,6 +7,7 @@
 #         break
 #     nlista.append(linia)
 
+
 def stworz_tab(lista):
     szer_max, wys_max = 0, 0
 
@@ -21,6 +22,7 @@ def stworz_tab(lista):
 
     return tablica
 
+
 def zaznacz_punkty(rogi, wszystkie):
     print("zaznacza rogi na wszystkie")
     max_x = max(x for x, _ in zip(rogi, wszystkie))
@@ -29,11 +31,12 @@ def zaznacz_punkty(rogi, wszystkie):
     tab = [["." for _ in range(max_x)] for _ in range(max_y)]
 
     for x, y in wszystkie:
-        tab[y-1][x-1] = "#"
+        tab[y - 1][x - 1] = "#"
     for x, y in rogi:
-        tab[y-1][x-1] = "O"
+        tab[y - 1][x - 1] = "O"
 
     return tab
+
 
 def znajdz_rogi(lista):
     inf = float("inf")
@@ -41,7 +44,7 @@ def znajdz_rogi(lista):
         "s": [(inf, None), []],
         "w": [(-inf, None), []],
         "d": [(None, inf), []],
-        "a": [(None, -inf), []]
+        "a": [(None, -inf), []],
     }
 
     for x, y in lista:
@@ -75,7 +78,7 @@ def znajdz_rogi(lista):
     return znalezione
 
 
-nlista = ['7,1', '11,1', '11,7', '9,7', '9,5', '2,5', '2,3', '7,3']
+nlista = ["7,1", "11,1", "11,7", "9,7", "9,5", "2,5", "2,3", "7,3"]
 lista = []
 
 for el in nlista:

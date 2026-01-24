@@ -24,7 +24,7 @@ print(liczby)
 
 wynik = 0
 for i in liczby:
-    for (od_, do_) in lista:
+    for od_, do_ in lista:
         if od_ <= i <= do_:
             wynik += 1
             break

@@ -11,9 +11,12 @@ from abc import ABC, abstractmethod
 from edytor_sciezki_Exceptions import (
     DestinationFolderAlreadyExistsEdycjaFolderException,
     FileAppendOSErrorDopiszException,
-    FileAppendPermissionDeniedDopiszException, FileNotFoundDopiszException,
-    FileNotFoundOdczytajException, FileNotFoundPoprawnoscPlikuException,
-    FileNotFoundResetPlikException, FileReadOSErrorOdczytajException,
+    FileAppendPermissionDeniedDopiszException,
+    FileNotFoundDopiszException,
+    FileNotFoundOdczytajException,
+    FileNotFoundPoprawnoscPlikuException,
+    FileNotFoundResetPlikException,
+    FileReadOSErrorOdczytajException,
     FileReadPermissionDeniedOdczytajException,
     FileResetOSErrorResetPlikException,
     FileResetPermissionDeniedResetPlikException,
@@ -24,9 +27,12 @@ from edytor_sciezki_Exceptions import (
     FolderUnknownOSErrorStworzFolderException,
     InvalidSearchLimitPrzeszukanieException,
     ParentFolderNotFoundStworzFolderException,
-    PathIsNotDirectoryStworzFolderException, PathIsNotFileDopiszException,
-    PathIsNotFileOdczytajException, PathIsNotFileResetPlikException,
-    PermissionDeniedPoprawnoscPlikuException, ReplaceOSErrorZastapException,
+    PathIsNotDirectoryStworzFolderException,
+    PathIsNotFileDopiszException,
+    PathIsNotFileOdczytajException,
+    PathIsNotFileResetPlikException,
+    PermissionDeniedPoprawnoscPlikuException,
+    ReplaceOSErrorZastapException,
     ReplacePermissionDeniedZastapException,
     SearchPathIsNotDirectoryPrzeszukanieException,
     SearchPermissionDeniedPrzeszukanieException,
@@ -34,16 +40,20 @@ from edytor_sciezki_Exceptions import (
     SourceFileNotFoundZastapException,
     SourceFolderNotFoundEdycjaFolderException,
     SourcePathIsNotDirectoryEdycjaFolderException,
-    SourcePathIsNotFileZastapException, UnicodeDecodePoprawnoscPlikuException,
+    SourcePathIsNotFileZastapException,
+    UnicodeDecodePoprawnoscPlikuException,
     UnknownExtensionPoprawnoscPlikuException,
     UnsupportedFileExtensionDopiszException,
     UnsupportedFileExtensionOdczytajException,
-    UnsupportedFileExtensionResetPlikException)
+    UnsupportedFileExtensionResetPlikException,
+)
 
 FileNotFoundPoprawnoscPlikuException
+
+
 def czasFunkcji(func):
     def wrapper(*args, **kwargs):
-        
+
         if args:
             instacja = args[0]
             nazwa_klasy = instacja.__class__.__name__
@@ -57,7 +67,9 @@ def czasFunkcji(func):
         print(f"Czas metody {nazwa_klasy}.{func.__name__}: {koniec - start:.4f} sek.")
 
         return wynik
+
     return wrapper
+
 
 class __SciezkaPliku__(ABC):
 
@@ -93,15 +105,26 @@ class __SciezkaPliku__(ABC):
     def sprawdz_dopisz(func):
         pass
 
-
     def __init__(self):
         self.folder: str = ""
         self.rSciezek: dict[str, list[str]] = {
-            "tekst": ["txt", "log", "csv", "json", "xml", "ini", "yaml", "yml", "md", "html", "htm"],
+            "tekst": [
+                "txt",
+                "log",
+                "csv",
+                "json",
+                "xml",
+                "ini",
+                "yaml",
+                "yml",
+                "md",
+                "html",
+                "htm",
+            ],
             "program": ["py", "js", "java", "c", "cpp", "h", "cs"],
             "obraz": ["jpg", "jpeg", "png", "gif", "bmp"],
             "bintekst": ["docx", "pdf"],
-            "audio": ["mp3", "wav", "flac", "aac", "ogg"]
+            "audio": ["mp3", "wav", "flac", "aac", "ogg"],
         }
 
     @abstractmethod
@@ -123,7 +146,7 @@ class __SciezkaPliku__(ABC):
         nazwa: str = "",
         od_konca: str = "",
         zaczyna_od: str = "C:/",
-        liczba_wynikow: int = 10
+        liczba_wynikow: int = 10,
     ) -> list[str]:
         pass
 
@@ -143,12 +166,13 @@ class __SciezkaPliku__(ABC):
     def dopisz(self, sciezka_pliku: str, zawartosc: list[str]) -> None:
         pass
 
+
 class SciezkaPliku(__SciezkaPliku__):
     def sprawdz_poprawnosc_pliku(func):
         def wrapper(self, sciezka_pliku, *args, **kwargs):
             _, ext = os.path.splitext(sciezka_pliku)
-            ext = ext.lower().lstrip('.')
-            
+            ext = ext.lower().lstrip(".")
+
             assert ext, "Plik musi mieć rozszerzenie"
             if not any(ext in rozszerzenia for rozszerzenia in self.rSciezek.values()):
                 raise UnknownExtensionPoprawnoscPlikuException(ext)
@@ -163,7 +187,7 @@ class SciezkaPliku(__SciezkaPliku__):
                 raise UnicodeDecodePoprawnoscPlikuException(sciezka_pliku)
 
         return wrapper
-    
+
     def sprawdz_stworz_folder(func):
         def wrapper(self, adres, nazwa, *args, **kwargs):
             sciezka = os.path.join(adres, nazwa)
@@ -201,15 +225,26 @@ class SciezkaPliku(__SciezkaPliku__):
             try:
                 return func(self, stara_sciezka, nowa_sciezka, *args, **kwargs)
             except PermissionError:
-                raise FolderRenamePermissionDeniedEdycjaFolderException(stara_sciezka, nowa_sciezka)
+                raise FolderRenamePermissionDeniedEdycjaFolderException(
+                    stara_sciezka, nowa_sciezka
+                )
             except OSError as blad:
-                raise FolderRenameOSErrorEdycjaFolderException(stara_sciezka, nowa_sciezka, blad)
+                raise FolderRenameOSErrorEdycjaFolderException(
+                    stara_sciezka, nowa_sciezka, blad
+                )
 
         return wrapper
 
-
     def sprawdz_przeszukiwanie(func):
-        def wrapper(self, nazwa="", od_konca="", zaczyna_od="C:/", liczba_wynikow=10, *args, **kwargs):
+        def wrapper(
+            self,
+            nazwa="",
+            od_konca="",
+            zaczyna_od="C:/",
+            liczba_wynikow=10,
+            *args,
+            **kwargs,
+        ):
             if not os.path.exists(zaczyna_od):
                 raise SearchStartPathNotFoundPrzeszukanieException(zaczyna_od)
 
@@ -220,7 +255,9 @@ class SciezkaPliku(__SciezkaPliku__):
                 raise InvalidSearchLimitPrzeszukanieException(liczba_wynikow)
 
             try:
-                return func(self,nazwa,od_konca,zaczyna_od,liczba_wynikow,*args,**kwargs)
+                return func(
+                    self, nazwa, od_konca, zaczyna_od, liczba_wynikow, *args, **kwargs
+                )
             except PermissionError:
                 raise SearchPermissionDeniedPrzeszukanieException(zaczyna_od)
 
@@ -325,7 +362,6 @@ class SciezkaPliku(__SciezkaPliku__):
 
         return wrapper
 
-
     def __init__(self):
         super().__init__()
 
@@ -339,18 +375,22 @@ class SciezkaPliku(__SciezkaPliku__):
 
         _, ext = os.path.splitext(sciezka_pliku)
 
-        ext = ext.lower().lstrip('.')
+        ext = ext.lower().lstrip(".")
 
         if ext in bin_ext:
             with open(sciezka_pliku, "rb") as plik:
                 zawartosc = plik.read(10)
-                odczyt = f"Otwarto plik binarny ({ext}): {sciezka_pliku} |{zawartosc}...|"
+                odczyt = (
+                    f"Otwarto plik binarny ({ext}): {sciezka_pliku} |{zawartosc}...|"
+                )
                 accept = True
 
         elif ext in txt_ext:
             with open(sciezka_pliku, "r", encoding="utf-8") as plik:
                 zawartosc = plik.read(10)
-                odczyt = f"Otwarto plik tekstowy ({ext}): {sciezka_pliku} |{zawartosc}...|"
+                odczyt = (
+                    f"Otwarto plik tekstowy ({ext}): {sciezka_pliku} |{zawartosc}...|"
+                )
                 accept = True
 
         return ext, accept, odczyt
@@ -365,7 +405,9 @@ class SciezkaPliku(__SciezkaPliku__):
         os.rename(stara_sciezka, nowa_sciezka)
 
     @sprawdz_przeszukiwanie
-    def przeszukiwanie(self, nazwa="", od_konca="", zaczyna_od="C:/", liczba_wynikow=10):
+    def przeszukiwanie(
+        self, nazwa="", od_konca="", zaczyna_od="C:/", liczba_wynikow=10
+    ):
         katalogi = []
         liczba = 0
 
@@ -379,7 +421,7 @@ class SciezkaPliku(__SciezkaPliku__):
 
                 if nazwa in plik:
 
-                    if od_konca == plik[-len(od_konca):]:
+                    if od_konca == plik[-len(od_konca) :]:
                         wynik = os.path.join(root, plik)
                         katalogi.append(wynik)
                         print("Znaleziono:", wynik)
@@ -395,13 +437,13 @@ class SciezkaPliku(__SciezkaPliku__):
     @sprawdz_reset_plik
     def reset_plik(self, sciezka_pliku):
         rozszerzenie = os.path.splitext(sciezka_pliku)[1].lower().lstrip(".")
-        
+
         kategoria = None
         for kat, rozszerzenia in self.rSciezek.items():
             if rozszerzenie in rozszerzenia:
                 kategoria = kat
                 break
-        
+
         if kategoria in ["tekst", "program"]:
             tryb = "w"
         elif kategoria in ["obraz", "bintekst", "audio"]:
@@ -409,25 +451,25 @@ class SciezkaPliku(__SciezkaPliku__):
 
         with open(sciezka_pliku, tryb):
             pass
-        
+
     @sprawdz_odczytaj
     def odczytaj(self, sciezka_pliku):
         rozszerzenie = os.path.splitext(sciezka_pliku)[1].lower().lstrip(".")
-        
+
         kategoria = None
         for kat, rozszerzenia in self.rSciezek.items():
             if rozszerzenie in rozszerzenia:
                 kategoria = kat
                 break
-        
+
         if kategoria in ["tekst", "program"]:
             with open(sciezka_pliku, "r", encoding="utf-8") as plik:
                 return plik.readlines()
-        
+
         elif kategoria == "bintekst":
             with open(sciezka_pliku, "rb") as plik:
                 return plik.read()
-        
+
         elif kategoria == "obraz" or kategoria == "audio":
             with open(sciezka_pliku, "rb") as plik:
                 return plik.read()
@@ -435,7 +477,7 @@ class SciezkaPliku(__SciezkaPliku__):
     @sprawdz_dopisz
     def dopisz(self, sciezka_pliku: str, zawartosc):
         rozszerzenie = os.path.splitext(sciezka_pliku)[1].lower().lstrip(".")
-        
+
         kategoria = None
         for kat, rozszerzenia in self.rSciezek.items():
             if rozszerzenie in rozszerzenia:
@@ -443,8 +485,10 @@ class SciezkaPliku(__SciezkaPliku__):
                 break
 
         match kategoria:
-            case "tekst" | "program": tryb, encoding = "a", "utf-8"
-            case "obraz" | "audio" | "bintekst": tryb, encoding = "ab", None
+            case "tekst" | "program":
+                tryb, encoding = "a", "utf-8"
+            case "obraz" | "audio" | "bintekst":
+                tryb, encoding = "ab", None
 
         if tryb == "a":
             with open(sciezka_pliku, tryb, encoding=encoding) as plik:
@@ -459,7 +503,7 @@ class SciezkaPliku(__SciezkaPliku__):
                             linia += "\n"
 
                         plik.write(linia)
-                        
+
         elif tryb == "ab":
             with open(sciezka_pliku, tryb) as plik:
                 if isinstance(zawartosc, bytes):
@@ -468,63 +512,78 @@ class SciezkaPliku(__SciezkaPliku__):
                     for element in zawartosc:
                         plik.write(element)
 
+
 import os
 import shutil
 
 
 def test_systemu_plikow():
     print(f"\n=> ROZPOCZYNAM TESTY METOD: SciezkaPliku (Status 2026) <=")
-    
+
     # Konfiguracja środowiska testowego
     sp = SciezkaPliku()
     root_test = "TEST_DIR_REMOVABLE"
     test_file = os.path.join(root_test, "test_unit.txt")
     target_file = os.path.join(root_test, "test_replaced.txt")
-    
+
     try:
         # 1. Test stworz_folder
         try:
             sp.stworz_folder(".", root_test)
             print("[OK] stworz_folder")
-        except Exception as e: print(f"[FAIL] stworz_folder: {e}")
+        except Exception as e:
+            print(f"[FAIL] stworz_folder: {e}")
 
         # 2. Test dopisz
         try:
             sp.dopisz(test_file, ["Linia 1", "Linia 2"])
             print("[OK] dopisz")
-        except Exception as e: print(f"[FAIL] dopisz: {e}")
+        except Exception as e:
+            print(f"[FAIL] dopisz: {e}")
 
         # 3. Test poprawnosc_pliku
         try:
             ext, ok, msg = sp.poprawnosc_pliku(test_file)
-            if ok and ext == "txt": print("[OK] poprawnosc_pliku")
-            else: raise ValueError(msg)
-        except Exception as e: print(f"[FAIL] poprawnosc_pliku: {e}")
+            if ok and ext == "txt":
+                print("[OK] poprawnosc_pliku")
+            else:
+                raise ValueError(msg)
+        except Exception as e:
+            print(f"[FAIL] poprawnosc_pliku: {e}")
 
         # 4. Test odczytaj
         try:
             dane = sp.odczytaj(test_file)
-            if len(dane) == 2: print("[OK] odczytaj")
-            else: raise ValueError("Błędna liczba linii")
-        except Exception as e: print(f"[FAIL] odczytaj: {e}")
+            if len(dane) == 2:
+                print("[OK] odczytaj")
+            else:
+                raise ValueError("Błędna liczba linii")
+        except Exception as e:
+            print(f"[FAIL] odczytaj: {e}")
 
         # 5. Test zastap (Rename/Move)
         try:
             sp.zastap(test_file, target_file)
-            if os.path.exists(target_file): print("[OK] zastap")
-        except Exception as e: print(f"[FAIL] zastap: {e}")
+            if os.path.exists(target_file):
+                print("[OK] zastap")
+        except Exception as e:
+            print(f"[FAIL] zastap: {e}")
 
         # 6. Test przeszukiwanie
         try:
             wyniki = sp.przeszukiwanie(nazwa="test", zaczyna_od=root_test)
-            if len(wyniki) > 0: print("[OK] przeszukiwanie")
-        except Exception as e: print(f"[FAIL] przeszukiwanie: {e}")
+            if len(wyniki) > 0:
+                print("[OK] przeszukiwanie")
+        except Exception as e:
+            print(f"[FAIL] przeszukiwanie: {e}")
 
         # 7. Test reset_plik
         try:
             sp.reset_plik(target_file)
-            if len(sp.odczytaj(target_file)) == 0: print("[OK] reset_plik")
-        except Exception as e: print(f"[FAIL] reset_plik: {e}")
+            if len(sp.odczytaj(target_file)) == 0:
+                print("[OK] reset_plik")
+        except Exception as e:
+            print(f"[FAIL] reset_plik: {e}")
 
     finally:
         # CZYSZCZENIE (Cleanup) - Usuwamy wszystko, co stworzył test
@@ -533,6 +592,7 @@ def test_systemu_plikow():
             shutil.rmtree(root_test)
             print(f"Usunięto folder testowy: {root_test}")
         print("Status: System plików przywrócony do stanu początkowego.")
+
 
 if __name__ == "__main__":
     test_systemu_plikow()

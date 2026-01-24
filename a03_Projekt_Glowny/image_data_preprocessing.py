@@ -65,7 +65,7 @@ __ConvolutionActions__
     convolution_2d
     apply_filter_to_channels_or_path
 __MatrixCreator__
-    create 
+    create
     pad
 __DataAugmentation__
     augment

@@ -2,23 +2,21 @@ import os
 import shutil
 from functools import wraps
 
-__all__ = [
-    "__BazaNauki__", 
-    "bezpieczny_wrapper",
-    "dekoruj_wszystko"
-]
+__all__ = ["__BazaNauki__", "bezpieczny_wrapper", "dekoruj_wszystko"]
+
 
 class __BazaNauki__:
     def __init__(self, aktywne=True):
         if not aktywne:
             print(f">>> SEKCJA POMINIĘTA: {self.__class__.__name__}")
             return
-            
+
         print(f"\n>>> URUCHAMIAM SEKCJĘ: {self.__class__.__name__} <<<")
         for nazwa in dir(self):
             wartosc = getattr(self, nazwa)
             if callable(wartosc) and not nazwa.startswith("_") and nazwa != "run":
                 wartosc()
+
 
 def bezpieczny_wrapper(func):
     @wraps(func)
@@ -34,7 +32,9 @@ def bezpieczny_wrapper(func):
             print(f"[WRAPPER] Stworzono folder tymczasowy: {tmp_folder}")
 
         return func(self, *args, **kwargs)
+
     return wrapper
+
 
 def dekoruj_wszystko(*dekoratory):
     def class_rebuilder(cls: type):
@@ -44,4 +44,5 @@ def dekoruj_wszystko(*dekoratory):
                     wartosc = d(wartosc)
                 setattr(cls, nazwa, wartosc)
         return cls
+
     return class_rebuilder

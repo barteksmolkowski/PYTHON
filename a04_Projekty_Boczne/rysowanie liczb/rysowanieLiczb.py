@@ -4,6 +4,7 @@ import json
 import pygame
 import re
 
+
 class __rysowanie__(ABC):
     def __init__(self, dane=None, macierz=None, nazwaPliku="rysowanie_zapis_plik"):
         super().__init__()
@@ -58,7 +59,9 @@ class __rysowanie__(ABC):
         pass
 
     @abstractmethod
-    def dzialaj_na_pixel(self, co_zrob: Literal["zaznacz", "usun"], x: int, y: int) -> bool:
+    def dzialaj_na_pixel(
+        self, co_zrob: Literal["zaznacz", "usun"], x: int, y: int
+    ) -> bool:
         """
         Zaznacza lub usuwa (resetuje) pojedynczy piksel w macierzy.
 
@@ -89,11 +92,8 @@ class __rysowanie__(ABC):
             nazwa = self.nazwaPliku
 
         with open(f"{nazwa}.json", "w", encoding="utf-8") as f:
-            json.dump(
-                {"dane": self.dane, "macierz": self.macierz},
-                f,
-                indent=4
-            )
+            json.dump({"dane": self.dane, "macierz": self.macierz}, f, indent=4)
+
 
 class rysowanie(__rysowanie__):
     def __init__(self, dane=None, macierz=None, nazwaPliku="rysowanie_zapis_plik"):
@@ -110,15 +110,17 @@ class rysowanie(__rysowanie__):
                 "odzielnieWys": 1,
                 "kolorRamki": (255, 253, 240),
                 "pierwszyKolorPx": (211, 211, 211),
-                "aktualKolor": (0, 0, 0)
+                "aktualKolor": (0, 0, 0),
             }
         else:
             self.dane = dane
 
         if macierz is None:
             self.macierz = [
-                [self.dane["pierwszyKolorPx"]
-                for _ in range(self.dane["szerIloscKwad"])]
+                [
+                    self.dane["pierwszyKolorPx"]
+                    for _ in range(self.dane["szerIloscKwad"])
+                ]
                 for _ in range(self.dane["wysIloscKwad"])
             ]
         else:
@@ -144,24 +146,23 @@ class rysowanie(__rysowanie__):
             else:
                 self.dane[k] = int(v)
 
-
-    def __str__(self): # dokończyć
+    def __str__(self):  # dokończyć
         # dopełniać 0 do % rgb
         # zrobić najlepiej ramkę gdzie poprostu wszystko będzie
         slow = {
-                "szerIloscKwad": ["Ilość kwadratów w szerokości", ""],
-                "wysIloscKwad": ["Ilość kwadratów w wysokości", ""],
-                "szerPx": ["Szerokość pixela", "px"],
-                "wysPx": ["Wysokość pixela", "px"],
-                "szerRamka": ["Szerokość ramki", "px"],
-                "wysRamka": ["Wysokość ramki", "px"],
-                "odzielnieSzer": ["Szerokość przerwy", "px"],
-                "odzielnieWys": ["Wysokość przerwy", "px"],
-                "kolorRamki": ["Kolor ramki", "rgb"],
-                "pierwszyKolorPx": ["Początkowy kolor okienka", "rgb"],
-                "aktualKolor": ["Aktualny kolor", "rgb"]
-                }
-        
+            "szerIloscKwad": ["Ilość kwadratów w szerokości", ""],
+            "wysIloscKwad": ["Ilość kwadratów w wysokości", ""],
+            "szerPx": ["Szerokość pixela", "px"],
+            "wysPx": ["Wysokość pixela", "px"],
+            "szerRamka": ["Szerokość ramki", "px"],
+            "wysRamka": ["Wysokość ramki", "px"],
+            "odzielnieSzer": ["Szerokość przerwy", "px"],
+            "odzielnieWys": ["Wysokość przerwy", "px"],
+            "kolorRamki": ["Kolor ramki", "rgb"],
+            "pierwszyKolorPx": ["Początkowy kolor okienka", "rgb"],
+            "aktualKolor": ["Aktualny kolor", "rgb"],
+        }
+
         wynik = ""
 
         for i, (nazwa, el) in enumerate(self.dane.items()):
@@ -172,9 +173,8 @@ class rysowanie(__rysowanie__):
 
             elif rodzaj in "rgb":
                 koniec = (
-                    f"R:{el[0]/255:.0%} "
-                    f"G:{el[1]/255:.0%} "
-                    f"B:{el[2]/255:.0%}")
+                    f"R:{el[0]/255:.0%} " f"G:{el[1]/255:.0%} " f"B:{el[2]/255:.0%}"
+                )
 
             wynik += f"el{i + 1}. {slow[nazwa][0]}: {koniec}\n"
 
@@ -190,10 +190,10 @@ class rysowanie(__rysowanie__):
             return None
 
         blok_szer = d["szerPx"] + d["odzielnieSzer"]
-        blok_wys  = d["wysPx"]  + d["odzielnieWys"]
+        blok_wys = d["wysPx"] + d["odzielnieWys"]
 
         kolumna = x // blok_szer
-        wiersz  = y // blok_wys
+        wiersz = y // blok_wys
 
         x_w_bloku = x % blok_szer
         y_w_bloku = y % blok_wys
@@ -204,16 +204,24 @@ class rysowanie(__rysowanie__):
             return None
 
         if (
-            kolumna < 0 or kolumna >= d["szerIloscKwad"] or
-            wiersz  < 0 or wiersz  >= d["wysIloscKwad"]
+            kolumna < 0
+            or kolumna >= d["szerIloscKwad"]
+            or wiersz < 0
+            or wiersz >= d["wysIloscKwad"]
         ):
             return None
 
         return (kolumna, wiersz)
 
-    def dzialaj_na_pixel(self, co_zrob: Literal["zaznacz", "usun"], x: int, y: int) -> bool:
+    def dzialaj_na_pixel(
+        self, co_zrob: Literal["zaznacz", "usun"], x: int, y: int
+    ) -> bool:
         if 0 <= x < self.dane["szerIloscKwad"] and 0 <= y < self.dane["wysIloscKwad"]:
-            self.macierz[y][x] = self.dane["aktualKolor"] if co_zrob == "zaznacz" else self.dane["pierwszyKolorPx"]
+            self.macierz[y][x] = (
+                self.dane["aktualKolor"]
+                if co_zrob == "zaznacz"
+                else self.dane["pierwszyKolorPx"]
+            )
         else:
             return False
 
@@ -235,11 +243,8 @@ class rysowanie(__rysowanie__):
             nazwa = self.nazwaPliku
 
         with open(f"{nazwa}.json", "w", encoding="utf-8") as f:
-            json.dump(
-                {"dane": self.dane, "macierz": self.macierz},
-                f,
-                indent=4
-            )
+            json.dump({"dane": self.dane, "macierz": self.macierz}, f, indent=4)
+
 
 class rysuj:
     def rysuj_tlo(self, screen):
@@ -247,10 +252,7 @@ class rysuj:
 
     def rysuj_ramke(self, screen, dane, szer, wys):
         pygame.draw.rect(
-            screen,
-            dane["kolorRamki"],
-            (0, 0, szer, wys),
-            dane["szerRamka"]
+            screen, dane["kolorRamki"], (0, 0, szer, wys), dane["szerRamka"]
         )
 
     def rysuj_pixele(self, screen, dane, macierz):
@@ -259,18 +261,15 @@ class rysuj:
                 kolor = macierz[y][x]
 
                 px = dane["szerRamka"] + x * (dane["szerPx"] + dane["odzielnieSzer"])
-                py = dane["wysRamka"]  + y * (dane["wysPx"]  + dane["odzielnieWys"])
+                py = dane["wysRamka"] + y * (dane["wysPx"] + dane["odzielnieWys"])
 
-                pygame.draw.rect(
-                    screen,
-                    kolor,
-                    (px, py, dane["szerPx"], dane["wysPx"])
-                )
+                pygame.draw.rect(screen, kolor, (px, py, dane["szerPx"], dane["wysPx"]))
 
     def rysuj_wszystko(self, screen, dane, macierz, kordy, szer, wys):
         self.rysuj_tlo(screen)
         self.rysuj_ramke(screen, dane, szer, wys)
         self.rysuj_pixele(screen, dane, macierz)
+
 
 class ekran:
     def __init__(self, dane):
@@ -281,13 +280,13 @@ class ekran:
         eventType = event.type
         eventKey = event.key
         kolory = {
-            pygame.K_1: (255, 0, 0),      # czerwony
-            pygame.K_2: (0, 255, 0),      # zielony
-            pygame.K_3: (0, 0, 255),      # niebieski
-            pygame.K_4: (255, 255, 0),    # żółty
-            pygame.K_5: (255, 165, 0),    # pomarańczowy
-            pygame.K_6: (128, 0, 128),    # fioletowy
-            pygame.K_7: (0, 255, 255),    # cyjan
+            pygame.K_1: (255, 0, 0),  # czerwony
+            pygame.K_2: (0, 255, 0),  # zielony
+            pygame.K_3: (0, 0, 255),  # niebieski
+            pygame.K_4: (255, 255, 0),  # żółty
+            pygame.K_5: (255, 165, 0),  # pomarańczowy
+            pygame.K_6: (128, 0, 128),  # fioletowy
+            pygame.K_7: (0, 255, 255),  # cyjan
             pygame.K_8: (255, 192, 203),  # różowy
             pygame.K_9: (128, 128, 128),  # szary
         }
@@ -362,15 +361,15 @@ class ekran:
 
     def dopasuj_nazwe_koloru(self, tekst):
         nazwy = {
-            "czerwony": (255,0,0),
-            "zielony": (0,255,0),
-            "niebieski": (0,0,255),
-            "zolty": (255,255,0),
-            "pomaranczowy": (255,165,0),
-            "fioletowy": (128,0,128),
-            "cyjan": (0,255,255),
-            "rozowy": (255,192,203),
-            "szary": (128,128,128)
+            "czerwony": (255, 0, 0),
+            "zielony": (0, 255, 0),
+            "niebieski": (0, 0, 255),
+            "zolty": (255, 255, 0),
+            "pomaranczowy": (255, 165, 0),
+            "fioletowy": (128, 0, 128),
+            "cyjan": (0, 255, 255),
+            "rozowy": (255, 192, 203),
+            "szary": (128, 128, 128),
         }
         for nazwa, kolor in nazwy.items():
             if re.search(tekst.lower(), nazwa):
@@ -411,14 +410,7 @@ class ekran:
                 if kordy:
                     self.model.dzialaj_na_pixel("zaznacz", *kordy)
 
-            self.view.rysuj_wszystko(
-                screen,
-                d,
-                self.model.macierz,
-                kordy,
-                szer,
-                wys
-            )
+            self.view.rysuj_wszystko(screen, d, self.model.macierz, kordy, szer, wys)
 
             pygame.display.flip()
 

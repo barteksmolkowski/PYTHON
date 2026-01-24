@@ -6,7 +6,9 @@ import numpy as np
 
 class __Normalization__(ABC):
     @abstractmethod
-    def normalize(self, M: np.ndarray, old_range: Tuple[int, int], new_range: Tuple[int, int]) -> np.ndarray:
+    def normalize(
+        self, M: np.ndarray, old_range: Tuple[int, int], new_range: Tuple[int, int]
+    ) -> np.ndarray:
         pass
 
     @abstractmethod
@@ -20,22 +22,23 @@ class __Normalization__(ABC):
     @overload
     @abstractmethod
     def process(
-        self, 
-        M: np.ndarray, 
-        use_z_score: Literal[False], 
-        old_r: Tuple[int, int], 
-        new_r: Tuple[int, int]
+        self,
+        M: np.ndarray,
+        use_z_score: Literal[False],
+        old_r: Tuple[int, int],
+        new_r: Tuple[int, int],
     ) -> np.ndarray: ...
 
     @abstractmethod
     def process(
-        self, 
-        M: np.ndarray, 
-        use_z_score: bool = True, 
-        old_r: Tuple[int, int] = (0, 255), 
-        new_r: Tuple[int, int] = (0, 1)
+        self,
+        M: np.ndarray,
+        use_z_score: bool = True,
+        old_r: Tuple[int, int] = (0, 255),
+        new_r: Tuple[int, int] = (0, 1),
     ) -> np.ndarray:
         pass
+
 
 class Normalization(__Normalization__):
     def normalize(self, M, old_r=(0, 255), new_r=(0, 1)):

@@ -3,10 +3,12 @@ class TooColdException(Exception):
         self.temp = temp
         super().__init__(f"Temperatura {temp} jest za niska!")
 
+
 def stopnieNaKelvin(temp):
     if temp < -273.15:
         raise TooColdException(temp)
     return temp + 273.15
+
 
 try:
     wynik = stopnieNaKelvin(-1000)

@@ -7,6 +7,7 @@ gd_path = r"C:\Program Files (x86)\Steam\steamapps\common\Geometry Dash"
 geode_dll = os.path.join(gd_path, "Geode.dll")
 backup_dll = os.path.join(gd_path, "Geode.dll.disabled")
 
+
 def disable_geode():
     if os.path.exists(geode_dll):
         # zamiast usuwać można zmienić nazwę
@@ -15,12 +16,14 @@ def disable_geode():
     else:
         print("⚠️ Nie znaleziono Geode.dll (może już wyłączony).")
 
+
 def enable_geode():
     if os.path.exists(backup_dll):
         shutil.move(backup_dll, geode_dll)
         print("✅ Geode.dll przywrócony.")
     else:
         print("⚠️ Nie znaleziono Geode.dll.disabled (nie można przywrócić).")
+
 
 def uninstall_geode():
     if os.path.exists(geode_dll):
@@ -31,6 +34,7 @@ def uninstall_geode():
         print("🗑️ Geode.dll.disabled usunięty.")
     else:
         print("⚠️ Geode.dll nie znaleziono (już odinstalowany).")
+
 
 if __name__ == "__main__":
     print("1. Wyłącz Geode (zmiana nazwy)")

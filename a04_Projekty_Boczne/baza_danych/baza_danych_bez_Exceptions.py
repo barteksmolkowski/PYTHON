@@ -5,23 +5,19 @@ from typing import Any, Literal, TypeAlias
 class Bazadanych:
     def __init__(self, nazwa: str):
         self.nazwa = nazwa
-        {("idKol", "naKol"):{("idWiersz", "naWier"):("rodEl", "cos")}}
+        {("idKol", "naKol"): {("idWiersz", "naWier"): ("rodEl", "cos")}}
 
-        self.bazadanych:dict[
-            tuple[int, str],
-            dict[
-                tuple[int, str],
-                tuple[str, Any]
-                ]
-                ]
+        self.bazadanych: dict[tuple[int, str], dict[tuple[int, str], tuple[str, Any]]]
 
-        self.bazadanych = {(0, "nazwaKolumna"): {0: "00Wartość", 1: "01Wartość"}, (1, "name1Kolumna1"): {0: "10Wartość", 1: "11Wartość"}}
+        self.bazadanych = {
+            (0, "nazwaKolumna"): {0: "00Wartość", 1: "01Wartość"},
+            (1, "name1Kolumna1"): {0: "10Wartość", 1: "11Wartość"},
+        }
 
     def __str__(self):
         print(self.bazadanych)
         # for klucz, wartosc in self.bazadanych.items():
         #     print(klucz, wartosc)
-
 
     def wyswietlBazeDanych(self, func):
         def wrapper(*args, **kwargs):
@@ -71,25 +67,23 @@ class Bazadanych:
 
     def zapisz(self):
         for (_, nazwa), wiersze in self.bazadanych.items():
-            self.cursor.execute(
-                f"""CREATE TABLE IF NOT EXISTS [{nazwa}] (
+            self.cursor.execute(f"""CREATE TABLE IF NOT EXISTS [{nazwa}] (
                     wiersz TEXT PRIMARY KEY,
                     wartosc TEXT
-                )"""
-            )
+                )""")
 
             for wiersz, wartosc in wiersze.items():
                 self.cursor.execute(
                     f"""INSERT INTO [{nazwa}] (wiersz, wartosc)
                         VALUES (?, ?)
                         ON CONFLICT(wiersz) DO UPDATE SET wartosc=excluded.wartosc""",
-                    (str(wiersz), str(wartosc))
+                    (str(wiersz), str(wartosc)),
                 )
 
         self.conn.commit()
 
     def dodaj_element(self, kolumna, wiersz, autoWiersz, wartosc, bazadanych):
-        self.bazadanych # nie zrobione
+        self.bazadanych  # nie zrobione
 
     def dodaj_przesten(self, coDodac: Literal["kolumna", "wiersz"], nazwa: str):
         match coDodac:
@@ -102,7 +96,9 @@ class Bazadanych:
                 if getattr(self, "autoWiersz", True):
                     wszystkie_wiersze = set()
                     for wiersze in self.bazadanych.values():
-                        wszystkie_wiersze.update(k for k in wiersze.keys() if isinstance(k, int))
+                        wszystkie_wiersze.update(
+                            k for k in wiersze.keys() if isinstance(k, int)
+                        )
                     nowy_wiersz_id = max(wszystkie_wiersze, default=-1) + 1
                 else:
                     nowy_wiersz_id = nazwa
@@ -112,7 +108,9 @@ class Bazadanych:
 
     def usun(self, coUsun: Literal["kolumna", "wiersz", "element"], nazwa):
         if coUsun == "kolumna":
-            klucze_do_usuniecia = [k for k in self.bazadanych if k[0] == nazwa or k[1] == nazwa]
+            klucze_do_usuniecia = [
+                k for k in self.bazadanych if k[0] == nazwa or k[1] == nazwa
+            ]
             for k in klucze_do_usuniecia:
                 del self.bazadanych[k]
 
@@ -128,26 +126,34 @@ class Bazadanych:
                     if wiersz in wiersze:
                         del wiersze[wiersz]
 
-    def edytuj(self, kolumna, wiersz, nowyElement): # narazie zrobić na słowniku
-        0 # edytuje konkretny element
+    def edytuj(self, kolumna, wiersz, nowyElement):  # narazie zrobić na słowniku
+        0  # edytuje konkretny element
 
-# [("wieksze", 5), ("mniejsze", 8)] np
-#         self.bazadanych:dict[tuple[int, str],dict[tuple[int, str],tuple[str, Any]]]
+    # [("wieksze", 5), ("mniejsze", 8)] np
+    #         self.bazadanych:dict[tuple[int, str],dict[tuple[int, str],tuple[str, Any]]]
     PobierzTyp: TypeAlias = Literal["kolumna", "wiersz", "element"]
 
     Operator: TypeAlias = Literal[
-        "==", "!=", ">", ">=", "<", "<=","in", "between",
-        "like", "startswith", "endswith", "ilike",
-        "is_null", "not_null","fuzzy"
+        "==",
+        "!=",
+        ">",
+        ">=",
+        "<",
+        "<=",
+        "in",
+        "between",
+        "like",
+        "startswith",
+        "endswith",
+        "ilike",
+        "is_null",
+        "not_null",
+        "fuzzy",
     ]
 
-    Warunek: TypeAlias = tuple[Operator,Any]
-      
-    def pobierz(
-        self,
-        coPobierz: list[PobierzTyp],
-        walidacja: list[Warunek]) -> Any:
+    Warunek: TypeAlias = tuple[Operator, Any]
 
+    def pobierz(self, coPobierz: list[PobierzTyp], walidacja: list[Warunek]) -> Any:
         """
         Porównania
         == to równe, != to różne, > to większe, < to mniejsze
@@ -170,7 +176,7 @@ class Bazadanych:
         Podobieństwo
         fuzzy to toleruj literówki
         """
-        0 # można pobrać np dane z kolumny czy z wiersza
+        0  # można pobrać np dane z kolumny czy z wiersza
         # warunki liczbowe
         # wymień te które są zwykle w bazadanych sql żebym mógł większość zaimplementować
         # też warto dać stopień pomylenia że jest do tego jakaś biblitoeka cn
@@ -185,11 +191,17 @@ class Bazadanych:
                 case "fuzzy":
                     tekst, prog = wartosc
 
-
-    def znajdz(self, element, coZnajdz: Literal["kolumna", "wiersz", "element"], zwracaBool = False):
-        0 # przeszukuje coZnajdz
-        self.bazadanych = {(0, "nazwaKolumna"):
-                           {0: "00Wartość", 1: "01Wartość"}, (1, "name1Kolumna1"): {0: "10Wartość", 1: "11Wartość"}}
+    def znajdz(
+        self,
+        element,
+        coZnajdz: Literal["kolumna", "wiersz", "element"],
+        zwracaBool=False,
+    ):
+        0  # przeszukuje coZnajdz
+        self.bazadanych = {
+            (0, "nazwaKolumna"): {0: "00Wartość", 1: "01Wartość"},
+            (1, "name1Kolumna1"): {0: "10Wartość", 1: "11Wartość"},
+        }
         match coZnajdz:
             case "kolumna":
                 for el, _ in self.bazadanych.items():
@@ -205,9 +217,10 @@ class Bazadanych:
             case _:
                 assert invalidElementFindIncoZnajdzException(coZnajdz)
 
+
 bazadanych = Bazadanych("test")
 bazadanych.otworz(nazwa="test", czy_nowa=True)
-bazadanych.dodaj_przesten(coDodac="kolumna", nazwa= "testKolumna")
+bazadanych.dodaj_przesten(coDodac="kolumna", nazwa="testKolumna")
 print(bazadanych)
 # dodajel edytuj znajdź zrobić potem chatgpt niech zrobi print i sprawdzi czy wszystko git
 # potem exceptions

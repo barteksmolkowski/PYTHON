@@ -1,8 +1,9 @@
 class mathFunc:
     def __init__(self, number):
         from sympy import isprime
+
         self.isprime = isprime
-        
+
         self.number = number
 
     def is_prime(self) -> bool:
@@ -17,13 +18,13 @@ class mathFunc:
                 count += 1
                 if count > 2:
                     return False
-                
+
         return count == 2
 
     def is_halftwin_first(self) -> bool:
         if self.is_prime(self.number) and self.is_prime(self.number + 2):
             return True
-        
+
         return False
 
     def len_period(self, bigger: int) -> bool:
@@ -41,7 +42,7 @@ class mathFunc:
         while mod != 1:
             mod = (mod * 10) % num
             k += 1
-        
+
         if k >= bigger:
             return True
         else:

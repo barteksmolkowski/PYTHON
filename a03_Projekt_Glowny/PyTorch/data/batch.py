@@ -12,20 +12,15 @@ from .common import MatrixChannels, TypeIMG, TypeMatrix
 class __BatchProcessing__(ABC):
     @abstractmethod
     def create_batches(
-        self,
-        data: list[TypeMatrix],
-        batch_size: int,
-        shuffle: bool = True
+        self, data: list[TypeMatrix], batch_size: int, shuffle: bool = True
     ) -> list[list[TypeMatrix]]:
 
         pass
-    
+
     @abstractmethod
-    def process_batch(
-        self,
-        paths: List[str]
-    ) -> List[TypeMatrix]:
+    def process_batch(self, paths: List[str]) -> List[TypeMatrix]:
         pass
+
 
 class BatchProcessing(__BatchProcessing__):
     def create_batches(self, data, batch_size, shuffle):
@@ -37,6 +32,5 @@ class BatchProcessing(__BatchProcessing__):
         return generator
         """
 
-    
     def process_batch(self, paths):
         0

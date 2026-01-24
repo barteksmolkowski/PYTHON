@@ -14,6 +14,7 @@ class GitBasicCommands(Protocol):
     def pull(self) -> None: ...
     def restore_and_checkout(self) -> None: ...
 
+
 class GitDiffCommands(Protocol):
     def o_hash_importance(self) -> None: ...
 
@@ -30,44 +31,114 @@ class GitDiffCommands(Protocol):
     def diff_commits_selective(self) -> None: ...
     def diff_separator(self) -> None: ...
 
+
 class GitLogCommands(Protocol):
     def basic_log(self) -> None: ...
     def file_analysis_log(self) -> None: ...
     def search_log(self) -> None: ...
     def visual_log(self) -> None: ...
 
+
 class GitBasic(GitBasicCommands, __BazaNauki__):
-    def version(self): print("Wersja gita:\n-> git --version\n")
-    def config_global(self): print("Konfiguracja globalna:\n-> git config --global user.name 'Nazwa'\n")
-    def init(self): print("Inicjalizacja repozytorium:\n-> git init\n")
-    def status(self): print("Status plików:\n-> git status\n")
-    def add(self): print("Dodawanie do staging:\n-> git add .\n")
-    def commit(self): print("Zapisanie zmian:\n-> git commit -m 'opis'\n")
-    def push(self): print("Wysyłka na serwer:\n-> git push origin main\n")
-    def pull(self): print("Pobieranie zmian:\n-> git pull\n")
-    def restore_and_checkout(self): print("COFANIE I PODRÓŻE W CZASIE:\n-> git restore <plik>     # Przywraca plik/cofa usunięcie\n-> git checkout <hash>    # Przejście do konkretnej wersji\n-> git switch -           # Powrót na główną gałąź\n")
+    def version(self):
+        print("Wersja gita:\n-> git --version\n")
+
+    def config_global(self):
+        print("Konfiguracja globalna:\n-> git config --global user.name 'Nazwa'\n")
+
+    def init(self):
+        print("Inicjalizacja repozytorium:\n-> git init\n")
+
+    def status(self):
+        print("Status plików:\n-> git status\n")
+
+    def add(self):
+        print("Dodawanie do staging:\n-> git add .\n")
+
+    def commit(self):
+        print("Zapisanie zmian:\n-> git commit -m 'opis'\n")
+
+    def push(self):
+        print("Wysyłka na serwer:\n-> git push origin main\n")
+
+    def pull(self):
+        print("Pobieranie zmian:\n-> git pull\n")
+
+    def restore_and_checkout(self):
+        print(
+            "COFANIE I PODRÓŻE W CZASIE:\n-> git restore <plik>     # Przywraca plik/cofa usunięcie\n-> git checkout <hash>    # Przejście do konkretnej wersji\n-> git switch -           # Powrót na główną gałąź\n"
+        )
+
 
 class GitDiff(GitDiffCommands, __BazaNauki__):
-    def o_hash_importance(self): print("WAŻNE: Hasze (np. f6f8988) są niezbędne do porównywania wersji z przeszłości!\n")
-    
-    def diff_standard(self): print("Standardowe porównanie:\n-> git diff\n")
-    def diff_stat(self): print("Statystyka zmian (linie +/-):\n-> git diff --stat\n")
-    def diff_shortstat(self): print("Krótkie podsumowanie:\n-> git diff --shortstat\n")
-    def diff_patch(self): print("Pełny podgląd (format patch) z kolorem:\n-> git diff -p --color\n")
-    def diff_cached(self): print("Analiza plików DODANYCH (staging):\n-> git diff --cached\n")
-    def diff_kumulacja(self): print("KUMULACJA FLAG (Łączenie minusów):\n-> git diff --stat --cached\n")
-    
-    def diff_commits(self): print("Porównanie historii między haszami:\n-> git diff <hash1> <hash2> --stat\n")
-    def diff_head_shortcuts(self): print("SKRÓTY HEAD (Nawigacja 2026):\n-> git diff @^ @     # @ to HEAD, ^ to poprzedni commit\n-> git diff HEAD~3.. # Od 3 commitów temu do teraz\n")
-    def diff_head_relative(self): print("PORÓWNANIE RELATYWNE (HEAD~n):\n-> git diff HEAD~2 HEAD --stat\n-> git diff HEAD~5 HEAD --name-only\n")
-    def diff_commits_selective(self): print("SELEKTYWNE PORÓWNANIE (Hasze + Separator):\n-> git diff <hash1> <hash2> -- <sciezka>\n")
-    def diff_separator(self): print("SEPARATOR (--) - Skupienie na ścieżce (ignoruje branche):\n-> git diff -- <sciezka/do/pliku>\n")
+    def o_hash_importance(self):
+        print(
+            "WAŻNE: Hasze (np. f6f8988) są niezbędne do porównywania wersji z przeszłości!\n"
+        )
+
+    def diff_standard(self):
+        print("Standardowe porównanie:\n-> git diff\n")
+
+    def diff_stat(self):
+        print("Statystyka zmian (linie +/-):\n-> git diff --stat\n")
+
+    def diff_shortstat(self):
+        print("Krótkie podsumowanie:\n-> git diff --shortstat\n")
+
+    def diff_patch(self):
+        print("Pełny podgląd (format patch) z kolorem:\n-> git diff -p --color\n")
+
+    def diff_cached(self):
+        print("Analiza plików DODANYCH (staging):\n-> git diff --cached\n")
+
+    def diff_kumulacja(self):
+        print("KUMULACJA FLAG (Łączenie minusów):\n-> git diff --stat --cached\n")
+
+    def diff_commits(self):
+        print(
+            "Porównanie historii między haszami:\n-> git diff <hash1> <hash2> --stat\n"
+        )
+
+    def diff_head_shortcuts(self):
+        print(
+            "SKRÓTY HEAD (Nawigacja 2026):\n-> git diff @^ @     # @ to HEAD, ^ to poprzedni commit\n-> git diff HEAD~3.. # Od 3 commitów temu do teraz\n"
+        )
+
+    def diff_head_relative(self):
+        print(
+            "PORÓWNANIE RELATYWNE (HEAD~n):\n-> git diff HEAD~2 HEAD --stat\n-> git diff HEAD~5 HEAD --name-only\n"
+        )
+
+    def diff_commits_selective(self):
+        print(
+            "SELEKTYWNE PORÓWNANIE (Hasze + Separator):\n-> git diff <hash1> <hash2> -- <sciezka>\n"
+        )
+
+    def diff_separator(self):
+        print(
+            "SEPARATOR (--) - Skupienie na ścieżce (ignoruje branche):\n-> git diff -- <sciezka/do/pliku>\n"
+        )
+
 
 class GitLog(GitLogCommands, __BazaNauki__):
-    def basic_log(self): print("PODSTAWOWA HISTORIA:\n-> git log --oneline     # Hasz + Opis\n-> git log --oneline -5  # Ostatnie 5 zmian\n")
-    def file_analysis_log(self): print("ANALIZA ZMIAN W PLIKACH:\n-> git log -p      # Co dokładnie zmieniło się w kodzie\n-> git log --stat  # Statystyka zmienionych plików\n")
-    def search_log(self): print("PRZESZUKIWANIE HISTORII:\n-> git log --grep='wiadomosc' # Szukaj po opisie\n-> git log -S 'kod' -p        # 'Pickaxe' - szukaj frazy w KODZIE\n")
-    def visual_log(self): print("WIDOK GRAFICZNY:\n-> git log --oneline --graph --all # Drzewo gałęzi\n")
+    def basic_log(self):
+        print(
+            "PODSTAWOWA HISTORIA:\n-> git log --oneline     # Hasz + Opis\n-> git log --oneline -5  # Ostatnie 5 zmian\n"
+        )
+
+    def file_analysis_log(self):
+        print(
+            "ANALIZA ZMIAN W PLIKACH:\n-> git log -p      # Co dokładnie zmieniło się w kodzie\n-> git log --stat  # Statystyka zmienionych plików\n"
+        )
+
+    def search_log(self):
+        print(
+            "PRZESZUKIWANIE HISTORII:\n-> git log --grep='wiadomosc' # Szukaj po opisie\n-> git log -S 'kod' -p        # 'Pickaxe' - szukaj frazy w KODZIE\n"
+        )
+
+    def visual_log(self):
+        print("WIDOK GRAFICZNY:\n-> git log --oneline --graph --all # Drzewo gałęzi\n")
+
 
 if __name__ == "__main__":
     GitBasic(False)
@@ -81,3 +152,5 @@ git revert --no-commit HEAD~2
 git restore --source hasz -- plik
 git reset hasz --soft
 """
+
+# dalej uczyc sie githug

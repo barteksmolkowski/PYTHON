@@ -12,50 +12,46 @@ from .geometry import ImageGeometry
 class __ConvolutionActions__(ABC):
     @abstractmethod
     def convolution_2d(
-        self,
-        M: TypeMatrix,
-        filtrs: List[TypeMatrix] = None,
-        dilated: int = 1
-        ) -> List[TypeMatrix]:
-        pass
-
-    @overload
-    @abstractmethod
-    def apply_filters(
-        self, 
-        channels_or_path: List[TypeMatrix], 
-        filtr: List[TypeMatrix], 
-        padding: Literal[True] = True
-    ) -> List[TypeMatrix]: ...
-
-    @overload
-    @abstractmethod
-    def apply_filters(
-        self, 
-        channels_or_path: List[TypeMatrix], 
-        filtr: List[TypeMatrix], 
-        padding: Literal[False]
-    ) -> List[TypeMatrix]: ...
-
-    @abstractmethod
-    def apply_filters(
-        self, 
-        channels_or_path: List[TypeMatrix], 
-        filtr: List[TypeMatrix], 
-        padding: bool = True
+        self, M: TypeMatrix, filtrs: List[TypeMatrix] = None, dilated: int = 1
     ) -> List[TypeMatrix]:
         pass
+
+    @overload
+    @abstractmethod
+    def apply_filters(
+        self,
+        channels_or_path: List[TypeMatrix],
+        filtr: List[TypeMatrix],
+        padding: Literal[True] = True,
+    ) -> List[TypeMatrix]: ...
+
+    @overload
+    @abstractmethod
+    def apply_filters(
+        self,
+        channels_or_path: List[TypeMatrix],
+        filtr: List[TypeMatrix],
+        padding: Literal[False],
+    ) -> List[TypeMatrix]: ...
+
+    @abstractmethod
+    def apply_filters(
+        self,
+        channels_or_path: List[TypeMatrix],
+        filtr: List[TypeMatrix],
+        padding: bool = True,
+    ) -> List[TypeMatrix]:
+        pass
+
 
 class ConvolutionActions(__ConvolutionActions__):
     def __init__(self):
         self.geometry = ImageGeometry()
 
     def convolution_2d(
-        self,
-        M: TypeMatrix,
-        filtrs: List[TypeMatrix] = None
+        self, M: TypeMatrix, filtrs: List[TypeMatrix] = None
     ) -> List[TypeMatrix]:
-        
+
         if filtrs is None or len(filtrs) == 0:
             return [M]
 
@@ -70,11 +66,9 @@ class ConvolutionActions(__ConvolutionActions__):
         return results
 
     def apply_filters(
-        self,
-        M_three_channels: List[TypeMatrix],
-        filtrs: List[TypeMatrix]
+        self, M_three_channels: List[TypeMatrix], filtrs: List[TypeMatrix]
     ) -> List[TypeMatrix]:
-        
+
         final_results = []
         for filtr, M in product(filtrs, M_three_channels):
             M_padded = self.geometry.pad(M, pad_value=-1, padding=1)

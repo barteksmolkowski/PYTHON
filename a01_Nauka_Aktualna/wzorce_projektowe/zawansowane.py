@@ -9,6 +9,7 @@ class MetaprogramowaniePodstawy(Protocol):
     def specyfika_classmethod(self): ...
     def pokaz_kod_automatu(self): ...
 
+
 class LekcjaBebechyPythona(MetaprogramowaniePodstawy, __BazaNauki__):
     def pokaz_kod_automatu(self) -> None:
         print("=== WZORZEC PANCERNEGO DEKORATORA KLASY (2026) ===")
@@ -34,22 +35,37 @@ class LekcjaBebechyPythona(MetaprogramowaniePodstawy, __BazaNauki__):
         print("VARS(CLS) VS CLS.__DICT__")
         print("vars(cls) to oficjalny interfejs Pythona (czysty i czytelny).")
         print("cls.__dict__ to surowy dostęp do bebechów klasy.")
-        print("Obie metody pokazują to samo, ale vars() jest bezpieczniejszym standardem w 2026 roku.")
-        print("Pamiętaj: w obu zobaczysz systemowe klucze (__module__, __doc__), które trzeba odfiltrować.\n")
+        print(
+            "Obie metody pokazują to samo, ale vars() jest bezpieczniejszym standardem w 2026 roku."
+        )
+        print(
+            "Pamiętaj: w obu zobaczysz systemowe klucze (__module__, __doc__), które trzeba odfiltrować.\n"
+        )
 
     def problem_modyfikacji_slownika(self) -> None:
         print("PROBLEM Z LIST(VARS(CLS).ITEMS())")
-        print("Próba zmiany klasy (setattr) w trakcie pętli po vars(cls).items() wywoła błąd.")
-        print("Python nie pozwala zmieniać rozmiaru słownika, który aktualnie przeglądasz.")
+        print(
+            "Próba zmiany klasy (setattr) w trakcie pętli po vars(cls).items() wywoła błąd."
+        )
+        print(
+            "Python nie pozwala zmieniać rozmiaru słownika, który aktualnie przeglądasz."
+        )
         print("Rozwiązanie: list(...) tworzy kopię (snapshot) kluczy.")
-        print("Dzięki temu możesz bezpiecznie dekorować metody 'w locie' bez zatrzymania programu.\n")
+        print(
+            "Dzięki temu możesz bezpiecznie dekorować metody 'w locie' bez zatrzymania programu.\n"
+        )
 
     def specyfika_classmethod(self) -> None:
         print("DLACZEGO CLASSMETHOD JEST SPECJALNY W VARS(CLS)?")
-        print("Metoda z @classmethod nie jest zwykłą funkcją (callable) w słowniku klasy.")
+        print(
+            "Metoda z @classmethod nie jest zwykłą funkcją (callable) w słowniku klasy."
+        )
         print("W vars(cls) widnieje jako obiekt typu 'classmethod' (deskryptor).")
         print("Aby ją udekorować, musisz sięgnąć głębiej do atrybutu .__func__.")
-        print("Po udekorowaniu musisz ją ponownie opakować w classmethod(), inaczej straci dostęp do 'cls'.\n")
+        print(
+            "Po udekorowaniu musisz ją ponownie opakować w classmethod(), inaczej straci dostęp do 'cls'.\n"
+        )
+
 
 if __name__ == "__main__":
-    LekcjaBebechyPythona(True) 
+    LekcjaBebechyPythona(True)

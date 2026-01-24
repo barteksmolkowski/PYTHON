@@ -9,15 +9,21 @@ from .common import TypeMatrix
 class __GrayScaleProcessing__(ABC):
     @overload
     @abstractmethod
-    def convert_color_space(self, M: TypeMatrix, to_gray: Literal[True] = True) -> TypeMatrix: ...
+    def convert_color_space(
+        self, M: TypeMatrix, to_gray: Literal[True] = True
+    ) -> TypeMatrix: ...
     @overload
     @abstractmethod
-    def convert_color_space(self, M: TypeMatrix, to_gray: Literal[False]) -> TypeMatrix: ...
+    def convert_color_space(
+        self, M: TypeMatrix, to_gray: Literal[False]
+    ) -> TypeMatrix: ...
     @abstractmethod
-    def convert_color_space(self, M: TypeMatrix, to_gray: bool = True) -> TypeMatrix: pass
+    def convert_color_space(self, M: TypeMatrix, to_gray: bool = True) -> TypeMatrix:
+        pass
+
 
 class GrayScaleProcessing(__GrayScaleProcessing__):
-    def convert_color_space(self, M, to_gray = True):
+    def convert_color_space(self, M, to_gray=True):
         if to_gray:
             weights = np.array([0.299, 0.587, 0.114])
             return np.dot(M[..., :3], weights).astype(np.uint8)

@@ -6,6 +6,7 @@ class __HOG__(ABC):
     def extract(self, matrix: TypeMatrix) -> List[float]:
         pass
 
+
 class HOG(__HOG__):
     def extract(self, matrix: TypeMatrix) -> List[float]:
         pass

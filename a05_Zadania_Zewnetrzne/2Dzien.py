@@ -1,5 +1,6 @@
 import sys
 
+
 def is_invalid(num: int) -> bool:
     s = str(num)
     n = len(s)
@@ -11,6 +12,7 @@ def is_invalid(num: int) -> bool:
                 return True
     return False
 
+
 def suma_invalid(range_str: str) -> int:
     a, b = map(int, range_str.split("-"))
     suma = 0
@@ -18,6 +20,7 @@ def suma_invalid(range_str: str) -> int:
         if is_invalid(x):
             suma += x
     return suma
+
 
 lista = []
 for linia in sys.stdin:

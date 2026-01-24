@@ -1,21 +1,27 @@
 from abc import ABC, abstractmethod
 
+
 class Edycja_(ABC):
     def __init__(self, szerokosc: int, wysokosc: int):
         self.szerokosc = szerokosc
         self.wysokosc = wysokosc
+
     @abstractmethod
     def zmienDane(self, szerokosc: int, wysokosc: int) -> None:
         pass
+
     @abstractmethod
     def zmienZapytanie(self, nowe_zapytanie: str) -> None:
         pass
+
     @abstractmethod
     def pokazZapytania(self) -> None:
         pass
+
     @abstractmethod
     def __str__(self) -> str:
         pass
+
 
 class Edycja(Edycja_):
     def __init__(self, szerokosc: int, wysokosc: int, zapytanie: str):
@@ -48,6 +54,7 @@ class Edycja(Edycja_):
             f"szerokosc = {self.szerokosc}, wysokosc = {self.wysokosc}, "
             f"aktualne zapytanie = {self.aktual_zapytanie}"
         )
+
 
 ob = Edycja(100, 200, "szerokosc")
 print(ob)

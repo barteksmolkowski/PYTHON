@@ -5,6 +5,7 @@ from itertools import product
 from functools import wraps
 import os
 
+
 class MatrixRGB:
     def __init__(self, data):
         if data is None or not isinstance(data, list) or len(data) == 0:
@@ -32,6 +33,7 @@ class MatrixRGB:
             matrices[idx] = tuple_weight[0] if len(tuple_weight) == 1 else tuple_weight
         return matrices
 
+
 class Multiplication:
     @staticmethod
     def matrix_checking(func):
@@ -54,9 +56,12 @@ class Multiplication:
             shapeB = get_shape(B)
 
             if shapeA != shapeB:
-                raise ValueError(f"Matrices have different shapes: {shapeA} vs {shapeB}")
+                raise ValueError(
+                    f"Matrices have different shapes: {shapeA} vs {shapeB}"
+                )
 
             return func(*args, **kwargs)
+
         return wrapper
 
     @staticmethod
@@ -90,6 +95,7 @@ class Multiplication:
             else:
                 result[i].append(sum_)
         return result
+
 
 class Reading:
     def __init__(self):
