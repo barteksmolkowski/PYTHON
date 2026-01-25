@@ -1,55 +1,57 @@
-from abc import ABC, abstractmethod
-from typing import Tuple, Literal, overload
+from typing import Any, Literal, Protocol, Tuple, overload
 
 import numpy as np
 
+Mtx = np.ndarray
+Range = Tuple[float, float]
 
-class __Normalization__(ABC):
-    @abstractmethod
-    def normalize(
-        self, M: np.ndarray, old_range: Tuple[int, int], new_range: Tuple[int, int]
-    ) -> np.ndarray:
-        pass
-
-    @abstractmethod
-    def z_score_normalization(self, M: np.ndarray) -> np.ndarray:
-        pass
+class NormalizationProtocol(Protocol):
+    def normalize(self, M: Mtx, old_r: Range = (0, 255), new_r: Range = (0, 1)) -> Mtx: ...
+    
+    def z_score_normalization(self, M: Mtx) -> Mtx: ...
 
     @overload
-    @abstractmethod
-    def process(self, M: np.ndarray, use_z_score: Literal[True]) -> np.ndarray: ...
+    def process(self, M: Mtx, use_z_score: Literal[True]) -> Mtx: ...
+    
+    @overload
+    def process(self, M: Mtx, use_z_score: Literal[False], old_r: Range, new_r: Range) -> Mtx: ...
+    
+    def process(self, M: Mtx, use_z_score: bool, old_r: Any, new_r: Any) -> Mtx: ...
+
+
+class Normalization:
+    def normalize(self, M: Mtx, old_r: Range = (0, 255), new_r: Range = (0, 1)) -> Mtx:
+        denominator = old_r[1] - old_r[0]
+        
+        if denominator == 0:
+            return np.zeros_like(M, dtype=np.float32) + new_r[0]
+            
+        return (M - old_r[0]) * (new_r[1] - new_r[0]) / denominator + new_r[0]
+
+    def z_score_normalization(self, M: Mtx) -> Mtx:
+        mu = np.mean(M)
+        sigma = np.std(M)
+        
+        eps = 1e-8
+        return (M - mu) / (sigma + eps)
 
     @overload
-    @abstractmethod
+    def process(self, M: Mtx, use_z_score: Literal[True]) -> Mtx: ...
+
+    @overload
+    def process(self, M: Mtx, use_z_score: Literal[False], old_r: Range, new_r: Range) -> Mtx: ...
+
     def process(
-        self,
-        M: np.ndarray,
-        use_z_score: Literal[False],
-        old_r: Tuple[int, int],
-        new_r: Tuple[int, int],
-    ) -> np.ndarray: ...
-
-    @abstractmethod
-    def process(
-        self,
-        M: np.ndarray,
-        use_z_score: bool = True,
-        old_r: Tuple[int, int] = (0, 255),
-        new_r: Tuple[int, int] = (0, 1),
-    ) -> np.ndarray:
-        pass
-
-
-class Normalization(__Normalization__):
-    def normalize(self, M, old_r=(0, 255), new_r=(0, 1)):
-        return (M - old_r[0]) * (new_r[1] - new_r[0]) / (old_r[1] - old_r[0]) + new_r[0]
-
-    def z_score_normalization(self, M):
-        mu, sigma = M.mean(), M.std()
-        return (M - mu) / sigma if sigma != 0 else M - mu
-
-    def process(self, M, use_z_score=True, old_r=(0, 255), new_r=(0, 1)):
-        M_np = np.array(M, dtype=float)
+        self, 
+        M: Mtx, 
+        use_z_score: bool = True, 
+        old_r: Range = (0, 255), 
+        new_r: Range = (0, 1)
+    ) -> Mtx:
+        M_np = np.asanyarray(M, dtype=np.float32)
+        
         if use_z_score:
             return self.z_score_normalization(M_np)
+        
         return self.normalize(M_np, old_r, new_r)
+    
