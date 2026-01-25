@@ -1,31 +1,34 @@
-from abc import ABC, abstractmethod
-from typing import Literal, overload
+from typing import Literal, Protocol, overload
 
 import numpy as np
 
-from .common import TypeMatrix
+Mtx = np.ndarray
 
-
-class __GrayScaleProcessing__(ABC):
+class GrayScaleProtocol(Protocol):
     @overload
-    @abstractmethod
-    def convert_color_space(
-        self, M: TypeMatrix, to_gray: Literal[True] = True
-    ) -> TypeMatrix: ...
+    def convert_color_space(self, M: Mtx, to_gray: Literal[True] = True) -> Mtx: ...
+    
     @overload
-    @abstractmethod
-    def convert_color_space(
-        self, M: TypeMatrix, to_gray: Literal[False]
-    ) -> TypeMatrix: ...
-    @abstractmethod
-    def convert_color_space(self, M: TypeMatrix, to_gray: bool = True) -> TypeMatrix:
-        pass
+    def convert_color_space(self, M: Mtx, to_gray: Literal[False]) -> Mtx: ...
+    
+    def convert_color_space(self, M: Mtx, to_gray: bool = True) -> Mtx: ...
 
 
-class GrayScaleProcessing(__GrayScaleProcessing__):
-    def convert_color_space(self, M, to_gray=True):
+class GrayScaleProcessing:
+    def convert_color_space(self, M: Mtx, to_gray: bool = True) -> Mtx:
+        M_arr = np.asanyarray(M)
+
         if to_gray:
-            weights = np.array([0.299, 0.587, 0.114])
-            return np.dot(M[..., :3], weights).astype(np.uint8)
+            weights = np.array([0.299, 0.587, 0.114], dtype=np.float32)
+            
+            if M_arr.ndim == 2:
+                return M_arr.astype(np.uint8)
+                
+            return np.dot(M_arr[..., :3], weights).astype(np.uint8)
+        
         else:
-            return np.stack([M] * 3, axis=-1).astype(np.uint8)
+            if M_arr.ndim == 3:
+                return M_arr.astype(np.uint8)
+                
+            return np.stack([M_arr] * 3, axis=-1).astype(np.uint8)
+
