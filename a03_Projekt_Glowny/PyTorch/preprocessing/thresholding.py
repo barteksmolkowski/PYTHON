@@ -44,7 +44,7 @@ class Thresholding:
         
         padded = np.pad(M, pad_width=pad_size, mode="reflect")
 
-        windows = np.lib.stride_tricks.sliding_window_view(padded, (block_size, block_size))
+        windows = sliding_window_view(padded, (block_size, block_size))
 
         local_means = np.sum(windows * kernel, axis=(2, 3)) / np.sum(kernel)
 
