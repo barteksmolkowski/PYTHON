@@ -1,91 +1,67 @@
-from abc import ABC, abstractmethod
+from typing import Protocol
 
 import numpy as np
 
-from .common import TypeMatrix
+Mtx = np.ndarray
+Size = tuple[int, int]
 
-
-class __ImageGeometry__(ABC):
-    @abstractmethod
-    def pad(self, matrix: TypeMatrix, pad_value: int, pad: int) -> TypeMatrix:
-        pass
-
-    @abstractmethod
-    def resize(self, matrix: TypeMatrix, new_size: tuple[int, int]) -> TypeMatrix:
-        pass
-
-    @abstractmethod
+class ImageGeometryProtocol(Protocol):
+    def resize(self, M: Mtx, new_size: Size) -> Mtx: ...
     def prepare_standard_geometry(
-        self,
-        M: TypeMatrix,
-        target_size: tuple[int, int] = (28, 28),
-        padding: int = 2,
-        pad_value: int = 0,
-    ) -> np.ndarray:
-        pass
+        self, M: Mtx, target_size: Size = (28, 28), padding: int = 2, pad_value: int = 0
+    ) -> Mtx: ...
 
+class ImageGeometry:
+    def _upscale(self, M: Mtx, target_size: Size) -> Mtx:
+        curr_h, curr_w = M.shape[:2]
+        new_h, new_w = target_size
+        
+        scale_h = max(1, new_h // curr_h)
+        scale_w = max(1, new_w // curr_w)
+        
+        return np.repeat(np.repeat(M, scale_h, axis=0), scale_w, axis=1)
 
-class ImageGeometry(__ImageGeometry__):
-    def pad(self, M, pad_val=-1, pad=1):
-        h, w = len(M), len(M[0])
-        new_h, new_w = h + 2 * pad, w + 2 * pad
-        new_M = np.full((new_h, new_w), pad_val)
-        new_M[pad : pad + h, pad : pad + w] = M
-        return new_M
+    def _downscale_vectorized(self, M: Mtx, target_size: Size) -> Mtx:
+        curr_h, curr_w = M.shape[:2]
+        new_h, new_w = target_size
+        
+        h_f, w_f = curr_h // new_h, curr_w // new_w
+        
+        if h_f > 1 and w_f > 1:
+            return M[:new_h * h_f, :new_w * w_f].reshape(
+                new_h, h_f, new_w, w_f
+            ).mean(axis=(1, 3)).astype(np.uint8)
+        
+        return M[:new_h, :new_w]
 
-    def _upscale_vertical(self, M, new_size):
-        return np.repeat(M, new_size[0] // len(M), axis=0)
+    def resize(self, M: Mtx, new_size: Size = (28, 28)) -> Mtx:
+        M_arr = np.asanyarray(M)
+        curr_h, curr_w = M_arr.shape[:2]
+        new_h, new_w = new_size
 
-    def _upscale_horizontal(self, M, new_size):
-        return np.repeat(M, new_size[1] // len(M[0]), axis=1)
-
-    def _prepare_supersampling(self, M, new_size):
-        if len(M) < new_size[0]:
-            M = self._upscale_vertical(M, new_size)
-        if len(M[0]) < new_size[1]:
-            M = self._upscale_horizontal(M, new_size)
-        return M
-
-    def _calculate_range_list(self, curr_size, new_size):
-        rangeList = [[], []]
-        for axis in range(2):
-            step = curr_size[axis] / new_size[axis]
-            for i in range(new_size[axis]):
-                start = int(round(i * step))
-                end = int(round((i + 1) * step))
-                if i == new_size[axis] - 1:
-                    end = curr_size[axis]
-                if start == end and end < curr_size[axis]:
-                    end += 1
-                rangeList[axis].append((start, end - 1))
-        return rangeList
-
-    def _apply_averaging(self, M, range_list):
-        return np.array(
-            [
-                [np.mean(M[y_s : y_e + 1, x_s : x_e + 1]) for x_s, x_e in range_list[1]]
-                for y_s, y_e in range_list[0]
-            ]
-        ).astype(int)
-
-    def _downscale_to_target(self, M, new_size):
-        curr_h, curr_w = len(M), len(M[0])
         if (curr_h, curr_w) == new_size:
-            return M
+            return M_arr
 
-        range_list = self._calculate_range_list((curr_h, curr_w), new_size)
-        return self._apply_averaging(M, range_list)
+        if curr_h < new_h or curr_w < new_w:
+            M_arr = self._upscale(M_arr, new_size)
+            
+        return self._downscale_vectorized(M_arr, new_size)
 
-    def resize(self, M, new_size=(28, 28)):
-        return self._downscale_to_target(
-            self._prepare_supersampling(np.array(M), new_size), new_size
-        )
+    def prepare_standard_geometry(
+        self, M: Mtx, target_size: Size = (28, 28), padding: int = 2, pad_value: int = 0
+    ) -> Mtx:
 
-    def prepare_standard_geometry(self, M, target_size, padding, pad_value):
-        return self.pad(
-            self.resize(
-                M, (target_size[0] - 2 * padding, target_size[1] - 2 * padding)
-            ),
-            pad_val=pad_value,
-            pad=padding,
-        )
+        inner_h = target_size[0] - 2 * padding
+        inner_w = target_size[1] - 2 * padding
+        
+        if inner_h <= 0 or inner_w <= 0:
+            return np.full(target_size, pad_value, dtype=np.uint8)
+
+        resized = self.resize(M, (inner_h, inner_w))
+
+        return np.pad(
+            resized,
+            pad_width=padding,
+            mode='constant',
+            constant_values=pad_value
+        ).astype(np.uint8)
