@@ -19,9 +19,10 @@ __all__ = [
 ClassType = TypeVar("ClassType")
 FunctionType = TypeVar("FunctionType", bound=Callable[..., Any])
 
-CT = type[ClassType] 
+CT = type[ClassType]
 FuncDec = Callable[[FunctionType], FunctionType]
 ClsDec = Callable[[CT], CT]
+
 
 def auto_fill_color(func: FunctionType) -> FunctionType:
     @wraps(func)
@@ -132,20 +133,23 @@ def parameter_complement(func: FunctionType) -> FunctionType:
 @overload
 def apply_to_methods(decorators: list[FuncDec], method_names: list[str]) -> ClsDec: ...
 
+
 @overload
 def apply_to_methods(decorators: FuncDec, method_names: str) -> ClsDec: ...
+
 
 @overload
 def apply_to_methods(decorators: FuncDec, method_names: list[str]) -> ClsDec: ...
 
+
 @overload
 def apply_to_methods(decorators: list[FuncDec], method_names: str) -> ClsDec: ...
 
+
 def apply_to_methods(
-    decorators: Union[FuncDec, list[FuncDec]], 
-    method_names: Union[str, list[str]]
+    decorators: Union[FuncDec, list[FuncDec]], method_names: Union[str, list[str]]
 ) -> ClsDec:
-    
+
     decs = decorators if isinstance(decorators, list) else [decorators]
     names = method_names if isinstance(method_names, list) else [method_names]
 
