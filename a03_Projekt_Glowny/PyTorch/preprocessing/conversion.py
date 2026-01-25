@@ -1,25 +1,23 @@
-from abc import ABC, abstractmethod
+from typing import Protocol
 
 import numpy as np
 from PIL import Image
 
-from .common import MatrixChannels
+Mtx = np.ndarray
+MtxList = list[np.ndarray]
+FilePath = str
 
+class ImageConverterProtocol(Protocol):
+    def get_channels_from_file(self, path: FilePath) -> MtxList: ...
 
-class __ImageToMatrixConverter__(ABC):
-    @abstractmethod
-    def get_channels_from_file(self, path: str) -> MatrixChannels:
-        pass
+class ImageToMatrixConverter:
+    def _convert_image_to_matrix(self, path: FilePath) -> Mtx:
+        with Image.open(path) as img:
+            return np.array(img.convert("RGB")).astype(np.uint8)
 
+    def _separate_channels(self, M: Mtx) -> MtxList:
+        return [M[..., i] for i in range(3)]
 
-class ImageToMatrixConverter(__ImageToMatrixConverter__):
-    def _separate_channels(self, M):
-        return [M[:, :, i] for i in range(3)]
-
-    def _convert_image_to_matrix(self, path):
-        img = Image.open(path).convert("RGB")
-        return np.array(img)
-
-    def get_channels_from_file(self, path):
-        M = self._convert_image_to_matrix(path)
-        return self._separate_channels(M)
+    def get_channels_from_file(self, path: FilePath) -> MtxList:
+        matrix = self._convert_image_to_matrix(path)
+        return self._separate_channels(matrix)
