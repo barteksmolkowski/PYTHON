@@ -3,7 +3,7 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 from numba import jit, njit
 
-from a01_Nauka_Aktualna import __BazaNauki__
+from a00_System_Baza.baza_nauki import __BazaNauki__
 
 
 @runtime_checkable
