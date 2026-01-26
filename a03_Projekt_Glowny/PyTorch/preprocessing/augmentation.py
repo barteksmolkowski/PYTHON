@@ -33,8 +33,12 @@ OptBool = Optional[bool]
 OptFloat = Optional[float]
 Kernel = int
 
+
 class DataAugmentationProtocol(Protocol):
-    def augment(self, M: Mtx, repeats: int) -> MtxList: ...
+    def augment(
+        self, M: Mtx, repeats: Optional[int] = None, debug: bool = False
+    ) -> MtxList: ...
+
 
 class GeometryAugmentationProtocol(Protocol):
     def horizontal_flip(self, M: Mtx) -> Mtx: ...
@@ -47,32 +51,55 @@ class GeometryAugmentationProtocol(Protocol):
     def rotate_90(self, M: Mtx, is_right: bool = True) -> Mtx: ...
 
     def rotate_small_angle(
-        self, M: Mtx, h: int, w: int, params: dict, 
-        is_right: OptBool = None, angle: OptFloat = None, fill: Optional[int] = None, 
-        **kwargs
+        self,
+        M: Mtx,
+        h: int,
+        w: int,
+        params: dict,
+        is_right: OptBool = None,
+        angle: OptFloat = None,
+        fill: Optional[int] = None,
+        **kwargs,
     ) -> Mtx: ...
 
     def random_shift(
-        self, M: Mtx, h: int, w: int, max_dx_dy: Optional[tuple[int, int]] = None, 
-        fill: Optional[int] = None, is_right: OptBool = None, 
-        **kwargs
+        self,
+        M: Mtx,
+        h: int,
+        w: int,
+        max_dx_dy: Optional[tuple[int, int]] = None,
+        fill: Optional[int] = None,
+        is_right: OptBool = None,
+        **kwargs,
     ) -> Mtx: ...
+
 
 class NoiseAugmentationProtocol(Protocol):
     def gaussian_noise(self, M: Mtx, std: OptFloat = None) -> Mtx: ...
     def salt_and_pepper(self, M: Mtx, prob: OptFloat = None) -> Mtx: ...
 
+
 class MorphologyAugmentationProtocol(Protocol):
     def dilate(self, M: Mtx, kernel_size: Kernel, **kwargs: Any) -> Mtx: ...
-    def erode(self, M: Mtx, kernel_size: Kernel, fill: int = 0, **kwargs: Any) -> Mtx: ...
-    def get_boundaries(self, M: Mtx, kernel_size: Kernel, fill: int = 0, **kwargs: Any) -> Mtx: ...
-    def morphology_filter(
-        self, M: Mtx, kernel_size: Kernel, fill: int = 0, 
-        mode: Literal["open", "close"] = "open", **kwargs: Any
+    def erode(
+        self, M: Mtx, kernel_size: Kernel, fill: int = 0, **kwargs: Any
     ) -> Mtx: ...
+    def get_boundaries(
+        self, M: Mtx, kernel_size: Kernel, fill: int = 0, **kwargs: Any
+    ) -> Mtx: ...
+    def morphology_filter(
+        self,
+        M: Mtx,
+        kernel_size: Kernel,
+        fill: int = 0,
+        mode: Literal["open", "close"] = "open",
+        **kwargs: Any,
+    ) -> Mtx: ...
+
 
 class ParameterProviderProtocol(Protocol):
     def get_value(self) -> float: ...
+
 
 class DataAugmentation(DataAugmentationProtocol):
     def __init__(
@@ -106,18 +133,18 @@ class DataAugmentation(DataAugmentationProtocol):
                 ),
             ],
             "Morphology": [
-                (lambda m: self.morphology.dilate(m, kernel_size=3), "Dilate"),
-                (lambda m: self.morphology.erode(m, kernel_size=3), "Erode"),
+                (lambda m: self.morphology.dilate(m, kernel_size=2), "Dilate"),
+                (lambda m: self.morphology.erode(m, kernel_size=2), "Erode"),
                 (
-                    lambda m: self.morphology.get_boundaries(m, kernel_size=3),
+                    lambda m: self.morphology.get_boundaries(m, kernel_size=2),
                     "Boundaries",
                 ),
                 (
-                    lambda m: self.morphology.morphology_filter(m, 3, mode="open"),
+                    lambda m: self.morphology.morphology_filter(m, 2, mode="open"),
                     "Opening",
                 ),
                 (
-                    lambda m: self.morphology.morphology_filter(m, 3, mode="close"),
+                    lambda m: self.morphology.morphology_filter(m, 2, mode="close"),
                     "Closing",
                 ),
             ],
@@ -136,11 +163,14 @@ class DataAugmentation(DataAugmentationProtocol):
 
     @get_number_repeats
     def augment(
-        self, M: np.ndarray, repeats: Optional[int] = None, debug: bool = False
-    ) -> List[np.ndarray]:
+        self, M: Mtx, repeats: Optional[int] = None, debug: bool = False
+    ) -> MtxList:
 
-        result: List[np.ndarray] = []
-        histories: List[List[str]] = []
+        if repeats is None:
+            repeats = 1
+
+        result: MtxList = []
+        histories: list[list[str]] = []
 
         M_arr = np.asanyarray(M).astype(np.uint8)
         orig_px = np.sum(M_arr > 0)
@@ -152,15 +182,36 @@ class DataAugmentation(DataAugmentationProtocol):
             if "Boundaries" in names and "Erode" in names:
                 continue
 
+            if "Dilate" in names and "Closing" in names:
+                continue
+
+            if "V-Flip" in names:
+                continue
+
+            if "Gauss-Noise" in names and "S&P-Noise" in names:
+                continue
+
             new_m = M_arr.copy()
             for func, _ in pipeline:
                 new_m = func(new_m)
 
-            temp_test = self.morphology.erode(new_m, kernel_size=3)
+            temp_test = self.morphology.erode(new_m, kernel_size=2)
             final_px = np.sum(temp_test > 0)
             retention = final_px / orig_px if orig_px > 0 else 0
 
             if 0.4 < retention < 2.5:
+
+                coords = np.argwhere(new_m > 0)
+                if coords.size > 0:
+                    y_min, x_min = coords.min(axis=0)
+                    y_max, x_max = coords.max(axis=0)
+                    h, w = (y_max - y_min + 1), (x_max - x_min + 1)
+
+                    aspect_ratio = h / (w + 1e-8)
+
+                    if aspect_ratio < 1.2:
+                        continue
+
                 result.append(new_m.astype(np.uint8))
                 if debug:
                     histories.append(names)
@@ -225,7 +276,9 @@ class DataAugmentation(DataAugmentationProtocol):
                 print("[!] Błąd! Wpisz liczby oddzielone przecinkami lub 'q'.")
 
 
-@apply_to_methods([auto_fill_color, with_dimensions], ["rotate_small_angle", "random_shift"])
+@apply_to_methods(
+    [auto_fill_color, with_dimensions], ["rotate_small_angle", "random_shift"]
+)
 class GeometryAugmentation(GeometryAugmentationProtocol):
     def horizontal_flip(self, M: np.ndarray) -> np.ndarray:
         return np.asanyarray(M)[:, ::-1]
@@ -329,6 +382,7 @@ class NoiseAugmentation(NoiseAugmentationProtocol):
         result[random_map > (1 - actual_prob / 2)] = 255
         return result
 
+
 @apply_to_methods(auto_fill_color, ["erode", "get_boundaries", "morphology_filter"])
 @apply_to_methods(kernel_data_processing, ["dilate", "erode", "get_boundaries"])
 class MorphologyAugmentation(MorphologyAugmentationProtocol):
@@ -339,11 +393,17 @@ class MorphologyAugmentation(MorphologyAugmentationProtocol):
         op_func: Optional[Callable[[np.ndarray, Tuple[int, int]], np.ndarray]] = None,
         pad_value: int = 0,
     ) -> np.ndarray:
-
         M_arr = np.asanyarray(M, dtype=np.uint8)
-        pad_size = (kernel_size - 1) // 2
+        h, w = M_arr.shape[:2]
+
+        pad_before = (kernel_size - 1) // 2
+        pad_after = kernel_size // 2
+
         padded = np.pad(
-            M_arr, pad_width=pad_size, mode="constant", constant_values=pad_value
+            M_arr,
+            pad_width=((pad_before, pad_after), (pad_before, pad_after)),
+            mode="constant",
+            constant_values=pad_value,
         )
 
         windows = sliding_window_view(padded, (kernel_size, kernel_size))
@@ -351,7 +411,8 @@ class MorphologyAugmentation(MorphologyAugmentationProtocol):
         if op_func is None:
             op_func = lambda win, axes: np.max(win, axis=axes)
 
-        return op_func(windows, (2, 3)).astype(np.uint8)
+        result = op_func(windows, (2, 3)).astype(np.uint8)
+        return result[:h, :w]
 
     def dilate(self, M: np.ndarray, kernel_size: int, **kwargs) -> np.ndarray:
         return self._sliding_window_engine(M, kernel_size, pad_value=0)
@@ -367,13 +428,17 @@ class MorphologyAugmentation(MorphologyAugmentationProtocol):
         )
 
     def get_boundaries(
-        self, M: np.ndarray, kernel_size: int, fill: int = 0, **kwargs
+        self, M: np.ndarray, kernel_size: int = 2, **kwargs
     ) -> np.ndarray:
-        eroded = self.erode(M, kernel_size, fill=fill)
-        boundaries = M - eroded
-        if fill != 0:
-            boundaries[boundaries == 0] = fill
-        return boundaries.astype(np.uint8)
+        M_arr = np.asanyarray(M)
+
+        # Przekazujemy **kwargs dalej do erode, bo dekorator mógł tam
+        # przygotować np. specyficzny 'fill' (kolor tła)
+        eroded = self.erode(M_arr, kernel_size=kernel_size, **kwargs)
+
+        # Logika odejmowania (Senior Standard: int16 + clip)
+        diff = M_arr.astype(np.int16) - eroded.astype(np.int16)
+        return np.clip(diff, 0, 255).astype(np.uint8)
 
     def morphology_filter(
         self,
