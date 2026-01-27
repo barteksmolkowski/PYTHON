@@ -7,8 +7,10 @@ Mtx = np.ndarray
 MtxList = list[np.ndarray]
 FilePath = str
 
+
 class ImageConverterProtocol(Protocol):
     def get_channels_from_file(self, path: FilePath) -> MtxList: ...
+
 
 class ImageToMatrixConverter:
     def _convert_image_to_matrix(self, path: FilePath) -> Mtx:

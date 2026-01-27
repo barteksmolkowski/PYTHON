@@ -122,18 +122,23 @@ class DataAugmentation(DataAugmentationProtocol):
             ],
             "Rotation": [
                 (lambda m: self.geometry.rotate_90(m, is_right=True), "Rot90-R"),
-                (lambda m: self.geometry.rotate_small_angle(m, is_right=True), "RotSmall-R"),
+                (
+                    lambda m: self.geometry.rotate_small_angle(m, is_right=True),
+                    "RotSmall-R",
+                ),
             ],
             "Morphology": [
                 (lambda m: self.morphology.dilate(m, kernel_size=1), "Dilate"),
-                (lambda m: self.morphology.morphology_filter(m, 1, mode="close"), "Closing"),
+                (
+                    lambda m: self.morphology.morphology_filter(m, 1, mode="close"),
+                    "Closing",
+                ),
             ],
             "Noise_Shift": [
                 (lambda m: self.noise.salt_and_pepper(m), "S&P-Noise"),
                 (lambda m: self.geometry.random_shift(m, is_right=True), "Shift-R"),
             ],
         }
-
 
     def _pick_random_pipeline(self) -> List[Tuple[Callable, str]]:
         available_keys = list(self._cached_groups.keys())
@@ -163,15 +168,20 @@ class DataAugmentation(DataAugmentationProtocol):
 
             if names.count("Rotation") > 1:
                 continue
-                
+
             rot_names = [n for n in names if "Rot" in n]
             if len(rot_names) > 1:
                 continue
 
-            if "Boundaries" in names and "Erode" in names: continue
-            if "Dilate" in names and "Erode" in names: continue
-            if "V-Flip" in names: continue
-            if any("Rot" in n for n in names) and any(m in names for m in ["Dilate", "Erode", "Opening"]):
+            if "Boundaries" in names and "Erode" in names:
+                continue
+            if "Dilate" in names and "Erode" in names:
+                continue
+            if "V-Flip" in names:
+                continue
+            if any("Rot" in n for n in names) and any(
+                m in names for m in ["Dilate", "Erode", "Opening"]
+            ):
                 continue
 
             new_m = M_arr.copy()
@@ -183,12 +193,12 @@ class DataAugmentation(DataAugmentationProtocol):
 
             if 0.2 < retention < 3.0:
                 coords = np.argwhere(new_m > 0)
-                
+
                 if coords.size > 0:
                     y_min, x_min = coords.min(axis=0)
                     y_max, x_max = coords.max(axis=0)
                     h, w = (y_max - y_min + 1), (x_max - x_min + 1)
-                    
+
                     aspect_ratio = h / (w + 1e-8)
 
                     if aspect_ratio < 0.2:

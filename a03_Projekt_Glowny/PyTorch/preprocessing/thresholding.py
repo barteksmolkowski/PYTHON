@@ -39,9 +39,9 @@ class Thresholding:
     ) -> Mtx:
         M = np.asanyarray(matrix)
         pad_size = block_size // 2
-        
+
         kernel = self._generate_gaussian_kernel(pad_size + 1)
-        
+
         padded = np.pad(M, pad_width=pad_size, mode="reflect")
 
         windows = sliding_window_view(padded, (block_size, block_size))
