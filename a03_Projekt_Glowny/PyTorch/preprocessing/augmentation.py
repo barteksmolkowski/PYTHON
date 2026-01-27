@@ -247,14 +247,15 @@ class DataAugmentation(DataAugmentationProtocol):
 
         plt.show()
 
-        print("\n" + "=" * 50 + " TRYB INTERAKTYWNEGO DEBUGOWANIA (2026) " + "=" * 50)
+        print("\n" + "=" * 50 + " INTERACTIVE DEBUG MODE (2026) " + "=" * 50)
 
         while True:
             user_input = input(
-                "\nPodaj numery rysunków, które wyglądają źle (np. 1, 5, 12) lub 'q' aby wyjść: "
+                "\nEnter plot indices that look incorrect (e.g., 1, 5, 12) or 'q' to quit: "
             )
 
             if user_input.lower() == "q":
+                print("Exiting Debug Mode...")
                 break
 
             try:
@@ -264,16 +265,16 @@ class DataAugmentation(DataAugmentationProtocol):
 
                 for idx in selected_indices:
                     if 0 <= idx < len(histories):
-                        print(f"\n[RYSUNEK {idx+1}] Ścieżka operacji:")
+                        print(f"\n[PLOT {idx+1}] Operation Trace:")
                         steps = histories[idx]
                         formatted_history = " -> ".join(
                             [f"[{i+1}] {name}" for i, name in enumerate(steps)]
                         )
                         print(f"  {formatted_history}")
                     else:
-                        print(f"[!] Numer {idx+1} jest poza zakresem.")
+                        print(f"[!] Index {idx+1} is out of range.")
             except ValueError:
-                print("[!] Błąd! Wpisz liczby oddzielone przecinkami lub 'q'.")
+                print("[!] Error! Please enter comma-separated numbers or 'q'.")
 
 
 @apply_to_methods(
@@ -432,11 +433,8 @@ class MorphologyAugmentation(MorphologyAugmentationProtocol):
     ) -> np.ndarray:
         M_arr = np.asanyarray(M)
 
-        # Przekazujemy **kwargs dalej do erode, bo dekorator mógł tam
-        # przygotować np. specyficzny 'fill' (kolor tła)
         eroded = self.erode(M_arr, kernel_size=kernel_size, **kwargs)
 
-        # Logika odejmowania (Senior Standard: int16 + clip)
         diff = M_arr.astype(np.int16) - eroded.astype(np.int16)
         return np.clip(diff, 0, 255).astype(np.uint8)
 
