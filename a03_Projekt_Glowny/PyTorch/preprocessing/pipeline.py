@@ -1,8 +1,8 @@
-from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Protocol
+
+import numpy as np
 
 from .augmentation import DataAugmentation
-from .common import MatrixChannels, TypeMatrix
 from .conversion import ImageToMatrixConverter
 from .convolution import ConvolutionActions
 from .geometry import ImageGeometry
@@ -12,48 +12,61 @@ from .normalization import Normalization
 from .pooling import Pooling
 from .thresholding import Thresholding
 
-
-class __TransformPipeline__(ABC):
-    @abstractmethod
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def apply(self, matrix: TypeMatrix) -> TypeMatrix:
-        pass
+Mtx = np.ndarray
+MtxList = list[np.ndarray]
 
 
-class __ImageDataPreprocessing__(ABC):
-    @abstractmethod
-    def preprocess(self, path: str) -> Optional[MatrixChannels]:
-        pass
+class TransformPipelineProtocol(Protocol):
+    def apply(self, matrix: Mtx) -> MtxList: ...
 
 
-class TransformPipeline(__TransformPipeline__):
-    def __init__(self):
-        self.image_handler = ImageHandler()
-        self.gray_scale_processing = GrayScaleProcessing()
-        self.geometry = ImageGeometry()
-        self.normalization = Normalization()
-        self.augmentation = DataAugmentation()
-        self.pooling = Pooling()
-        self.thresholding = Thresholding()
-        self.convolution = ConvolutionActions()
-
-    def apply(self, matrix: TypeMatrix) -> TypeMatrix:
-        """def kolejności obróbki zdjęcia."""
-        x = matrix
-        return x
+class ImageDataPreprocessingProtocol(Protocol):
+    def preprocess(self, path: str) -> Optional[MtxList]: ...
 
 
-class ImageDataPreprocessing(__ImageDataPreprocessing__):
-    def __init__(self):
+class TransformPipeline:
+    def __init__(
+        self,
+        geometry: Optional[ImageGeometry] = None,
+        normalization: Optional[Normalization] = None,
+        grayscale: Optional[GrayScaleProcessing] = None,
+        thresholding: Optional[Thresholding] = None,
+        convolution: Optional[ConvolutionActions] = None,
+        pooling: Optional[Pooling] = None,
+        augmentation: Optional[DataAugmentation] = None,
+    ):
+        self.geometry = geometry or ImageGeometry()
+        self.normalization = normalization or Normalization()
+        self.grayscale = grayscale or GrayScaleProcessing()
+        self.thresholding = thresholding or Thresholding()
+        self.convolution = convolution or ConvolutionActions(geometry=self.geometry)
+        self.pooling = pooling or Pooling()
+        self.augmentation = augmentation or DataAugmentation()
+
+    def apply(self, matrix: Mtx) -> MtxList:
+        x = self.grayscale.convert_color_space(matrix, to_gray=True)
+        x = self.geometry.prepare_standard_geometry(x, target_size=(28, 28))
+
+        augmented_samples = self.augmentation.augment(x)
+
+        final_batch = [
+            self.normalization.process(sample, use_z_score=True)
+            for sample in augmented_samples
+        ]
+        return final_batch
+
+
+class ImageDataPreprocessing:
+    def __init__(self, pipeline: Optional[TransformPipeline] = None):
         self.handler = ImageHandler()
         self.converter = ImageToMatrixConverter()
-        self.pipeline = TransformPipeline()
+        self.pipeline = pipeline or TransformPipeline()
 
-    def preprocess(self, path: str) -> Optional[MatrixChannels]:
-        """
-        Główny punkt wejścia do przetwarzania konkretnego pliku.
-        """
-        return None
+    def preprocess(self, path: str) -> Optional[MtxList]:
+        try:
+            channels = self.converter.get_channels_from_file(path)
+            return [self.pipeline.apply(ch) for ch in channels]
+
+        except Exception as e:
+            print(f"[CRITICAL] Preprocessing Error: {e}")
+            return None
