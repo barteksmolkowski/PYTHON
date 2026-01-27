@@ -122,39 +122,18 @@ class DataAugmentation(DataAugmentationProtocol):
             ],
             "Rotation": [
                 (lambda m: self.geometry.rotate_90(m, is_right=True), "Rot90-R"),
-                (lambda m: self.geometry.rotate_90(m, is_right=False), "Rot90-L"),
-                (
-                    lambda m: self.geometry.rotate_small_angle(m, is_right=True),
-                    "RotSmall-R",
-                ),
-                (
-                    lambda m: self.geometry.rotate_small_angle(m, is_right=False),
-                    "RotSmall-L",
-                ),
+                (lambda m: self.geometry.rotate_small_angle(m, is_right=True), "RotSmall-R"),
             ],
             "Morphology": [
-                (lambda m: self.morphology.dilate(m, kernel_size=2), "Dilate"),
-                (lambda m: self.morphology.erode(m, kernel_size=2), "Erode"),
-                (
-                    lambda m: self.morphology.get_boundaries(m, kernel_size=2),
-                    "Boundaries",
-                ),
-                (
-                    lambda m: self.morphology.morphology_filter(m, 2, mode="open"),
-                    "Opening",
-                ),
-                (
-                    lambda m: self.morphology.morphology_filter(m, 2, mode="close"),
-                    "Closing",
-                ),
+                (lambda m: self.morphology.dilate(m, kernel_size=1), "Dilate"),
+                (lambda m: self.morphology.morphology_filter(m, 1, mode="close"), "Closing"),
             ],
             "Noise_Shift": [
-                (lambda m: self.noise.gaussian_noise(m), "Gauss-Noise"),
                 (lambda m: self.noise.salt_and_pepper(m), "S&P-Noise"),
                 (lambda m: self.geometry.random_shift(m, is_right=True), "Shift-R"),
-                (lambda m: self.geometry.random_shift(m, is_right=False), "Shift-L"),
             ],
         }
+
 
     def _pick_random_pipeline(self) -> List[Tuple[Callable, str]]:
         available_keys = list(self._cached_groups.keys())
@@ -165,7 +144,6 @@ class DataAugmentation(DataAugmentationProtocol):
     def augment(
         self, M: Mtx, repeats: Optional[int] = None, debug: bool = False
     ) -> MtxList:
-
         if repeats is None:
             repeats = 1
 
@@ -175,46 +153,50 @@ class DataAugmentation(DataAugmentationProtocol):
         M_arr = np.asanyarray(M).astype(np.uint8)
         orig_px = np.sum(M_arr > 0)
 
-        while len(result) < repeats:
+        attempts = 0
+        max_attempts = repeats * 100
+
+        while len(result) < repeats and attempts < max_attempts:
+            attempts += 1
             pipeline = self._pick_random_pipeline()
             names = [name for _, name in pipeline]
 
-            if "Boundaries" in names and "Erode" in names:
+            if names.count("Rotation") > 1:
+                continue
+                
+            rot_names = [n for n in names if "Rot" in n]
+            if len(rot_names) > 1:
                 continue
 
-            if "Dilate" in names and "Closing" in names:
-                continue
-
-            if "V-Flip" in names:
-                continue
-
-            if "Gauss-Noise" in names and "S&P-Noise" in names:
+            if "Boundaries" in names and "Erode" in names: continue
+            if "Dilate" in names and "Erode" in names: continue
+            if "V-Flip" in names: continue
+            if any("Rot" in n for n in names) and any(m in names for m in ["Dilate", "Erode", "Opening"]):
                 continue
 
             new_m = M_arr.copy()
             for func, _ in pipeline:
                 new_m = func(new_m)
 
-            temp_test = self.morphology.erode(new_m, kernel_size=2)
-            final_px = np.sum(temp_test > 0)
+            final_px = np.sum(new_m > 0)
             retention = final_px / orig_px if orig_px > 0 else 0
 
-            if 0.4 < retention < 2.5:
-
+            if 0.2 < retention < 3.0:
                 coords = np.argwhere(new_m > 0)
+                
                 if coords.size > 0:
                     y_min, x_min = coords.min(axis=0)
                     y_max, x_max = coords.max(axis=0)
                     h, w = (y_max - y_min + 1), (x_max - x_min + 1)
-
+                    
                     aspect_ratio = h / (w + 1e-8)
 
-                    if aspect_ratio < 1.2:
+                    if aspect_ratio < 0.2:
                         continue
 
-                result.append(new_m.astype(np.uint8))
-                if debug:
-                    histories.append(names)
+                    result.append(new_m.astype(np.uint8))
+                    if debug:
+                        histories.append(names)
 
         if debug:
             self._display_debug_plots(result, histories)
