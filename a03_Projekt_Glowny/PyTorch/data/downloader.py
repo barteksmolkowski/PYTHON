@@ -1,77 +1,61 @@
-from abc import ABC, abstractmethod
-from typing import overload, Literal, List, Union, Dict
+from typing import Literal, Protocol, Union, overload
 
-import requests
-import json
-import os
+import numpy as np
 
-
-class __DataDownloader__(ABC):
-    @abstractmethod
-    def fetch_data(self, source: str, force_reload: bool = False) -> Union[List, Dict]:
-        """Pobiera JSON lub listę linków"""
-        pass
-
-    @abstractmethod
-    def save_to_disk(self, data: Union[List, Dict]) -> bool:
-        """Zapisuje pobrane pliki binarnie (Requests .content)"""
-        pass
+Mtx = np.ndarray
+MtxList = list[np.ndarray]
 
 
-class __DataProcessor__(ABC):
-    @abstractmethod
-    def process_batch(self, items: List, grayscale: bool = True) -> bool:
-        """Przetwarza pobrane zdjęcia na macierze"""
-        pass
+class DataDownloaderProtocol(Protocol):
+    def fetch_data(
+        self, source: str, force_reload: bool = False
+    ) -> Union[list, dict]: ...
+    def save_to_disk(self, data: Union[list, dict]) -> bool: ...
 
 
-class __ProjectManager__(ABC):
+class DataProcessorProtocol(Protocol):
+    def process_batch(self, items: list, grayscale: bool = True) -> bool: ...
+
+
+class ProjectManagerProtocol(Protocol):
     @overload
-    @abstractmethod
-    def run_pipeline(self, source_url: str, fast_mode: Literal[True]) -> bool:
-        """Gdy wybieramy tryb szybki, zwracamy tylko status powodzenia."""
-        ...
+    def run_pipeline(self, source_url: str, fast_mode: Literal[True]) -> bool: ...
 
     @overload
-    @abstractmethod
-    def run_pipeline(self, source_url: str, fast_mode: Literal[False] = False) -> str:
-        """Gdy wybieramy tryb pełny, zwracamy szczegółowy raport tekstowy."""  # niech ai wytlumaczy dlaczego
-        ...
+    def run_pipeline(self, source_url: str, fast_mode: Literal[False]) -> str: ...
 
-    @abstractmethod
     def run_pipeline(
         self, source_url: str, fast_mode: bool = False
-    ) -> Union[str, bool]:
-        """
-        Główna metoda implementująca logikę.
-        """
-        pass
+    ) -> Union[str, bool]: ...
 
 
-class DataDownloader(__DataDownloader__):
-    def fetch_data(self, source, force_reload=False):
-        0
+class DataDownloader:
+    def fetch_data(self, source: str, force_reload: bool = False) -> Union[list, dict]:
+        return []
 
-    def save_to_disk(self, data):
-        0
+    def save_to_disk(self, data: Union[list, dict]) -> bool:
+        return True
 
 
-class DataProcessor(__DataProcessor__):
-    def process_batch(self, items, grayscale=True):
-        0
+class DataProcessor:
+    def process_batch(self, items: list, grayscale: bool = True) -> bool:
+        return True
 
 
 class ProjectManager:
     def __init__(self):
-        data_downloader = DataDownloader()
-        self.fetch_data = data_downloader.fetch_data
-        self.save_to_disk = data_downloader.save_to_disk
+        self.downloader: DataDownloaderProtocol = DataDownloader()
+        self.processor: DataProcessorProtocol = DataProcessor()
 
-        data_processor = DataProcessor()
-        self.process_batch = data_processor.process_batch
+    @overload
+    def run_pipeline(self, source_url: str, fast_mode: Literal[True]) -> bool: ...
 
-    def run_pipeline(self, source_url: str, fast_mode: bool = False) -> str:
-        """
-        Główna metoda uruchamiająca cały proces.
-        fast_mode: jeśli True, pomija niektóre kroki dla szybkości.
-        """
+    @overload
+    def run_pipeline(self, source_url: str, fast_mode: Literal[False]) -> str: ...
+
+    def run_pipeline(
+        self, source_url: str, fast_mode: bool = False
+    ) -> Union[str, bool]:
+        if fast_mode:
+            return True
+        return "Full Detailed Report 2026: Success"
