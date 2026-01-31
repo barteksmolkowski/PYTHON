@@ -1,9 +1,13 @@
 import types
 
-from layers import *
-from model import *
-from tensor import *
 
+def build_all(local_vars: dict) -> list[str]:
+    _trash = dir(types.ModuleType("base"))
+
+    # dokonczyc i wszedzie w init dac to cos
+
+
+"""
 base_attrs = dir(types.ModuleType("base"))
 base_attrs.extend(
     [
@@ -30,3 +34,5 @@ if "base_attrs" in locals():
     del base_attrs
 if "imported_names" in locals():
     del imported_names
+
+"""

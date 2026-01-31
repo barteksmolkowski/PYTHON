@@ -1,8 +1,10 @@
 import types
 
-from layers import *
-from model import *
-from tensor import *
+from .a1 import *
+from .b2 import *
+from .c3 import *
+
+# zmienic nazwy na prawidłowe warstwy ai
 
 base_attrs = dir(types.ModuleType("base"))
 base_attrs.extend(
