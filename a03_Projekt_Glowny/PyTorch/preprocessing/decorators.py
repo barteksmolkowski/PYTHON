@@ -5,16 +5,7 @@ from typing import Any, Callable, Optional, TypeVar, Union, cast, overload
 
 import numpy as np
 
-__all__ = [
-    "auto_fill_color",
-    "with_dimensions",
-    "prepare_angle",
-    "prepare_values",
-    "get_number_repeats",
-    "kernel_data_processing",
-    "parameter_complement",
-    "apply_to_methods",
-]
+from common_utils import build_all
 
 ClassType = TypeVar("ClassType")
 FunctionType = TypeVar("FunctionType", bound=Callable[..., Any])
@@ -163,3 +154,6 @@ def apply_to_methods(
         return cls
 
     return class_rebuilder
+
+
+__all__ = build_all(locals())
