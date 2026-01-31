@@ -12,6 +12,7 @@ class __BazaNauki__:
         aktywne=True,
         metody: Optional[list] = None,
         na_odwrot_metody: bool = False,
+        pokaz_docstring: bool = True,
     ):
         if not aktywne:
             print(f">>> SEKCJA POMINIĘTA: {self.__class__.__name__}")
@@ -23,9 +24,18 @@ class __BazaNauki__:
             if callable(getattr(self, n)) and not n.startswith("_") and n != "run"
         ]
 
-        wybrane_metody = metody if metody is not None else wszystkie_publiczne
+        wybrane_metody = [
+            n
+            for n in wszystkie_publiczne
+            if (n in (metody or wszystkie_publiczne)) != na_odwrot_metody
+        ]
 
-        print(f"\n>>> URUCHAMIAM SEKCJĘ: {self.__class__.__name__} <<<")
+        print(
+            f"\n>>> URUCHAMIAM SEKCJĘ: {self.__class__.__name__} [{len(wybrane_metody)} tematów] <<<"
+        )
+
+        if pokaz_docstring and self.__doc__:
+            print(f"[OPIS] {self.__doc__.strip()}")
 
         for nazwa in wszystkie_publiczne:
             wartosc = getattr(self, nazwa)
