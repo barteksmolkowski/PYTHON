@@ -1,36 +1,36 @@
-import random
-from abc import ABC, abstractmethod
-from typing import List, Literal, Optional, Tuple, overload
+from typing import Protocol
 
 import numpy as np
-from PIL import Image
 
-from .common import MatrixChannels, TypeIMG, TypeMatrix
+Mtx = np.ndarray
+MtxList = list[np.ndarray]
 
 
-# ZMIENIC NA SZARE
-class __BatchProcessing__(ABC):
-    @abstractmethod
+class BatchProcessingProtocol(Protocol):
     def create_batches(
-        self, data: list[TypeMatrix], batch_size: int, shuffle: bool = True
-    ) -> list[list[TypeMatrix]]:
+        self, data: MtxList, batch_size: int, shuffle: bool = True
+    ) -> list[MtxList]: ...
 
-        pass
-
-    @abstractmethod
-    def process_batch(self, paths: List[str]) -> List[TypeMatrix]:
-        pass
+    def process_batch(self, paths: list[str]) -> MtxList: ...
 
 
-class BatchProcessing(__BatchProcessing__):
-    def create_batches(self, data, batch_size, shuffle):
+class BatchProcessing:
+    def create_batches(
+        self, data: MtxList, batch_size: int, shuffle: bool
+    ) -> list[MtxList]:
         """
-        data - Lista zdjec
-        batch_size ile zdj w 1 partii
+        data - lista macierzy (zdjec)
+        batch_size - ile macierzy w 1 partii
         shuffle - czy mieszac czy nie
 
-        return generator
+        return lista paczek macierzy
         """
+        pass
 
-    def process_batch(self, paths):
-        0
+    def process_batch(self, paths: list[str]) -> MtxList:
+        """
+        paths - lista sciezek do plikow
+
+        return lista macierzy (MtxList)
+        """
+        return []
