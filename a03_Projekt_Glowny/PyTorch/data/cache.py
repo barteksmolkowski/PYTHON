@@ -1,4 +1,4 @@
-from typing import Optional, Protocol, runtime_checkable
+from typing import Optional, Protocol
 
 import numpy as np
 
@@ -14,17 +14,7 @@ class CacheManagerProtocol(Protocol):
 
 class CacheManager:
     def cache(self, data: MtxList) -> bool:
-        """
-        data - lista macierzy do zapisania w pamięci podręcznej
-
-        return bool (czy zapis się udał)
-        """
-        return False
+        ...
 
     def load(self) -> Optional[MtxList]:
-        """
-        wczytuje dane z pamięci podręcznej
-
-        return MtxList lub None jeśli cache jest pusty
-        """
-        return None
+        ...

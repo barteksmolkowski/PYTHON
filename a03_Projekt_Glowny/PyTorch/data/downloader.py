@@ -56,6 +56,4 @@ class ProjectManager:
     def run_pipeline(
         self, source_url: str, fast_mode: bool = False
     ) -> Union[str, bool]:
-        if fast_mode:
-            return True
-        return "Full Detailed Report 2026: Success"
+        ...
