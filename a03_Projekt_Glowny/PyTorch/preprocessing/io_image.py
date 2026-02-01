@@ -22,7 +22,7 @@ class ImageHandlerProtocol(Protocol):
     def handle_file(
         self, path: FilePath, data: None = None, is_save_mode: Literal[False] = False
     ) -> Mtx: ...
-    
+
     @overload
     def handle_file(
         self, path: FilePath, data: Mtx, is_save_mode: Literal[True]
@@ -62,7 +62,9 @@ class ImageHandler:
     ) -> Optional[Mtx]:
         if is_save_mode:
             if data is None:
-                raise ValueError("[ERROR] The 'data' parameter is required in write mode!")
+                raise ValueError(
+                    "[ERROR] The 'data' parameter is required in write mode!"
+                )
             self.save(data, path)
             return None
         return self.open_image(path)[0]
