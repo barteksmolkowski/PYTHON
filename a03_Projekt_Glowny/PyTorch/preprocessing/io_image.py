@@ -1,12 +1,12 @@
-from typing import Literal, Optional, Protocol, Union, overload
+from typing import Literal, Optional, Protocol, TypeAlias, Union, overload
 
 import numpy as np
 from PIL import Image
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
-FilePath = str
-ImgData = Union[Mtx, MtxList]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
+FilePath: TypeAlias = str
+ImgData: TypeAlias = Union[Mtx, MtxList]
 
 
 class ImageHandlerProtocol(Protocol):
@@ -22,10 +22,12 @@ class ImageHandlerProtocol(Protocol):
     def handle_file(
         self, path: FilePath, data: None = None, is_save_mode: Literal[False] = False
     ) -> Mtx: ...
+    
     @overload
     def handle_file(
         self, path: FilePath, data: Mtx, is_save_mode: Literal[True]
     ) -> None: ...
+
     def handle_file(
         self, path: FilePath, data: Optional[Mtx] = None, is_save_mode: bool = False
     ) -> Optional[Mtx]: ...
@@ -36,16 +38,12 @@ class ImageHandler:
         with Image.open(path) as img:
             img_rgb = img.convert("RGB")
             width, height = img_rgb.size
-
             array = np.array(img_rgb).astype(np.uint8)
-
             return array, width, height
 
     def save(self, data: ImgData, path: FilePath) -> None:
         array = np.asanyarray(data).astype(np.uint8)
-
         mode = "RGB" if array.ndim == 3 else "L"
-
         img_pil = Image.fromarray(array, mode=mode)
         img_pil.save(path)
 
@@ -53,6 +51,7 @@ class ImageHandler:
     def handle_file(
         self, path: FilePath, data: None = None, is_save_mode: Literal[False] = False
     ) -> Mtx: ...
+
     @overload
     def handle_file(
         self, path: FilePath, data: Mtx, is_save_mode: Literal[True]
@@ -61,14 +60,9 @@ class ImageHandler:
     def handle_file(
         self, path: FilePath, data: Optional[Mtx] = None, is_save_mode: bool = False
     ) -> Optional[Mtx]:
-
         if is_save_mode:
             if data is None:
-                raise ValueError(
-                    "[ERROR] The 'data' parameter is required in write mode!"
-                )
+                raise ValueError("[ERROR] The 'data' parameter is required in write mode!")
             self.save(data, path)
             return None
-
-        matrix, _, _ = self.open_image(path)
-        return matrix
+        return self.open_image(path)[0]
