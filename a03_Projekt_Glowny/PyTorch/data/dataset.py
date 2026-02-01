@@ -1,9 +1,9 @@
-from typing import Protocol, Union
+from typing import Protocol, TypeAlias, Union
 
 import numpy as np
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
 
 class DatasetProtocol(Protocol):
@@ -13,8 +13,6 @@ class DatasetProtocol(Protocol):
 
 
 class Dataset:
-    def __len__(self) -> int:
-        ...
+    def __len__(self) -> int: ...
 
-    def __getitem__(self, index: int) -> Union[Mtx, MtxList]:
-        ...
+    def __getitem__(self, index: int) -> Union[Mtx, MtxList]: ...

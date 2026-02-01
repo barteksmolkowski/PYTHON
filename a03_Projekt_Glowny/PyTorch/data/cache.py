@@ -1,9 +1,9 @@
-from typing import Optional, Protocol
+from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
 
 class CacheManagerProtocol(Protocol):
@@ -13,8 +13,6 @@ class CacheManagerProtocol(Protocol):
 
 
 class CacheManager:
-    def cache(self, data: MtxList) -> bool:
-        ...
+    def cache(self, data: MtxList) -> bool: ...
 
-    def load(self) -> Optional[MtxList]:
-        ...
+    def load(self) -> Optional[MtxList]: ...

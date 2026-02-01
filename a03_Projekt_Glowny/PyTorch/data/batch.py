@@ -1,9 +1,9 @@
-from typing import Protocol
+from typing import Protocol, TypeAlias
 
 import numpy as np
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
 
 class BatchProcessingProtocol(Protocol):
@@ -17,8 +17,6 @@ class BatchProcessingProtocol(Protocol):
 class BatchProcessing:
     def create_batches(
         self, data: MtxList, batch_size: int, shuffle: bool
-    ) -> list[MtxList]:
-        ...
+    ) -> list[MtxList]: ...
 
-    def process_batch(self, paths: list[str]) -> MtxList:
-        ...
+    def process_batch(self, paths: list[str]) -> MtxList: ...

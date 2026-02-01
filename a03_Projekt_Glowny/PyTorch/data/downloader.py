@@ -1,9 +1,9 @@
-from typing import Literal, Protocol, Union, overload
+from typing import Literal, Protocol, TypeAlias, Union, overload
 
 import numpy as np
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
 
 class DataDownloaderProtocol(Protocol):
@@ -55,5 +55,4 @@ class ProjectManager:
 
     def run_pipeline(
         self, source_url: str, fast_mode: bool = False
-    ) -> Union[str, bool]:
-        ...
+    ) -> Union[str, bool]: ...
