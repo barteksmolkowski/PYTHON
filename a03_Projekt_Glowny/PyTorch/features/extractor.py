@@ -1,9 +1,9 @@
-from typing import Protocol
+from typing import Protocol, TypeAlias
 
 import numpy as np
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
 
 class FeatureExtractorProtocol(Protocol):
