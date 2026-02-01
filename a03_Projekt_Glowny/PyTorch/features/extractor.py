@@ -1,22 +1,22 @@
-from .common import ABC, List, TypeMatrix, abstractmethod
+from typing import Protocol
+
+import numpy as np
+
+Mtx = np.ndarray
+MtxList = list[np.ndarray]
 
 
-class __FeatureExtraction__(ABC):
-    @abstractmethod
-    def extract_edges(self, matrix: TypeMatrix) -> TypeMatrix:
-        pass
-
-    @abstractmethod
-    def extract_features(self, matrix: TypeMatrix) -> List[float]:
-        pass
+class FeatureExtractorProtocol(Protocol):
+    def extract_edges(self, matrix: Mtx) -> Mtx: ...
+    def extract_features(self, matrix: Mtx) -> list[float]: ...
 
 
-class FeatureExtraction(__FeatureExtraction__):
+class FeatureExtraction:
     def __init__(self):
-        0
+        pass
 
-    def extract_edges(self, matrix: TypeMatrix) -> TypeMatrix:
-        0
+    def extract_edges(self, matrix: Mtx) -> Mtx:
+        return matrix
 
-    def extract_features(self, matrix: TypeMatrix) -> List[float]:
-        0
+    def extract_features(self, matrix: Mtx) -> list[float]:
+        return [0.0]

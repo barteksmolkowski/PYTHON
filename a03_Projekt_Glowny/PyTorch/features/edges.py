@@ -1,17 +1,20 @@
-from .common import ABC, TypeMatrix, abstractmethod
+from typing import Protocol
+
+import numpy as np
+
+Mtx = np.ndarray
+MtxList = list[np.ndarray]
 
 
-class __EdgeDetector__(ABC):
-    @abstractmethod
-    def apply(self, matrix: TypeMatrix) -> TypeMatrix:
-        pass
+class EdgeDetectorProtocol(Protocol):
+    def apply(self, matrix: Mtx) -> Mtx: ...
 
 
-class Sobel(__EdgeDetector__):
-    def apply(self, matrix: TypeMatrix) -> TypeMatrix:
-        pass
+class Sobel:
+    def apply(self, matrix: Mtx) -> Mtx:
+        return matrix
 
 
-class Prewitt(__EdgeDetector__):
-    def apply(self, matrix: TypeMatrix) -> TypeMatrix:
-        pass
+class Prewitt:
+    def apply(self, matrix: Mtx) -> Mtx:
+        return matrix
