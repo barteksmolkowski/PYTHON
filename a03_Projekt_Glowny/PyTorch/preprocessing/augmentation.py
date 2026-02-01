@@ -8,6 +8,7 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
+    TypeAlias,
     overload,
 )
 
@@ -26,12 +27,13 @@ from .decorators import (
     with_dimensions,
 )
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
-OptBool = Optional[bool]
-OptFloat = Optional[float]
-Kernel = int
+OptBool: TypeAlias = Optional[bool]
+OptFloat: TypeAlias = Optional[float]
+
+Kernel: TypeAlias = int
 
 
 class DataAugmentationProtocol(Protocol):

@@ -1,10 +1,10 @@
-from typing import Optional, Protocol
+from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
-Mtx = np.ndarray
-Kernel = tuple[int, int]
+Mtx: TypeAlias = np.ndarray
+Kernel: TypeAlias = tuple[int, int]
 
 
 class PoolingProtocol(Protocol):

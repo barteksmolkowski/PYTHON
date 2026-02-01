@@ -1,11 +1,11 @@
-from typing import Protocol
+from typing import Protocol, TypeAlias
 
 import numpy as np
 from PIL import Image
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
-FilePath = str
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
+FilePath: TypeAlias = str
 
 
 class ImageConverterProtocol(Protocol):

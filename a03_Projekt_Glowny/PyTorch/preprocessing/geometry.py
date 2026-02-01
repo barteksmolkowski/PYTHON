@@ -1,9 +1,9 @@
-from typing import Protocol, Tuple
+from typing import Protocol, Tuple, TypeAlias
 
 import numpy as np
 
-Mtx = np.ndarray
-Size = Tuple[int, int]
+Mtx: TypeAlias = np.ndarray
+Size: TypeAlias = Tuple[int, int]
 
 
 class ImageGeometryProtocol(Protocol):

@@ -1,4 +1,4 @@
-from typing import Optional, Protocol
+from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
 
@@ -12,8 +12,8 @@ from .normalization import Normalization
 from .pooling import Pooling
 from .thresholding import Thresholding
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
 
 class TransformPipelineProtocol(Protocol):

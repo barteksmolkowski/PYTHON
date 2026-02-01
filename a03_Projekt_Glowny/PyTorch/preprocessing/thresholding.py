@@ -1,11 +1,11 @@
-from typing import Literal, Protocol, overload
+from typing import Literal, Protocol, TypeAlias, overload
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 from .decorators import parameter_complement
 
-Mtx = np.ndarray
+Mtx: TypeAlias = np.ndarray
 
 
 class ThresholdingProtocol(Protocol):

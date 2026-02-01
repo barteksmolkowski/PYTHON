@@ -1,13 +1,13 @@
 from itertools import product
-from typing import Optional, Protocol
+from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
 from .geometry import ImageGeometry
 
-Mtx = np.ndarray
-MtxList = list[np.ndarray]
+Mtx: TypeAlias = np.ndarray
+MtxList: TypeAlias = list[np.ndarray]
 
 
 class GeometryProtocol(Protocol):

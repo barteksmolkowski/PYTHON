@@ -1,8 +1,8 @@
-from typing import Literal, Protocol, overload
+from typing import Literal, Protocol, TypeAlias, overload
 
 import numpy as np
 
-Mtx = np.ndarray
+Mtx: TypeAlias = np.ndarray
 
 
 class GrayScaleProtocol(Protocol):

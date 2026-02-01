@@ -1,7 +1,7 @@
 import math
 import random
 from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union, cast, overload
+from typing import Any, Callable, Optional, TypeAlias, TypeVar, Union, cast, overload
 
 import numpy as np
 
@@ -10,9 +10,9 @@ from common_utils import build_all
 ClassType = TypeVar("ClassType")
 FunctionType = TypeVar("FunctionType", bound=Callable[..., Any])
 
-CT = type[ClassType]
-FuncDec = Callable[[FunctionType], FunctionType]
-ClsDec = Callable[[CT], CT]
+CT: TypeAlias = type[ClassType]
+FuncDec: TypeAlias = Callable[[FunctionType], FunctionType]
+ClsDec: TypeAlias = Callable[[CT], CT]
 
 
 def auto_fill_color(func: FunctionType) -> FunctionType:
