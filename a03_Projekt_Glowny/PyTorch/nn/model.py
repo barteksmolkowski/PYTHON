@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from .layers.base import LayerProtocol
 from .tensor import Mtx
@@ -21,6 +21,10 @@ class NeuralNetwork:
 
     def predict(self, x: Mtx) -> Mtx: ...
 
-    def save(self, path: str) -> None: ...
+    def save(self, path: Optional[str] = None) -> None:
+        """save zrobić w .npz"""
+        ...
 
-    def load(self, path: str) -> None: ...
+    def load(self, path: Optional[str] = None) -> None:
+        """load zrobić w .npz"""
+        ...
