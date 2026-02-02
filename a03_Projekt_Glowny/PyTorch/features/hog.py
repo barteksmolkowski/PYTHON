@@ -1,8 +1,8 @@
-from typing import Protocol
+from typing import Protocol, TypeAlias
 
 import numpy as np
 
-Mtx = np.ndarray
+Mtx: TypeAlias = np.ndarray
 
 
 class HOGProtocol(Protocol):
