@@ -1,4 +1,7 @@
+import logging
 import types
+
+from rich.logging import RichHandler
 
 
 def build_all(local_vars: dict) -> list[str]:
@@ -24,3 +27,14 @@ def build_all(local_vars: dict) -> list[str]:
         and not isinstance(obj, types.ModuleType)
         and (n.startswith("__") or "_" in n or n.isupper())
     ]
+
+
+def setup_logging(file_name="engine_history.log"):
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(name)s] %(message)s",
+        handlers=[
+            RichHandler(rich_tracebacks=True),
+            logging.FileHandler(file_name),
+        ],
+    )
