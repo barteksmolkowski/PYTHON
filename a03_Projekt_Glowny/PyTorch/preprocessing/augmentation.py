@@ -103,7 +103,7 @@ class ParameterProviderProtocol(Protocol):
     def get_value(self) -> float: ...
 
 
-class DataAugmentation(DataAugmentationProtocol):
+class DataAugmentation:
     def __init__(
         self,
         geometry: Optional[GeometryAugmentationProtocol] = None,
@@ -274,7 +274,7 @@ class DataAugmentation(DataAugmentationProtocol):
 @apply_to_methods(
     [auto_fill_color, with_dimensions], ["rotate_small_angle", "random_shift"]
 )
-class GeometryAugmentation(GeometryAugmentationProtocol):
+class GeometryAugmentation:
     def horizontal_flip(self, M: np.ndarray) -> np.ndarray:
         return np.asanyarray(M)[:, ::-1]
 
@@ -347,7 +347,7 @@ class RandomUniformProvider:
         return random.uniform(self.low, self.high)
 
 
-class NoiseAugmentation(NoiseAugmentationProtocol):
+class NoiseAugmentation:
     def __init__(
         self,
         std_provider: Optional[ParameterProviderProtocol] = None,
@@ -380,7 +380,7 @@ class NoiseAugmentation(NoiseAugmentationProtocol):
 
 @apply_to_methods(auto_fill_color, ["erode", "get_boundaries", "morphology_filter"])
 @apply_to_methods(kernel_data_processing, ["dilate", "erode", "get_boundaries"])
-class MorphologyAugmentation(MorphologyAugmentationProtocol):
+class MorphologyAugmentation:
     def _sliding_window_engine(
         self,
         M: np.ndarray,
