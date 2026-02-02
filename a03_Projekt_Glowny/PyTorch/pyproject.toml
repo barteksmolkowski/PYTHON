@@ -2,3 +2,14 @@
 profile = "black"
 line_length = 88
 multi_line_output = 3
+
+[project]
+name = "neural-digit-recognizer"
+version = "0.1.0"
+dependencies = [
+    "numpy",
+    "pillow",
+    "rich",
+    "pytest",
+    "tqdm"
+]
