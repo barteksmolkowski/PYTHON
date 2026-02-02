@@ -8,10 +8,13 @@ Project of a custom image processing and neural network building library from sc
 project/
 │
 ├── common_utils.py          ← (Mózg systemu: funkcja build_all)
+├── config.json
 ├── core.py                  ← (Łącznik: BrainEngine / Facade)
 ├── main.py                  ← (Punkt startowy aplikacji)
 ├── pyproject.toml           ← (Zależności i konfiguracja pip/pytest)
+├── README.md                ← Opis projektu
 ├── settings.json            ← (Parametry: ścieżki, learning_rate, size)
+├── test_pipeline.py         ← interactive_inspection
 │
 ├── preprocessing/           ← PRZETWARZANIE WSTĘPNE
 │   ├── __init__.py
@@ -70,7 +73,8 @@ project/
     │   ├── __init__.py
     │   ├── test_augmentation.py
     │   ├── test_conversion.py
-    │   ├── test_convolution.py
+    │   ├── test_convolution.
+    │   ├── test_decorators.py
     │   ├── test_geometry.py   
     │   ├── test_grayscale.py     
     │   ├── test_io_image.py
