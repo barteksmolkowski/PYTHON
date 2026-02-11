@@ -37,13 +37,12 @@ class GitLog_Protocol(Protocol):
     def file_analysis_log(self) -> None: ...
     def search_log(self) -> None: ...
     def visual_log(self) -> None: ...
-
     def log_all_branches(self) -> None: ...
     def log_decorate(self) -> None: ...
-    def log_graph(self) -> None: ...
-    def config_alias(self) -> None: ...
+    def config_call_alias_ll(self) -> None: ...
     def config_alias_global(self) -> None: ...
     def call_alias_ll(self) -> None: ...
+    def log_graph(self) -> None: ...
 
 
 class GitUndo_Protocol(Protocol):
@@ -192,12 +191,12 @@ class GitLog(__BazaNauki__, GitLog_Protocol):
     file_analysis_log - git log -p / --stat,
     search_log - git log --grep / -S,
     visual_log - git log --graph --all,
-
     log_all_branches - git log --all (wszystkie branche),
     log_decorate - git log --decorate (tagi/head),
-    config_alias_ll - ustawienie aliasu grafu,
+    config_call_alias_ll - ustawienie i opis aliasu ll,
     config_alias_global - globalny alias xyz,
-    call_alias_ll - wywołanie git ll
+    call_alias_ll - wywołanie git ll,
+    log_graph - proste rysowanie grafu
     """
 
     def basic_log(self):
@@ -216,7 +215,9 @@ class GitLog(__BazaNauki__, GitLog_Protocol):
         )
 
     def visual_log(self):
-        print("Widok graficzny:\n-> git log --oneline --graph --all # Drzewo gałęzi")
+        print(
+            "Widok graficzny (Full):\n-> git log --oneline --graph --all # Drzewo wszystkich gałęzi"
+        )
 
     def log_all_branches(self):
         print(
@@ -228,19 +229,24 @@ class GitLog(__BazaNauki__, GitLog_Protocol):
             "Informacje o tagach i HEAD:\n-> git log --decorate # Pokazuje wskaźniki gałęzi i tagów przy commitach"
         )
 
-    def config_alias_ll(self):
+    def config_call_alias_ll(self):
         print(
-            "Ustawienie potężnego aliasu grafu:\n-> git config alias.ll 'log --oneline --all --decorate --graph'"
+            "Konfiguracja aliasu:\n-> git config alias.ll 'log --oneline --all --decorate --graph'\n# Pozwala używać 'git ll' zamiast długiej komendy"
         )
 
     def config_alias_global(self):
         print(
-            "Definiowanie aliasu dostępnego wszędzie (globalnie):\n-> git config --global alias.xyz 'string'"
+            "Definiowanie aliasu globalnego:\n-> git config --global alias.xyz 'string' # Alias dostępny we WSZYSTKICH projektach"
         )
 
     def call_alias_ll(self):
         print(
-            "Wywołanie zdefiniowanego aliasu:\n-> git ll # Skrót do pełnego widoku graficznego"
+            "Wywołanie aliasu:\n-> git ll # Skrót do pełnego widoku graficznego (musi być wcześniej skonfigurowany)"
+        )
+
+    def log_graph(self):
+        print(
+            "Prosty graf:\n-> git log --graph # Rysuje drzewo zmian dla obecnej gałęzi"
         )
 
 
@@ -405,6 +411,6 @@ class GitBranchMerge(__BazaNauki__, GitBranchMerge_Protocol):
 
 
 if __name__ == "__main__":
-    rozdzialy = [GitRefactor, GitBranchMerge]
+    moje_lekcje = [GitBasic, GitDiff, GitLog, GitUndo, GitRefactor, GitBranchMerge]
 
-    __BazaNauki__.Edukator.start(rozdzialy)
+    __BazaNauki__(interaktywne=True, lista_klas=moje_lekcje)
