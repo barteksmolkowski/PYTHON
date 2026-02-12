@@ -12,7 +12,7 @@ class GitBasic_Protocol(Protocol):
     def commit(self) -> None: ...
     def push(self) -> None: ...
     def pull(self) -> None: ...
-    def restore_and_checkout(self) -> None: ...
+    def restore_checkout_switch(self) -> None: ...
 
 
 class GitDiff_Protocol(Protocol):
@@ -70,7 +70,6 @@ class GitBranchMerge_Protocol(Protocol):
     def merge_standard(self) -> None: ...
     def merge_with_msg(self) -> None: ...
     def resolve_conflicts(self) -> None: ...
-
     def branch_move(self) -> None: ...
     def branch_list_merged(self) -> None: ...
     def branch_list_unmerged(self) -> None: ...
@@ -80,16 +79,18 @@ class GitBranchMerge_Protocol(Protocol):
 
 
 class GitBasic(__BazaNauki__, GitBasic_Protocol):
+    opis_menu = "version, config_global, init, status, add, commit, push, pull, restore_checkout_switch"
+
     """
-    version - git --version,
-    config_global - git config --global,
-    init - git init,
-    status - git status,
-    add - git add .,
-    commit - git commit -m,
-    push - git push,
-    pull - git pull,
-    restore_and_checkout - git restore / git checkout / git switch
+    version - git --version
+    config_global - git config --global
+    init - git init
+    status - git status
+    add - git add .
+    commit - git commit -m
+    push - git push
+    pull - git pull
+    restore_checkout_switch - git restore / git checkout / git switch
     """
 
     def version(self):
@@ -116,25 +117,28 @@ class GitBasic(__BazaNauki__, GitBasic_Protocol):
     def pull(self):
         print("Pobieranie zmian:\n-> git pull")
 
-    def restore_and_checkout(self):
+    def restore_checkout_switch(self):
         print(
             f"Cofanie i podróże w czasie:\n-> git restore <plik>     # Przywraca plik/cofa usunięcie\n-> git checkout <hash>    # Przejście do konkretnej wersji\n-> git switch -{" " * 11}# Powrót na główną gałąź"
         )
 
 
 class GitDiff(__BazaNauki__, GitDiff_Protocol):
+    opis_menu = "o_hash_importance, diff_standard, diff_stat, diff_shortstat, diff_patch, diff_cached, diff_kumulacja, diff_commits, diff_head_shortcuts, diff_head_relative, diff_commits_selective, diff_separator"
+
+
     """
-    o_hash_importance - info o haszach,
-    diff_standard - git diff,
-    diff_stat - git diff --stat,
-    diff_shortstat - git diff --shortstat,
-    diff_patch - git diff -p --color,
-    diff_cached - git diff --cached,
-    diff_kumulacja - git diff --stat --cached,
-    diff_commits - git diff [h1] [h2] --stat,
-    diff_head_shortcuts - git diff @^ @ / HEAD~n..,
-    diff_head_relative - git diff HEAD~n HEAD --stat/--name-only,
-    diff_commits_selective - git diff [h1] [h2] -- [path],
+    o_hash_importance - info o haszach
+    diff_standard - git diff
+    diff_stat - git diff --stat
+    diff_shortstat - git diff --shortstat
+    diff_patch - git diff -p --color
+    diff_cached - git diff --cached
+    diff_kumulacja - git diff --stat --cached
+    diff_commits - git diff [h1] [h2] --stat
+    diff_head_shortcuts - git diff @^ @ / HEAD~n..
+    diff_head_relative - git diff HEAD~n HEAD --stat/--name-only
+    diff_commits_selective - git diff [h1] [h2] -- [path]
     diff_separator - git diff -- [path]
     """
 
@@ -186,16 +190,19 @@ class GitDiff(__BazaNauki__, GitDiff_Protocol):
 
 
 class GitLog(__BazaNauki__, GitLog_Protocol):
+    opis_menu = "basic_log, file_analysis_log, search_log, visual_log, log_all_branches, log_decorate, config_call_alias_ll, config_alias_global, call_alias_ll, log_graph"
+
+
     """
-    basic_log - git log --oneline (-n),
-    file_analysis_log - git log -p / --stat,
-    search_log - git log --grep / -S,
-    visual_log - git log --graph --all,
-    log_all_branches - git log --all (wszystkie branche),
-    log_decorate - git log --decorate (tagi/head),
-    config_call_alias_ll - ustawienie i opis aliasu ll,
-    config_alias_global - globalny alias xyz,
-    call_alias_ll - wywołanie git ll,
+    basic_log - git log --oneline (-n)
+    file_analysis_log - git log -p / --stat
+    search_log - git log --grep / -S
+    visual_log - git log --graph --all
+    log_all_branches - git log --all (wszystkie branche)
+    log_decorate - git log --decorate (tagi/head)
+    config_call_alias_ll - ustawienie i opis aliasu ll
+    config_alias_global - globalny alias xyz
+    call_alias_ll - wywołanie git ll
     log_graph - proste rysowanie grafu
     """
 
@@ -251,14 +258,17 @@ class GitLog(__BazaNauki__, GitLog_Protocol):
 
 
 class GitUndo(__BazaNauki__, GitUndo_Protocol):
+    opis_menu = "quick_commit, revert_changes, revert_no_commit, restore_file_from_hash, reset_soft, reset_mixed, reset_hard, checkout_file_from_hash"
+
+
     """
-    quick_commit - git commit -am,
-    revert_changes - git revert,
-    revert_no_commit - git revert -n,
-    restore_file_from_hash - git restore -s,
-    reset_soft - git reset --soft,
-    reset_mixed - git reset --mixed,
-    reset_hard - git reset --hard,
+    quick_commit - git commit -am
+    revert_changes - git revert
+    revert_no_commit - git revert -n
+    restore_file_from_hash - git restore -s
+    reset_soft - git reset --soft
+    reset_mixed - git reset --mixed
+    reset_hard - git reset --hard
     checkout_file_from_hash - git checkout [hash] -- [file]
     """
 
@@ -304,14 +314,17 @@ class GitUndo(__BazaNauki__, GitUndo_Protocol):
 
 
 class GitRefactor(__BazaNauki__, GitRefactor_Protocol):
+    opis_menu = "quick_commit, revert_changes, revert_no_commit, restore_file_from_hash, reset_soft, reset_mixed, reset_hard, checkout_file_from_hash"
+
+
     """
-    quick_commit - git commit -am,
-    revert_changes - git revert,
-    revert_no_commit - git revert -n,
-    restore_file_from_hash - git restore -s,
-    reset_soft - git reset --soft,
-    reset_mixed - git reset --mixed,
-    reset_hard - git reset --hard,
+    quick_commit - git commit -am
+    revert_changes - git revert
+    revert_no_commit - git revert -n
+    restore_file_from_hash - git restore -s
+    reset_soft - git reset --soft
+    reset_mixed - git reset --mixed
+    reset_hard - git reset --hard
     checkout_file_from_hash - git checkout [hash] -- [file]
     """
 
@@ -352,15 +365,17 @@ class GitRefactor(__BazaNauki__, GitRefactor_Protocol):
 
 
 class GitBranchMerge(__BazaNauki__, GitBranchMerge_Protocol):
+    opis_menu = "merge_standard, merge_with_msg, resolve_conflicts, branch_move, branch_list_merged, branch_list_unmerged, branch_delete_safe, branch_delete_force, branch_from_hash"
+
     """
-    merge_standard - git merge nazwa (scala gałęzie),
-    merge_with_msg - git merge -m (własny komentarz),
-    resolve_conflicts - porada (Merge Editor / Ręcznie),
-    branch_move - git branch --move (zmiana nazwy),
-    branch_list_merged - git branch --merged (złączone),
-    branch_list_unmerged - git branch --no-merged (niezłączone),
-    branch_delete_safe - git branch -d (bezpieczne usuwanie),
-    branch_delete_force - git branch -D (siłowe usuwanie),
+    merge_standard - git merge nazwa (scala gałęzie)
+    merge_with_msg - git merge -m (własny komentarz)
+    resolve_conflicts - porada (Merge Editor / Ręcznie)
+    branch_move - git branch --move (zmiana nazwy)
+    branch_list_merged - git branch --merged (złączone)
+    branch_list_unmerged - git branch --no-merged (niezłączone)
+    branch_delete_safe - git branch -d (bezpieczne usuwanie)
+    branch_delete_force - git branch -D (siłowe usuwanie)
     branch_from_hash - git branch nazwa hasz (wskrzeszanie)
     """
 
