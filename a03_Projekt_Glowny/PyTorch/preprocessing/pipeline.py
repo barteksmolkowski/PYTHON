@@ -2,6 +2,8 @@ from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
 
+from common_utils import class_autologger
+
 from .augmentation import DataAugmentation
 from .conversion import ImageToMatrixConverter
 from .convolution import ConvolutionActions
@@ -24,6 +26,7 @@ class ImageDataPreprocessingProtocol(Protocol):
     def preprocess(self, path: str) -> Optional[MtxList]: ...
 
 
+@class_autologger
 class TransformPipeline:
     def __init__(
         self,
@@ -45,17 +48,32 @@ class TransformPipeline:
 
     def apply(self, matrix: Mtx) -> MtxList:
         x = self.grayscale.convert_color_space(matrix, to_gray=True)
+        self.logger.debug(f"[apply] Initial grayscale conversion complete. Shape: {x.shape}")
+
         x = self.geometry.prepare_standard_geometry(x, target_size=(28, 28))
+        self.logger.debug(f"[apply] Geometry standardized to 28x28 target size.")
 
         augmented_samples = self.augmentation.augment(x)
+        sample_count = len(augmented_samples)
+        
+        if sample_count == 0:
+            self.logger.warning(f"[apply] Augmentation returned 0 samples for the input matrix.")
+        else:
+            self.logger.info(f"[apply] Generated {sample_count} augmented samples for processing.")
 
-        final_batch = [
-            self.normalization.process(sample, use_z_score=True)
-            for sample in augmented_samples
-        ]
+        final_batch = []
+        for i, sample in enumerate(augmented_samples):
+            normalized = self.normalization.process(sample, use_z_score=True)
+            final_batch.append(normalized)
+            
+            if (i + 1) % 5 == 0 or (i + 1) == sample_count:
+                self.logger.debug(f"[apply] Progress: Normalized {i + 1}/{sample_count} samples.")
+
+        self.logger.info(f"[apply] Pipeline execution finished. Returning batch of {len(final_batch)} matrices.")
         return final_batch
 
 
+@class_autologger
 class ImageDataPreprocessing:
     def __init__(self, pipeline: Optional[TransformPipeline] = None):
         self.handler = ImageHandler()
@@ -65,8 +83,15 @@ class ImageDataPreprocessing:
     def preprocess(self, path: str) -> Optional[MtxList]:
         try:
             channels = self.converter.get_channels_from_file(path)
-            return [self.pipeline.apply(ch) for ch in channels]
+            
+            self.logger.info(f"[preprocess] Successfully loaded {len(channels)} channels from {path}. Starting pipeline transformation.")
+            
+            processed_channels = [self.pipeline.apply(ch) for ch in channels]
+            
+            self.logger.debug(f"[preprocess] Pipeline applied to all {len(processed_channels)} channels.")
+            return processed_channels
 
         except Exception as e:
+            self.logger.error(f"[preprocess] Preprocessing failed for file {path}. Error details: {str(e)}")
             print(f"[CRITICAL] Preprocessing Error: {e}")
             return None
