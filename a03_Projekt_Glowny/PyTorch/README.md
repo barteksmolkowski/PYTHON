@@ -8,13 +8,14 @@ Project of a custom image processing and neural network building library from sc
 project/
 │
 ├── common_utils.py          ← (Mózg systemu: funkcja build_all)
-├── config.json
+├── config.json              ← właściwości projektu
 ├── core.py                  ← (Łącznik: BrainEngine / Facade)
+├── DEVELOPMENT.MD           ← (Ukryty plan projektu)
 ├── main.py                  ← (Punkt startowy aplikacji)
 ├── pyproject.toml           ← (Zależności i konfiguracja pip/pytest)
+├── pytest.ini               ← (Zależności i konfiguracja pip/pytest)
 ├── README.md                ← Opis projektu
 ├── settings.json            ← (Parametry: ścieżki, learning_rate, size)
-├── test_pipeline.py         ← interactive_inspection
 │
 ├── preprocessing/           ← PRZETWARZANIE WSTĘPNE
 │   ├── __init__.py
@@ -38,11 +39,11 @@ project/
 │
 ├── data/                    ← ZARZĄDZANIE DANYCH
 │   ├── __init__.py
-│   ├── batch.py             ← (Class: BatchProcessing - pakiety dla sieci)
-│   ├── cache.py             ← (Class: CacheManager - zapis .npz)
-│   ├── dataset.py           ← (Class: Dataset - dostęp do próbek)
-│   ├── downloader.py        ← (Class: DataDownloader - Requests API)
-│   └── metadata.json        ← (Baza danych o zdjęciach/etykietach)
+│   ├── batch.py             ← (Class: BatchProcessing - pakiety dla sieci) ← 4
+│   ├── cache.py             ← (Class: CacheManager - zapis .npz)           ← 5
+│   ├── dataset.py           ← (Class: Dataset - dostęp do próbek)          ← 3
+│   ├── downloader.py        ← (Class: DataDownloader - Requests API)       ← 1
+│   └── metadata.json        ← (Baza danych o zdjęciach/etykietach)         ← 2
 │
 ├── nn/                      ← TWOJA SIEĆ NEURONOWA
 │   │
