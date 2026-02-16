@@ -1,0 +1,4 @@
+Wersja Python: [np. 3.0.0] python 3.12
+Wersja PIP: [np. 24.0.0] 26.0.1
+IDE - nazwa oraz strona domowa: [np. Visual Studio Code, https://code.visualstudio.com/]
+pip 26.0.1 from C:\Users\barte\AppData\Local\Programs\Python\Python312\Lib\site-packages\pip (python 3.12)
