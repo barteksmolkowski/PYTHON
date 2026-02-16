@@ -1,9 +1,11 @@
 import inspect
 import logging
+import platform
 import types
 from functools import wraps
 from time import perf_counter
 
+import psutil
 from rich.logging import RichHandler
 
 
@@ -32,17 +34,48 @@ def build_all(local_vars: dict) -> list[str]:
     ]
 
 
-def setup_logging(file_name="engine_history.log"):
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(name)s] %(message)s",
-        handlers=[
-            RichHandler(
-                rich_tracebacks=True, show_time=True, omit_repeated_times=False
-            ),
-            logging.FileHandler(file_name),
-        ],
+def log_system_info():
+    log = logging.getLogger("NeuralRecognizer")
+
+    log.info("[bold cyan]" + "=" * 40)
+    log.info("[bold white] SYSTEM ENVIRONMENT INFO [/bold white]")
+    log.info("[bold cyan]" + "=" * 40)
+    log.info(
+        f"OS: {platform.system()} {platform.release()} ({platform.architecture()[0]})"
     )
+    log.info(f"CPU: {platform.processor()}")
+
+    total_ram = round(psutil.virtual_memory().total / (1024**3), 2)
+    log.info(f"RAM: {total_ram} GB")
+
+    log.info(f"Python: {platform.python_version()}")
+    log.info("[bold cyan]" + "=" * 40 + "[/bold cyan]")
+
+
+def setup_logging(
+    level=logging.DEBUG, file_name="engine_history.log", log_to_file=True
+):
+    FILE_FORMAT = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+    DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+    active_handlers = [RichHandler(rich_tracebacks=True, markup=True, show_path=True)]
+
+    if log_to_file:
+        file_h = logging.FileHandler(file_name, encoding="utf-8")
+        file_h.setFormatter(logging.Formatter(FILE_FORMAT, DATE_FORMAT))
+        active_handlers.append(file_h)
+
+    logging.basicConfig(
+        level=level,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=active_handlers,
+        force=True,
+    )
+
+    for handler in logging.root.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.setFormatter(logging.Formatter(FILE_FORMAT, DATE_FORMAT))
 
 
 def _format_args(sig, *args, **kwargs):
@@ -79,28 +112,30 @@ def autologger(func):
     func_name = func.__name__
     line_def = getattr(getattr(func, "__code__", {}), "co_firstlineno", 0)
 
-    sig = None
-    try:
-        sig = inspect.signature(func)
-    except Exception:
-        pass
-
     @wraps(func)
     def wrapper(*args, **kwargs):
         instance = args[0] if args and hasattr(args[0], "logger") else None
         logger = instance.logger if instance else logging.getLogger(module_name)
 
-        formatted_args = _format_args(sig, *args, **kwargs)
-        logger.info(f"[{func_name}] [line:{line_def}] Started with: {formatted_args}")
+        formatted_args = _format_args(inspect.signature(func), *args, **kwargs)
+
+        logger.info(
+            f"[bold blue]START[/] | [cyan]{func_name}[/] (line:{line_def}) | Args: {formatted_args}"
+        )
 
         start = perf_counter()
         try:
             result = func(*args, **kwargs)
             duration = perf_counter() - start
-            logger.info(f"[{func_name}] [line:{line_def}] Completed in {duration:.4f}s")
+            logger.info(
+                f"[bold green]DONE[/]  | [cyan]{func_name}[/] | Time: [yellow]{duration:.4f}s[/]"
+            )
             return result
         except Exception as e:
-            logger.error(f"[{func_name}] [line:{line_def}] Failed: {str(e)}")
+            logger.error(
+                f"[bold red]FAIL[/]  | [cyan]{func_name}[/] | Reason: {str(e)}",
+                exc_info=True,
+            )
             raise
 
     return wrapper
