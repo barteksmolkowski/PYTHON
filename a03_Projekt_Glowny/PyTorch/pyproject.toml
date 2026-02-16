@@ -1,15 +1,53 @@
-[tool.isort]
-profile = "black"
-line_length = 88
-multi_line_output = 3
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "neural-digit-recognizer"
 version = "0.1.0"
+description = "System do rozpoznawania cyfr z zaawansowaną augmentacją danych"
+authors = [
+    {name = "Bartek", email = "twoj@email.com"}
+]
 dependencies = [
     "numpy",
     "pillow",
     "rich",
     "pytest",
-    "tqdm"
+    "tqdm",
+    "rstr"
 ]
+requires-python = ">=3.10"
+
+[tool.setuptools]
+packages = ["preprocessing", "features", "data", "nn", "training"]
+py-modules = ["common_utils", "core", "main"]
+
+[tool.setuptools.package-data]
+"*" = ["config.json"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "B"]
