@@ -1,7 +1,11 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.isort",
-        "editor.formatOnSave": true
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
     },
-    "isort.args": ["--settings-path", "./pyproject.toml"]
+    "isort.args": ["--settings-path", "./pyproject.toml"],
+    "black-formatter.args": ["--line-length", "88"]
 }
