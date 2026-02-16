@@ -64,6 +64,10 @@ class GitRefactor_Protocol(Protocol):
     def rebase_squash(self) -> None: ...
     def rebase_fixup(self) -> None: ...
     def rebase_drop(self) -> None: ...
+    def rebase_main(self) -> None: ...
+    def rebase_interactive_head(self) -> None: ...
+    def rebase_continue(self) -> None: ...
+    def rebase_abort(self) -> None: ...
 
 
 class GitBranchMerge_Protocol(Protocol):
@@ -76,6 +80,18 @@ class GitBranchMerge_Protocol(Protocol):
     def branch_delete_safe(self) -> None: ...
     def branch_delete_force(self) -> None: ...
     def branch_from_hash(self) -> None: ...
+
+
+class GitTag_Protocol(Protocol):
+    def tag_lightweight(self) -> None: ...
+    def tag_list(self) -> None: ...
+    def tag_annotated(self) -> None: ...
+    def tag_show(self) -> None: ...
+    def tag_delete(self) -> None: ...
+
+
+class GitCherryPick_Protocol(Protocol):
+    def cherry_pick_single(self) -> None: ...
 
 
 class GitBasic(__BazaNauki__, GitBasic_Protocol):
@@ -125,7 +141,6 @@ class GitBasic(__BazaNauki__, GitBasic_Protocol):
 
 class GitDiff(__BazaNauki__, GitDiff_Protocol):
     opis_menu = "o_hash_importance, diff_standard, diff_stat, diff_shortstat, diff_patch, diff_cached, diff_kumulacja, diff_commits, diff_head_shortcuts, diff_head_relative, diff_commits_selective, diff_separator"
-
 
     """
     o_hash_importance - info o haszach
@@ -191,7 +206,6 @@ class GitDiff(__BazaNauki__, GitDiff_Protocol):
 
 class GitLog(__BazaNauki__, GitLog_Protocol):
     opis_menu = "basic_log, file_analysis_log, search_log, visual_log, log_all_branches, log_decorate, config_call_alias_ll, config_alias_global, call_alias_ll, log_graph"
-
 
     """
     basic_log - git log --oneline (-n)
@@ -260,108 +274,91 @@ class GitLog(__BazaNauki__, GitLog_Protocol):
 class GitUndo(__BazaNauki__, GitUndo_Protocol):
     opis_menu = "quick_commit, revert_changes, revert_no_commit, restore_file_from_hash, reset_soft, reset_mixed, reset_hard, checkout_file_from_hash"
 
-
     """
-    quick_commit - git commit -am
-    revert_changes - git revert
-    revert_no_commit - git revert -n
-    restore_file_from_hash - git restore -s
-    reset_soft - git reset --soft
-    reset_mixed - git reset --mixed
-    reset_hard - git reset --hard
-    checkout_file_from_hash - git checkout [hash] -- [file]
+    quick_commit - git commit -am (szybki zapis)
+    revert_changes - git revert (odwrócenie zmiany)
+    revert_no_commit - git revert -n (odwrócenie bez zapisu)
+    restore_file_from_hash - git restore -s (przywrócenie wersji)
+    reset_soft - git reset --soft (cofnięcie do stage)
+    reset_mixed - git reset --mixed (cofnięcie do working dir)
+    reset_hard - git reset --hard (całkowite skasowanie)
+    checkout_file_from_hash - git checkout [hash] -- [file] (wyciągnięcie pliku)
     """
 
     def quick_commit(self):
-        print(
-            "Szybkie zatwierdzenie wszystkich zmodyfikowanych plików bez ręcznego dodawania:\n-> git commit -a -m 'message'"
-        )
+        print("Szybki zapis (wszystkie śledzone zmiany + opis):\n-> git commit -am 'wiadomość'")
 
     def revert_changes(self):
-        print(
-            "Bezpieczne wycofanie zmian z konkretnego zapisu poprzez stworzenie nowego commita:\n-> git revert <hash>"
-        )
+        print("Odwrócenie zmian nowym zapisem:\n-> git revert <hash>")
 
     def revert_no_commit(self):
-        print(
-            "Wycofanie zmian z dwóch ostatnich zapisów do poczekalni bez automatycznego tworzenia commita:\n-> git revert --no-commit HEAD~2"
-        )
+        print("Odwrócenie zmian bez automatycznego zapisu:\n-> git revert -n <hash>")
 
     def restore_file_from_hash(self):
-        print(
-            "Przywrócenie wybranego pliku do stanu, w jakim był w konkretnym momencie historii:\n-> git restore --source <hash> -- <plik>"
-        )
+        print("Przywrócenie konkretnej wersji pliku:\n-> git restore -s <hash> <plik>")
 
     def reset_soft(self):
-        print(
-            "Cofnięcie zapisu do historii przy jednoczesnym zachowaniu wszystkich zmian w kodzie:\n-> git reset <hash> --soft"
-        )
+        print("Cofnięcie zapisu (bezpieczne, zostawia stage):\n-> git reset --soft HEAD~1")
 
     def reset_mixed(self):
-        print(
-            "cofnięcie commita i wyczyszczenie poczekalni, ale zmiany zostają w kodzie (tryb domyślny):\n-> git reset <hash> --mixed"
-        )
+        print("Cofnięcie zapisu do edycji (domyślne):\n-> git reset --mixed HEAD~1")
 
     def reset_hard(self):
-        print(
-            "całkowite skasowanie zmian i powrót do czystego stanu z danego hasha (uważaj, tracisz kod!):\n-> git reset <hash> --hard"
-        )
+        print("Całkowite usunięcie zmian (niebezpieczne):\n-> git reset --hard HEAD~1")
 
     def checkout_file_from_hash(self):
-        print(
-            "nadpisanie konkretnego pliku wersją z innego zapisu/hasha:\n-> git checkout <hash> -- <plik>"
-        )
+        print("Wyciągnięcie pliku z historii:\n-> git checkout <hash> -- <file>")
 
 
 class GitRefactor(__BazaNauki__, GitRefactor_Protocol):
-    opis_menu = "quick_commit, revert_changes, revert_no_commit, restore_file_from_hash, reset_soft, reset_mixed, reset_hard, checkout_file_from_hash"
-
+    opis_menu = "commit_amend, rebase_interactive, rebase_pick, rebase_reword, rebase_squash, rebase_fixup, rebase_drop, rebase_main, rebase_interactive_head, rebase_continue, rebase_abort"
 
     """
-    quick_commit - git commit -am
-    revert_changes - git revert
-    revert_no_commit - git revert -n
-    restore_file_from_hash - git restore -s
-    reset_soft - git reset --soft
-    reset_mixed - git reset --mixed
-    reset_hard - git reset --hard
-    checkout_file_from_hash - git checkout [hash] -- [file]
+    commit_amend - git commit --amend (poprawa ostatniego)
+    rebase_interactive - git rebase -i (edycja historii)
+    rebase_pick - zachowanie zapisu (pick)
+    rebase_reword - zmiana tylko opisu (reword)
+    rebase_squash - połączenie z edycją opisu (squash)
+    rebase_fixup - połączenie po cichu (fixup)
+    rebase_drop - usunięcie zapisu (drop)
+    rebase_main - git rebase main (zmiana bazy na main)
+    rebase_interactive_head - git rebase -i HEAD~n (zasięg edycji)
+    rebase_continue - git rebase --continue (po rozwiązaniu konfliktu)
+    rebase_abort - git rebase --abort (przerwanie i powrót)
     """
 
     def commit_amend(self):
-        print(
-            "szybka poprawka ostatniego zapisu (zmiana nazwy lub dodanie zapomnianych plików):\n-> git commit --amend -m 'nowa_nazwa'"
-        )
+        print("Poprawa ostatniego zapisu (nazwa lub pliki):\n-> git commit --amend -m 'nowa_nazwa'")
 
     def rebase_interactive(self):
-        print(
-            "wejście w tryb interaktywnej edycji ostatnich n zapisów:\n-> git rebase -i HEAD~3"
-        )
+        print("Wejście w tryb interaktywnej edycji ostatnich n zapisów:\n-> git rebase -i HEAD~3")
 
     def rebase_pick(self):
-        print(
-            "pozostawienie zapisu bez żadnych zmian (standard w menu rebase):\n-> p / pick"
-        )
+        print("Pozostawienie zapisu bez zmian (standard):\n-> p / pick")
 
     def rebase_reword(self):
-        print(
-            "zatrzymanie procesu, aby zmienić tylko tekst opisu danego zapisu:\n-> r / reword"
-        )
+        print("Zatrzymanie procesu, aby zmienić tylko tekst opisu:\n-> r / reword")
 
     def rebase_squash(self):
-        print(
-            "połączenie zapisu z poprzednim (scala kod i pozwala edytować wspólny opis):\n-> s / squash"
-        )
+        print("Połączenie zapisu z poprzednim (edycja wspólnego opisu):\n-> s / squash")
 
     def rebase_fixup(self):
-        print(
-            "połączenie zapisu z poprzednim po cichu (zostawia tylko opis starszego zapisu):\n-> f / fixup"
-        )
+        print("Połączenie zapisu z poprzednim po cichu (zostawia opis starszego):\n-> f / fixup")
 
     def rebase_drop(self):
-        print(
-            "całkowite usunięcie wybranego zapisu wraz z jego zmianami w kodzie:\n-> d / drop"
-        )
+        print("Całkowite usunięcie wybranego zapisu z historii:\n-> d / drop")
+
+    def rebase_main(self):
+        print("Zmiana bazy gałęzi:\n-> git rebase main # Przesuwa commity bieżącej gałęzi na szczyt gałęzi main")
+
+    def rebase_interactive_head(self):
+        print("Interaktywny rebase względem HEAD:\n-> git rebase -i HEAD~3 # HEAD~1 (ostatni), HEAD~3 (trzy wstecz)")
+
+    def rebase_continue(self):
+        print("Kontynuacja rebase:\n-> git rebase --continue # Wywołaj po rozwiązaniu konfliktów i git add")
+
+    def rebase_abort(self):
+        print("Anulowanie rebase:\n-> git rebase --abort # Przerywa proces i wraca do stanu sprzed startu")
 
 
 class GitBranchMerge(__BazaNauki__, GitBranchMerge_Protocol):
@@ -399,11 +396,6 @@ class GitBranchMerge(__BazaNauki__, GitBranchMerge_Protocol):
             "Zmiana nazwy gałęzi:\n-> git branch --move 'stara' 'nowa' # Przemianowuje brancha"
         )
 
-    def branch_from_hash(self):
-        print(
-            "Wskrzeszanie gałęzi:\n-> git branch 'nowa_nazwa' <hash> # Tworzy brancha w miejscu starego commita"
-        )
-
     def branch_list_merged(self):
         print(
             "Gałęzie już złączone:\n-> git branch --merged # Te, które można bezpiecznie usunąć"
@@ -424,8 +416,59 @@ class GitBranchMerge(__BazaNauki__, GitBranchMerge_Protocol):
             "Siłowe usuwanie:\n-> git branch -D 'nazwa' # Usuwa nawet niezłączone (-D to --delete --force)"
         )
 
+    def branch_from_hash(self):
+        print(
+            "Wskrzeszanie gałęzi:\n-> git branch 'nowa_nazwa' <hash> # Tworzy brancha w miejscu starego commita"
+        )
+
+
+class GitTag(__BazaNauki__, GitTag_Protocol):
+    opis_menu = "tag_lightweight, tag_list, tag_annotated, tag_show, tag_delete"
+
+    """
+    tag_lightweight - git tag nazwa hasz (lekki znacznik)
+    tag_list - git tag (lista wszystkich tagów)
+    tag_annotated - git tag -a -m (tag z opisem)
+    tag_show - git show nazwa (szczegóły taga)
+    tag_delete - git tag -d (usuwanie taga)
+    """
+
+    def tag_lightweight(self):
+        print(
+            "Tworzenie lekkiego taga:\n-> git tag <nazwa_taga> <hash> # Wskaźnik na konkretny commit"
+        )
+
+    def tag_list(self):
+        print("Lista tagów:\n-> git tag # Wyświetla wszystkie znaczniki w projekcie")
+
+    def tag_annotated(self):
+        print(
+            'Tag opisowy (Adnotowany):\n-> git tag -a <nazwa> <hash> -m "<wiadomość>" # Tworzy pełny obiekt taga'
+        )
+
+    def tag_show(self):
+        print(
+            "Podgląd taga:\n-> git show <nazwa_taga> # Wyświetla dane taga i przypisany commit"
+        )
+
+    def tag_delete(self):
+        print("Usuwanie taga:\n-> git tag -d <nazwa_taga> # Kasuje znacznik lokalnie")
+
+
+class GitCherryPick(__BazaNauki__, GitCherryPick_Protocol):
+    opis_menu = "cherry_pick_single"
+
+    """
+    cherry_pick_single - git cherry-pick hasz (kopiowanie zmiany)
+    """
+
+    def cherry_pick_single(self):
+        print(
+            "Kopiowanie wybranego commita:\n-> git cherry-pick <hash> # Pobiera zmiany z dowolnego commita i tworzy nowy commit w bieżącej gałęzi"
+        )
+
 
 if __name__ == "__main__":
-    moje_lekcje = [GitBasic, GitDiff, GitLog, GitUndo, GitRefactor, GitBranchMerge]
+    moje_lekcje = [GitBasic, GitDiff, GitLog, GitUndo, GitRefactor, GitBranchMerge, GitTag, GitCherryPick]
 
     __BazaNauki__(interaktywne=True, lista_klas=moje_lekcje)
