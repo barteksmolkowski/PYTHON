@@ -1,17 +1,22 @@
+import logging
 import sys
 
 import pytest
 
-from common_utils import setup_logging
+from common_utils import log_system_info, setup_logging
 from core import BrainEngine
 
 
 def main():
-    setup_logging()
+    setup_logging(
+        level=logging.DEBUG, file_name="biuletyn_silnika.log", log_to_file=True
+    )
+    log_system_info()
+
     engine = BrainEngine()
 
     if len(sys.argv) < 2:
-        print("Use: python main.py [test|nauka|zgaduj <path>]")
+        print("Use: python main.py [test|learn|guess <path>]")
         return
 
     mode = sys.argv[1].lower()
