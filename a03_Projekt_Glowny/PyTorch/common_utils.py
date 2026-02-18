@@ -141,13 +141,21 @@ def autologger(func):
     return wrapper
 
 
+def silent(func):
+    func._is_silent = True
+    return func
+
 def class_autologger(cls):
     cls.logger = logging.getLogger(cls.__module__)
 
     for name, attr in list(vars(cls).items()):
+        func = attr.__func__ if isinstance(attr, (classmethod, staticmethod)) else attr
+        
+        if getattr(func, "_is_silent", False):
+            continue
+
         if isinstance(attr, (classmethod, staticmethod)):
-            original_func = attr.__func__
-            setattr(cls, name, type(attr)(autologger(original_func)))
+            setattr(cls, name, type(attr)(autologger(func)))
         elif callable(attr) and not name.startswith("__"):
             setattr(cls, name, autologger(attr))
 
