@@ -3,9 +3,10 @@
         "editor.defaultFormatter": "ms-python.black-formatter",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "explicit"
+            "source.organizeImports": "always",
+            "source.fixAll": "explicit"
         }
     },
-    "isort.args": ["--settings-path", "./pyproject.toml"],
-    "black-formatter.args": ["--line-length", "88"]
+    "black-formatter.args": ["--line-length", "88"],
+    "isort.args": ["--settings-path", "./pyproject.toml"]
 }
