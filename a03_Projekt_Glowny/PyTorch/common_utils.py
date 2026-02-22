@@ -53,12 +53,16 @@ def log_system_info():
 
 
 def setup_logging(
-    level=logging.DEBUG, file_name="engine_history.log", log_to_file=True
-):
+    level: int = logging.DEBUG, 
+    file_name: str = "engine_history.log", 
+    log_to_file: bool = True
+) -> None:
     FILE_FORMAT = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 
-    active_handlers = [RichHandler(rich_tracebacks=True, markup=True, show_path=True)]
+    active_handlers: list[logging.Handler] = [
+        RichHandler(rich_tracebacks=True, markup=True, show_path=True)
+    ]
 
     if log_to_file:
         file_h = logging.FileHandler(file_name, encoding="utf-8")
@@ -109,12 +113,17 @@ def _format_args(sig, *args, **kwargs):
 
 def autologger(func):
     module_name = func.__module__
-    func_name = func.__name__
+    func_name = getattr(func, "__name__", str(func))
     line_def = getattr(getattr(func, "__code__", {}), "co_firstlineno", 0)
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        instance = args[0] if args and hasattr(args[0], "logger") else None
+        instance = None
+        if len(args) > 0:
+            first_arg = args[0]
+            if hasattr(first_arg, "logger"):
+                instance = first_arg
+
         logger = instance.logger if instance else logging.getLogger(module_name)
 
         formatted_args = _format_args(inspect.signature(func), *args, **kwargs)
@@ -127,6 +136,7 @@ def autologger(func):
         try:
             result = func(*args, **kwargs)
             duration = perf_counter() - start
+
             logger.info(
                 f"[bold green]DONE[/]  | [cyan]{func_name}[/] | Time: [yellow]{duration:.4f}s[/]"
             )
@@ -145,18 +155,25 @@ def silent(func):
     func._is_silent = True
     return func
 
+
 def class_autologger(cls):
     cls.logger = logging.getLogger(cls.__module__)
 
     for name, attr in list(vars(cls).items()):
-        func = attr.__func__ if isinstance(attr, (classmethod, staticmethod)) else attr
-        
-        if getattr(func, "_is_silent", False):
-            continue
-
         if isinstance(attr, (classmethod, staticmethod)):
+            func = attr.__func__
+            if getattr(func, "_is_silent", False):
+                continue
+
             setattr(cls, name, type(attr)(autologger(func)))
+
         elif callable(attr) and not name.startswith("__"):
+            if not hasattr(attr, "__name__"):
+                attr.__name__ = name
+
+            if getattr(attr, "_is_silent", False):
+                continue
+
             setattr(cls, name, autologger(attr))
 
     return cls
