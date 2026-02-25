@@ -1,7 +1,13 @@
-from edges import *
-from extractor import *
-from hog import *
+from .edges import EdgeDetectorProtocol, Prewitt, Sobel
+from .extractor import FeatureExtraction, FeatureExtractorProtocol
+from .hog import HOG, HOGProtocol
 
-from common_utils import build_all
-
-__all__ = build_all(locals())
+__all__ = [
+    "HOG",
+    "EdgeDetectorProtocol",
+    "FeatureExtraction",
+    "FeatureExtractorProtocol",
+    "HOGProtocol",
+    "Prewitt",
+    "Sobel",
+]

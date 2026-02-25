@@ -1,10 +1,17 @@
-from activation import *
-from base import *
-from conv_layer import *
-from dropout import *
-from flatten import *
-from linear import *
+from .activation import ReLULayer, SigmoidLayer, SoftmaxLayer
+from .base import LayerProtocol
+from .conv_layer import Conv2DLayer
+from .dropout import DropoutLayer
+from .flatten import FlattenLayer
+from .linear import LinearLayer
 
-from common_utils import build_all
-
-__all__ = build_all(locals())
+__all__ = [
+    "Conv2DLayer",
+    "DropoutLayer",
+    "FlattenLayer",
+    "LayerProtocol",
+    "LinearLayer",
+    "ReLULayer",
+    "SigmoidLayer",
+    "SoftmaxLayer",
+]
