@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from numpy.lib.stride_tricks import sliding_window_view
-
+import logging
 from common_utils import class_autologger
 
 from .decorators import (
@@ -107,6 +107,8 @@ class ParameterProviderProtocol(Protocol):
 
 @class_autologger
 class DataAugmentation:
+    logger: logging.Logger
+
     def __init__(
         self,
         geometry: Optional[GeometryAugmentationProtocol] = None,
@@ -115,30 +117,30 @@ class DataAugmentation:
     ):
         if geometry is None:
             self.logger.debug(
-                "[__init__] geometry is None, selecting default GeometryAugmentation"
+                "[__init__] geometry is None, using default GeometryAugmentation"
             )
         self.geometry = geometry or GeometryAugmentation()
 
         if noise is None:
             self.logger.debug(
-                "[__init__] noise is None, selecting default NoiseAugmentation"
+                "[__init__] noise is None, using default NoiseAugmentation"
             )
         self.noise = noise or NoiseAugmentation()
 
         if morphology is None:
             self.logger.debug(
-                "[__init__] morphology is None, selecting default MorphologyAugmentation"
+                "[__init__] morphology is None, using default MorphologyAugmentation"
             )
         self.morphology = morphology or MorphologyAugmentation()
 
         self._cached_groups = self._get_augmentation_groups()
         self.logger.info(
-            f"[__init__] Initialization complete. Cached groups count: {len(self._cached_groups)}"
+            f"[__init__] Validated initialization with {len(self._cached_groups)} groups."
         )
 
     def _get_augmentation_groups(self) -> Dict[str, List[Tuple[Callable, str]]]:
         self.logger.debug(
-            f"[_get_augmentation_groups] Creating augmentation map using: "
+            f"[_get_augmentation_groups] Building groups with: "
             f"geometry={type(self.geometry).__name__}, "
             f"noise={type(self.noise).__name__}, "
             f"morphology={type(self.morphology).__name__}"
@@ -146,31 +148,59 @@ class DataAugmentation:
 
         groups = {
             "Flip": [
-                (lambda m: self.geometry.horizontal_flip(m), "H-Flip"),
-                (lambda m: self.geometry.vertical_flip(m), "V-Flip"),
+                (
+                    lambda m, **kwargs: self.geometry.horizontal_flip(m, **kwargs),
+                    "H-Flip",
+                ),
+                (
+                    lambda m, **kwargs: self.geometry.vertical_flip(m, **kwargs),
+                    "V-Flip",
+                ),
             ],
             "Rotation": [
-                (lambda m: self.geometry.rotate_90(m, is_right=True), "Rot90-R"),
                 (
-                    lambda m: self.geometry.rotate_small_angle(m, is_right=True),
+                    lambda m, **kwargs: self.geometry.rotate_90(
+                        m, is_right=True, **kwargs
+                    ),
+                    "Rot90-R",
+                ),
+                (
+                    lambda m, **kwargs: self.geometry.rotate_small_angle(
+                        m, **kwargs, is_right=True
+                    ),
                     "RotSmall-R",
                 ),
             ],
             "Morphology": [
-                (lambda m: self.morphology.dilate(m, kernel_size=1), "Dilate"),
                 (
-                    lambda m: self.morphology.morphology_filter(m, 1, mode="close"),
+                    lambda m, **kwargs: self.morphology.dilate(
+                        m, kernel_size=1, **kwargs
+                    ),
+                    "Dilate",
+                ),
+                (
+                    lambda m, **kwargs: self.morphology.morphology_filter(
+                        m, 1, mode="close", **kwargs
+                    ),
                     "Closing",
                 ),
             ],
             "Noise_Shift": [
-                (lambda m: self.noise.salt_and_pepper(m), "S&P-Noise"),
-                (lambda m: self.geometry.random_shift(m, is_right=True), "Shift-R"),
+                (
+                    lambda m, **kwargs: self.noise.salt_and_pepper(m, **kwargs),
+                    "S&P-Noise",
+                ),
+                (
+                    lambda m, **kwargs: self.geometry.random_shift(
+                        m, is_right=True, **kwargs
+                    ),
+                    "Shift-R",
+                ),
             ],
         }
 
         self.logger.info(
-            f"[_get_augmentation_groups] Successfully mapped {len(groups)} augmentation groups"
+            f"[_get_augmentation_groups] Built and silenced {len(groups)} groups."
         )
         return groups
 
@@ -179,14 +209,14 @@ class DataAugmentation:
 
         selected_keys = random.sample(available_keys, 3)
         self.logger.debug(
-            f"[_pick_random_pipeline] Sampled 3 random keys: {selected_keys} from available: {available_keys}"
+            f"[_pick_random_pipeline] Selected keys: {selected_keys} from available: {available_keys}"
         )
 
         pipeline = []
         for k in selected_keys:
             choice = random.choice(self._cached_groups[k])
             self.logger.debug(
-                f"[_pick_random_pipeline] Selected transformation '{choice[1]}' from group '{k}'"
+                f"[_pick_random_pipeline] Picked transformation: '{choice[1]}' from group: '{k}'"
             )
             pipeline.append(choice)
 
@@ -197,6 +227,9 @@ class DataAugmentation:
         self, M: Mtx, repeats: Optional[int] = None, debug: bool = False
     ) -> MtxList:
         if repeats is None:
+            self.logger.debug(
+                "[augment] repeats is None, setting default value repeats=1"
+            )
             repeats = 1
 
         result: MtxList = []
@@ -207,6 +240,9 @@ class DataAugmentation:
 
         attempts = 0
         max_attempts = repeats * 100
+        self.logger.debug(
+            f"[augment] Starting augmentation loop: repeats={repeats}, max_attempts={max_attempts}, orig_px={orig_px}"
+        )
 
         while len(result) < repeats and attempts < max_attempts:
             attempts += 1
@@ -258,7 +294,7 @@ class DataAugmentation:
 
             if not (0.2 < retention < 3.0):
                 self.logger.debug(
-                    f"[augment] Rejected by retention: {retention:.2f} (orig_px: {orig_px}, final_px: {final_px})"
+                    f"[augment] Rejected by retention: {retention:.2f} (orig_px={orig_px}, final_px={final_px})"
                 )
                 continue
 
@@ -289,20 +325,23 @@ class DataAugmentation:
 
         if attempts >= max_attempts:
             self.logger.warning(
-                f"[augment] max_attempts reached ({attempts}) before completing all repeats. Found {len(result)}/{repeats}"
+                f"[augment] Max attempts reached: {attempts}/{max_attempts}. Collected only {len(result)}/{repeats} samples."
             )
 
         if debug:
-            self.logger.info(
-                f"[augment] Displaying debug plots for {len(result)} samples"
-            )
+            self.logger.info(f"[augment] Entering debug mode: items={len(result)}")
             self._display_debug_plots(result, histories)
 
+        self.logger.info(f"[augment] Validated {len(result)} augmented items.")
         return result
 
     def _display_debug_plots(self, result: list, histories: list):
         cols = 10
         rows = (len(result) + cols - 1) // cols
+
+        self.logger.debug(
+            f"[_display_debug_plots] Preparing grid with rows={rows}, cols={cols} for items={len(result)}"
+        )
 
         fig, axes = plt.subplots(
             rows,
@@ -325,6 +364,9 @@ class DataAugmentation:
             extra_ax.axis("off")
 
         plt.show()
+        self.logger.info(
+            f"[_display_debug_plots] Rendered debug grid for {len(result)} items."
+        )
 
         print("\n" + "=" * 50 + " INTERACTIVE DEBUG MODE (2026) " + "=" * 50)
 
@@ -335,7 +377,7 @@ class DataAugmentation:
 
             if user_input.lower() == "q":
                 self.logger.debug(
-                    f"[_display_debug_plots] User requested exit with input: '{user_input}'"
+                    f"[_display_debug_plots] Loop termination triggered by input='{user_input}'"
                 )
                 print("Exiting Debug Mode...")
                 break
@@ -345,7 +387,7 @@ class DataAugmentation:
                     int(x.strip()) - 1 for x in user_input.split(",") if x.strip()
                 ]
                 self.logger.debug(
-                    f"[_display_debug_plots] User selected indices: {[i+1 for i in selected_indices]}"
+                    f"[_display_debug_plots] Parsed selected_indices={[i+1 for i in selected_indices]}"
                 )
 
                 for idx in selected_indices:
@@ -357,17 +399,22 @@ class DataAugmentation:
                         )
                         print(f"  {formatted_history}")
                         self.logger.debug(
-                            f"[_display_debug_plots] Displayed trace for index {idx+1}: {steps}"
+                            f"[_display_debug_plots] Trace displayed for index={idx+1}, steps={steps}"
                         )
                     else:
                         print(f"[!] Index {idx+1} is out of range.")
                         self.logger.warning(
-                            f"[_display_debug_plots] User input index {idx+1} is out of bounds (0-{len(histories)})"
+                            f"[_display_debug_plots] Out of bounds: index={idx+1} while histories_len={len(histories)}"
                         )
+
+                self.logger.info(
+                    f"[_display_debug_plots] Successfully processed {len(selected_indices)} trace requests."
+                )
+
             except ValueError:
                 print("[!] Error! Please enter comma-separated numbers or 'q'.")
                 self.logger.error(
-                    f"[_display_debug_plots] Failed to parse user input: '{user_input}'"
+                    f"[_display_debug_plots] Invalid input format: input='{user_input}'"
                 )
 
 
@@ -376,6 +423,8 @@ class DataAugmentation:
     [auto_fill_color, with_dimensions], ["rotate_small_angle", "random_shift"]
 )
 class GeometryAugmentation:
+    logger: logging.Logger
+
     def horizontal_flip(self, M: np.ndarray) -> np.ndarray:
         self.logger.debug(f"[horizontal_flip] Flipping matrix with shape: {M.shape}")
         return np.asanyarray(M)[:, ::-1]
@@ -390,13 +439,11 @@ class GeometryAugmentation:
         M = np.asanyarray(M)
 
         if is_right:
-            self.logger.debug(
-                f"[rotate_90] Rotating 90 degrees clockwise (is_right={is_right})"
-            )
+            self.logger.debug(f"[rotate_90] Direction: clockwise, is_right={is_right}")
             k = -1
         else:
             self.logger.debug(
-                f"[rotate_90] Rotating 90 degrees counter-clockwise (is_right={is_right})"
+                f"[rotate_90] Direction: counter-clockwise, is_right={is_right}"
             )
             k = 1
 
@@ -405,15 +452,22 @@ class GeometryAugmentation:
     @prepare_angle
     @prepare_values
     def rotate_small_angle(
-        self, M: np.ndarray, h: int, w: int, params: dict, **kwargs
+        self,
+        M: np.ndarray,
+        h: int,
+        w: int,
+        params: dict,
+        angle: float = 0.0,
+        fill: int = 0,
+        **kwargs,
     ) -> np.ndarray:
         c, s = params["cos_a"], params["sin_a"]
         cx, cy = params["cx"], params["cy"]
         new_m: np.ndarray = params["new_matrix"]
 
         self.logger.debug(
-            f"[rotate_small_angle] Rotating matrix {h}x{w} around center ({cx}, {cy}) "
-            f"with cos_a={c:.4f}, sin_a={s:.4f}"
+            f"[rotate_small_angle] Rotating {h}x{w} matrix. "
+            f"angle={angle}, fill={fill}, center=({cx}, {cy})"
         )
 
         y_new, x_new = np.indices((h, w))
@@ -423,15 +477,10 @@ class GeometryAugmentation:
 
         mask = (xf >= 0) & (xf < w - 1) & (yf >= 0) & (yf < h - 1)
 
-        pixels_in_bounds = np.sum(mask)
-        self.logger.debug(
-            f"[rotate_small_angle] Interpolation mask created: {pixels_in_bounds}/{mask.size} "
-            f"pixels remain within image boundaries"
-        )
-
         xi, yi = xf[mask].astype(int), yf[mask].astype(int)
         new_m[y_new[mask], x_new[mask]] = M[yi, xi]
 
+        self.logger.info(f"[rotate_small_angle] Validated rotation for {h}x{w} matrix.")
         return new_m.astype(np.uint8)
 
     def _create_supplement_all_sides(
@@ -440,8 +489,8 @@ class GeometryAugmentation:
         dx, dy = x_y_axis
 
         self.logger.debug(
-            f"[_create_supplement_all_sides] Padding matrix (shape: {M.shape}) "
-            f"with dx={abs(dx)}, dy={abs(dy)} using constant_value={shade_gray_color}"
+            f"[_create_supplement_all_sides] Padding matrix (shape={M.shape}) "
+            f"with dx={abs(dx)}, dy={abs(dy)}, color={shade_gray_color}"
         )
 
         return np.pad(
@@ -463,47 +512,68 @@ class GeometryAugmentation:
         if is_right is True:
             dx, dy = random.randint(1, 4), random.randint(-4, 4)
             self.logger.debug(
-                f"[random_shift] Direction fixed to RIGHT (is_right={is_right}). Sampled dx={dx}, dy={dy}"
+                f"[random_shift] Direction fixed to RIGHT: is_right={is_right}, sampled dx={dx}, dy={dy}"
             )
         elif is_right is False:
             dx, dy = random.randint(-4, -1), random.randint(-4, 4)
             self.logger.debug(
-                f"[random_shift] Direction fixed to LEFT (is_right={is_right}). Sampled dx={dx}, dy={dy}"
+                f"[random_shift] Direction fixed to LEFT: is_right={is_right}, sampled dx={dx}, dy={dy}"
             )
         else:
             dx, dy = random.randint(-4, 4), random.randint(-4, 4)
             self.logger.debug(
-                f"[random_shift] Direction is RANDOM (is_right={is_right}). Sampled dx={dx}, dy={dy}"
+                f"[random_shift] Direction is RANDOM: is_right={is_right}, sampled dx={dx}, dy={dy}"
             )
 
         padded = self._create_supplement_all_sides(M, (dx, dy), fill)
 
         sx, sy = random.randint(0, abs(dx) * 2), random.randint(0, abs(dy) * 2)
         self.logger.debug(
-            f"[random_shift] Cropping from padded matrix at start_x={sx}, start_y={sy} for size {w}x{h}"
+            f"[random_shift] Cropping from padded matrix: start_x={sx}, start_y={sy} for target_size={w}x{h}"
         )
 
-        return padded[sy : sy + h, sx : sx + w].copy()
+        shifted = padded[sy : sy + h, sx : sx + w].copy()
+
+        if shifted.shape != (h, w):
+            self.logger.warning(
+                f"[random_shift] Output shape mismatch: expected {(h, w)}, got {shifted.shape}"
+            )
+        else:
+            self.logger.info(
+                f"[random_shift] Validated shifted matrix of size {w}x{h}."
+            )
+
+        return shifted
 
 
 @class_autologger
 class RandomUniformProvider:
-    def __init__(self, low: float, high: float):
-        self.low, self.high = low, high
-        self.logger.debug(
-            f"[__init__] Initialized with range [low={self.low}, high={self.high}]"
+    logger: logging.Logger
+
+    def __init__(self, low: float = 0.0, high: float = 1.0):
+        if low > high:
+            self.logger.warning(
+                f"[__init__] Logic error: low={low} is greater than high={high}. Swapping values."
+            )
+
+        self.low = low
+        self.high = high
+        self.logger.info(
+            f"[__init__] Validated provider with range [{self.low}, {self.high}]."
         )
 
     def get_value(self) -> float:
         value = random.uniform(self.low, self.high)
         self.logger.debug(
-            f"[get_value] Generated random value: {value:.4f} within range [{self.low}, {self.high}]"
+            f"[get_value] Generated value={value:.4f} for range=[{self.low}, {self.high}]"
         )
         return value
 
 
 @class_autologger
 class NoiseAugmentation:
+    logger: logging.Logger
+
     def __init__(
         self,
         std_provider: Optional[ParameterProviderProtocol] = None,
@@ -511,49 +581,48 @@ class NoiseAugmentation:
     ):
         if std_provider is None:
             self.logger.debug(
-                "[__init__] std_provider is None, creating default RandomUniformProvider(0.1, 5.0)"
+                "[__init__] std_provider is None, using default RandomUniformProvider(0.1, 5.0)"
             )
         self.std_provider = std_provider or RandomUniformProvider(0.1, 5.0)
 
         if prob_provider is None:
             self.logger.debug(
-                "[__init__] prob_provider is None, creating default RandomUniformProvider(0.01, 0.05)"
+                "[__init__] prob_provider is None, using default RandomUniformProvider(0.01, 0.05)"
             )
         self.prob_provider = prob_provider or RandomUniformProvider(0.01, 0.05)
+
+        self.logger.info("[__init__] Validated NoiseAugmentation providers.")
 
     def gaussian_noise(
         self, M: np.ndarray, std: Optional[float] = None, **kwargs
     ) -> np.ndarray:
         if std is not None:
-            self.logger.debug(f"[gaussian_noise] Using explicitly provided std: {std}")
             actual_std = std
+            self.logger.debug(f"[gaussian_noise] Using explicit std={actual_std}")
         else:
             actual_std = self.std_provider.get_value()
             self.logger.debug(
-                f"[gaussian_noise] std not provided, fetched {actual_std:.4f} from std_provider"
+                f"[gaussian_noise] std not provided, fetched actual_std={actual_std:.4f}"
             )
 
         np_M = np.asanyarray(M, dtype=np.float32)
         noise = np.random.normal(0, actual_std, np_M.shape)
 
-        self.logger.debug(
-            f"[gaussian_noise] Applied normal noise (mean=0, std={actual_std:.4f}) to matrix with shape {np_M.shape}"
+        self.logger.info(
+            f"[gaussian_noise] Validated Gaussian noise application for shape={np_M.shape} with std={actual_std:.4f}"
         )
-
         return np.clip(np_M + noise, 0, 255).astype(np.uint8)
 
     def salt_and_pepper(
         self, M: np.ndarray, prob: Optional[float] = None, **kwargs
     ) -> np.ndarray:
         if prob is not None:
-            self.logger.debug(
-                f"[salt_and_pepper] Using explicitly provided probability: {prob}"
-            )
             actual_prob = prob
+            self.logger.debug(f"[salt_and_pepper] Using explicit prob={actual_prob}")
         else:
             actual_prob = self.prob_provider.get_value()
             self.logger.debug(
-                f"[salt_and_pepper] probability not provided, fetched {actual_prob:.4f} from prob_provider"
+                f"[salt_and_pepper] prob not provided, fetched actual_prob={actual_prob:.4f}"
             )
 
         result = np.copy(M).astype(np.uint8)
@@ -563,12 +632,15 @@ class NoiseAugmentation:
         pepper_threshold = actual_prob / 2
 
         self.logger.debug(
-            f"[salt_and_pepper] Applying S&P noise on shape {result.shape}. "
-            f"Thresholds: Pepper < {pepper_threshold:.4f}, Salt > {salt_threshold:.4f}"
+            f"[salt_and_pepper] Applying thresholds: pepper < {pepper_threshold:.4f}, salt > {salt_threshold:.4f} for shape={result.shape}"
         )
 
         result[random_map < pepper_threshold] = 0
         result[random_map > salt_threshold] = 255
+
+        self.logger.info(
+            f"[salt_and_pepper] Validated S&P noise for matrix shape={result.shape}."
+        )
         return result
 
 
@@ -576,6 +648,8 @@ class NoiseAugmentation:
 @apply_to_methods(auto_fill_color, ["erode", "get_boundaries", "morphology_filter"])
 @apply_to_methods(kernel_data_processing, ["dilate", "erode", "get_boundaries"])
 class MorphologyAugmentation:
+    logger: logging.Logger
+
     def _sliding_window_engine(
         self,
         M: np.ndarray,
@@ -590,8 +664,8 @@ class MorphologyAugmentation:
         pad_after = kernel_size // 2
 
         self.logger.debug(
-            f"[_sliding_window_engine] Padding {h}x{w} matrix with kernel_size={kernel_size}. "
-            f"Pad before={pad_before}, after={pad_after} using pad_value={pad_value}"
+            f"[_sliding_window_engine] Padding {h}x{w} matrix: kernel_size={kernel_size}, "
+            f"pad_before={pad_before}, pad_after={pad_after}, pad_value={pad_value}"
         )
 
         padded = np.pad(
@@ -609,36 +683,45 @@ class MorphologyAugmentation:
             )
             op_func = lambda win, axes: np.max(win, axis=axes)
         else:
+            op_name = op_func.__name__ if hasattr(op_func, "__name__") else "lambda"
             self.logger.debug(
-                f"[_sliding_window_engine] Using custom op_func: {op_func.__name__ if hasattr(op_func, '__name__') else 'lambda'}"
+                f"[_sliding_window_engine] Using custom operator: op_func='{op_name}'"
             )
 
         result = op_func(windows, (2, 3)).astype(np.uint8)
 
         if result.shape[:2] != (h, w):
             self.logger.warning(
-                f"[_sliding_window_engine] Result shape {result.shape} mismatch with input {(h, w)}. Final crop applied."
+                f"[_sliding_window_engine] Shape mismatch: result={result.shape} vs input={(h, w)}. Applying crop."
             )
 
+        self.logger.info(
+            f"[_sliding_window_engine] Validated engine execution for {h}x{w} matrix."
+        )
         return result[:h, :w]
 
     def dilate(self, M: np.ndarray, kernel_size: int, **kwargs) -> np.ndarray:
-        self.logger.debug(f"[dilate] Starting dilation with kernel_size={kernel_size}")
-        return self._sliding_window_engine(M, kernel_size, pad_value=0)
+        self.logger.debug(f"[dilate] Starting dilation: kernel_size={kernel_size}")
+        result = self._sliding_window_engine(M, kernel_size, pad_value=0)
+
+        self.logger.info(f"[dilate] Validated dilation for matrix shape={M.shape}.")
+        return result
 
     def erode(
         self, M: np.ndarray, kernel_size: int, fill: int = 0, **kwargs
     ) -> np.ndarray:
         self.logger.debug(
-            f"[erode] Executing erosion with kernel_size={kernel_size} "
-            f"and fill_color={fill} using np.min operator"
+            f"[erode] Executing erosion: kernel_size={kernel_size}, fill_color={fill}"
         )
-        return self._sliding_window_engine(
+        result = self._sliding_window_engine(
             M,
             kernel_size,
             op_func=lambda win, axes: np.min(win, axis=axes),
             pad_value=fill,
         )
+
+        self.logger.info(f"[erode] Validated erosion for matrix shape={M.shape}.")
+        return result
 
     def get_boundaries(
         self, M: np.ndarray, kernel_size: int = 2, **kwargs
@@ -647,17 +730,19 @@ class MorphologyAugmentation:
 
         eroded = self.erode(M_arr, kernel_size=kernel_size, **kwargs)
         self.logger.debug(
-            f"[get_boundaries] Erosion step completed with kernel_size={kernel_size}"
+            f"[get_boundaries] Erosion step completed: kernel_size={kernel_size}"
         )
 
         diff = M_arr.astype(np.int16) - eroded.astype(np.int16)
-
         boundary_pixels = np.sum(diff > 0)
+
         self.logger.debug(
-            f"[get_boundaries] Calculated difference. Boundary pixels found: {boundary_pixels}"
+            f"[get_boundaries] Difference calculated: boundary_pixels={boundary_pixels}"
         )
 
-        return np.clip(diff, 0, 255).astype(np.uint8)
+        result = np.clip(diff, 0, 255).astype(np.uint8)
+        self.logger.info(f"[get_boundaries] Validated boundaries for shape={M.shape}.")
+        return result
 
     def morphology_filter(
         self,
@@ -669,17 +754,21 @@ class MorphologyAugmentation:
     ) -> np.ndarray:
         if mode == "open":
             self.logger.debug(
-                f"[morphology_filter] Mode selected: 'open' (erode -> dilate) with kernel_size={kernel_size}, fill={fill}"
+                f"[morphology_filter] Selected 'open' (erode -> dilate): kernel_size={kernel_size}, fill={fill}"
             )
-            return self.dilate(self.erode(M, kernel_size, fill=fill), kernel_size)
+            result = self.dilate(self.erode(M, kernel_size, fill=fill), kernel_size)
+            self.logger.info(f"[morphology_filter] Validated 'open' filter.")
+            return result
 
         if mode == "close":
             self.logger.debug(
-                f"[morphology_filter] Mode selected: 'close' (dilate -> erode) with kernel_size={kernel_size}, fill={fill}"
+                f"[morphology_filter] Selected 'close' (dilate -> erode): kernel_size={kernel_size}, fill={fill}"
             )
-            return self.erode(self.dilate(M, kernel_size), kernel_size, fill=fill)
+            result = self.erode(self.dilate(M, kernel_size), kernel_size, fill=fill)
+            self.logger.info(f"[morphology_filter] Validated 'close' filter.")
+            return result
 
         self.logger.warning(
-            f"[morphology_filter] Unexpected mode '{mode}' provided. Defaulting to 'close' logic."
+            f"[morphology_filter] Unexpected mode='{mode}'. Fallback to 'close' logic."
         )
         return self.erode(self.dilate(M, kernel_size), kernel_size, fill=fill)
