@@ -1,5 +1,5 @@
 from typing import Optional, Protocol, TypeAlias
-
+import logging
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
@@ -22,6 +22,8 @@ class PoolingProtocol(Protocol):
 
 @class_autologger
 class Pooling:
+    logger: logging.Logger
+
     def max_pool(
         self,
         matrix: Mtx,
@@ -31,26 +33,35 @@ class Pooling:
         pad_values: int = 0,
     ) -> Mtx:
         M = np.asanyarray(matrix, dtype=np.float32)
-        if stride == None:
+
+        if stride is None:
             stride = kernel_size[0]
             self.logger.debug(
-                f"[max_pool] Stride not provided. Defaulting to kernel_size[0]: {stride}"
+                f"[max_pool] stride is None, defaulting to kernel_size[0]: {stride}"
             )
 
         if pad_width > 0:
             self.logger.debug(
-                f"[max_pool] Applying padding: width={pad_width}, value={pad_values}. Original shape: {M.shape}"
+                f"[max_pool] Applying padding: width={pad_width}, value={pad_values}. input_shape={M.shape}"
             )
             M = np.pad(
                 M, pad_width=pad_width, mode="constant", constant_values=pad_values
             )
-            self.logger.debug(f"[max_pool] Matrix shape after padding: {M.shape}")
+            self.logger.debug(f"[max_pool] Padded matrix shape: {M.shape}")
 
         windows = sliding_window_view(M, window_shape=kernel_size)
         view = windows[::stride, ::stride]
 
         self.logger.debug(
-            f"[max_pool] Creating pooling view with kernel={kernel_size} and stride={stride}. View grid shape: {view.shape[:2]}"
+            f"[max_pool] Pooling configuration: kernel={kernel_size}, stride={stride}, view_grid={view.shape[:2]}"
         )
 
-        return np.max(view, axis=(2, 3)).astype(np.uint8)
+        result = np.max(view, axis=(2, 3)).astype(np.uint8)
+
+        if result.size == 0:
+            self.logger.error(
+                f"[max_pool] Data loss: Resulting matrix is empty for input_shape={M.shape}"
+            )
+
+        self.logger.info(f"[max_pool] Validated 1 items. Output shape={result.shape}")
+        return result
