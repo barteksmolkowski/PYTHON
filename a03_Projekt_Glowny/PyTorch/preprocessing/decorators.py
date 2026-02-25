@@ -2,11 +2,9 @@ import logging
 import math
 import random
 from functools import wraps
-from typing import Any, Callable, Optional, TypeAlias, TypeVar, Union, cast, overload
+from typing import Any, Callable, TypeAlias, TypeVar, Union, cast, overload
 
 import numpy as np
-
-from common_utils import build_all
 
 ClassType = TypeVar("ClassType")
 FunctionType = TypeVar("FunctionType", bound=Callable[..., Any])
@@ -22,17 +20,18 @@ def auto_fill_color(func: FunctionType) -> FunctionType:
     @wraps(func)
     def wrapper(self, M: Any, *args, **kwargs):
         M = np.asanyarray(M)
+
         if kwargs.get("fill") is None:
             values, counts = np.unique(M, return_counts=True)
-            chosen_fill = values[np.argmax(counts)]
+            chosen_fill = int(values[np.argmax(counts)])
+            kwargs["fill"] = chosen_fill
 
             logger.debug(
-                f"[auto_fill_color] 'fill' is None. Analyzed matrix: "
-                f"found {len(values)} unique values. "
-                f"Selecting dominant color as fill: {chosen_fill}"
+                f"[auto_fill_color] Missing 'fill' parameter. "
+                f"calculated_fill={chosen_fill} from unique_values={len(values)}"
             )
-
-            kwargs["fill"] = chosen_fill
+        else:
+            logger.debug(f"[auto_fill_color] Using provided fill={kwargs.get('fill')}")
 
         return func(self, M, *args, **kwargs)
 
@@ -43,13 +42,23 @@ def with_dimensions(func: FunctionType) -> FunctionType:
     @wraps(func)
     def wrapper(self, M: Any, *args, **kwargs):
         M = np.asanyarray(M)
-        h, w = M.shape
+        h_val, w_val = M.shape[:2]
 
-        logger.debug(
-            f"[with_dimensions] Extracted matrix dimensions: height={h}, width={w}"
+        logger.debug(f"[with_dimensions] Parameters detected: h={h_val}, w={w_val}")
+
+        if "h" in kwargs or "w" in kwargs:
+            logger.warning(
+                f"[with_dimensions] Overriding manual parameters: "
+                f"h={kwargs.get('h')}, w={kwargs.get('w')} with detected_shape=({h_val}, {w_val})"
+            )
+            kwargs.pop("h", None)
+            kwargs.pop("w", None)
+
+        result = func(self, M, h_val, w_val, *args, **kwargs)
+        logger.info(
+            f"[with_dimensions] Validated dimension injection for {h_val}x{w_val} matrix."
         )
-
-        return func(self, M, h, w, *args, **kwargs)
+        return result
 
     return cast(FunctionType, wrapper)
 
@@ -57,25 +66,27 @@ def with_dimensions(func: FunctionType) -> FunctionType:
 def prepare_angle(func: FunctionType) -> FunctionType:
     @wraps(func)
     def wrapper(self, M: Any, *args, **kwargs):
-        is_right = kwargs.get("is_right")
-        limits: dict[Optional[bool], tuple[int, int]] = {
-            True: (0, 30),
-            False: (-30, 0),
-            None: (-30, 30),
-        }
+        is_right = kwargs.pop("is_right", None)
 
+        limits = {True: (0, 30), False: (-30, 0), None: (-30, 30)}
         low, high = limits.get(is_right, (-50, 50))
-        logger.debug(
-            f"[prepare_angle] Direction is_right={is_right}. Setting sampling range to ({low}, {high})"
-        )
+
+        if is_right not in limits:
+            logger.warning(
+                f"[prepare_angle] Unexpected value is_right='{is_right}'. Fallback range set to ({low}, {high})"
+            )
+        else:
+            logger.debug(
+                f"[prepare_angle] Selected range=({low}, {high}) for is_right={is_right}"
+            )
 
         if kwargs.get("angle") is None:
-            sampled_angle = random.randint(low, high)
-
+            kwargs["angle"] = random.randint(low, high)
             logger.debug(
-                f"[prepare_angle] 'angle' is None. Randomly sampled angle: {sampled_angle}"
+                f"[prepare_angle] Randomly sampled angle={kwargs['angle']} from range=({low}, {high})"
             )
-            kwargs["angle"] = sampled_angle
+        else:
+            logger.debug(f"[prepare_angle] Using provided angle={kwargs['angle']}")
 
         return func(self, M, *args, **kwargs)
 
@@ -84,9 +95,10 @@ def prepare_angle(func: FunctionType) -> FunctionType:
 
 def prepare_values(func: FunctionType) -> FunctionType:
     @wraps(func)
-    def wrapper(
-        self, M: Any, h: int, w: int, angle: float = 0, fill: int = 0, **kwargs
-    ):
+    def wrapper(self, M: Any, h: int, w: int, **kwargs):
+        angle = kwargs.pop("angle", 0)
+        fill = kwargs.pop("fill", 0)
+
         rad = math.radians(angle)
         M = np.asanyarray(M)
 
@@ -99,17 +111,16 @@ def prepare_values(func: FunctionType) -> FunctionType:
         }
 
         logger.debug(
-            f"[prepare_values] Calculated rotation params for angle {angle}°: "
-            f"cos={params['cos_a']:.4f}, sin={params['sin_a']:.4f}, "
-            f"center=({params['cx']}, {params['cy']})"
+            f"[prepare_values] Transformation context prepared: angle={angle}, rad={rad:.4f}, "
+            f"center=({params['cx']}, {params['cy']}), fill={fill}"
         )
 
-        logger.debug(
-            f"[prepare_values] Initialized new matrix {h}x{w} "
-            f"with fill_color={fill} and dtype={M.dtype}"
-        )
+        result = func(self, M, h, w, params=params, angle=angle, fill=fill, **kwargs)
 
-        return func(self, M, h, w, params=params, angle=angle, fill=fill, **kwargs)
+        logger.info(
+            f"[prepare_values] Validated parameter injection for {h}x{w} matrix."
+        )
+        return result
 
     return cast(FunctionType, wrapper)
 
@@ -121,13 +132,17 @@ def get_number_repeats(func: FunctionType) -> FunctionType:
             sampled_repeats = random.randrange(2, 5)
 
             logger.debug(
-                f"[get_number_repeats] 'repeats' missing in kwargs (args_len: {len(args)}). "
-                f"Randomly sampled repeats: {sampled_repeats}"
+                f"[get_number_repeats] 'repeats' missing in kwargs (args_len={len(args)}). "
+                f"sampled_repeats={sampled_repeats}"
             )
 
             kwargs["repeats"] = sampled_repeats
 
-        return func(*args, **kwargs)
+        result = func(*args, **kwargs)
+        logger.info(
+            f"[get_number_repeats] Validated repeat injection: repeats={kwargs.get('repeats')}"
+        )
+        return result
 
     return cast(FunctionType, wrapper)
 
@@ -148,13 +163,13 @@ def kernel_data_processing(func: FunctionType) -> FunctionType:
             r_range = range(-r_val, r_val + 1)
 
             logger.debug(
-                f"[kernel_data_processing] Processing for kernel_size: {k_size}. "
-                f"Calculated radius r_val: {r_val}, injecting range: {list(r_range)} into kwargs"
+                f"[kernel_data_processing] Processing for kernel_size={k_size}. "
+                f"calculated_radius={r_val}, range_len={len(r_range)}"
             )
             kwargs["r"] = r_range
         else:
             logger.warning(
-                "[kernel_data_processing] 'kernel_size' is None. Cannot calculate 'r' range."
+                f"[kernel_data_processing] Logic error: 'kernel_size' is {k_size}. Cannot calculate 'r' range."
             )
 
         return func(self, M, *args, **kwargs)
@@ -178,16 +193,24 @@ def parameter_complement(func: FunctionType) -> FunctionType:
             final_b_size = max(3, b_size)
 
             logger.debug(
-                f"[parameter_complement] auto_params=True. Matrix size {w}x{h}. "
+                f"[parameter_complement] auto_params=True. Matrix size={w}x{h}. "
                 f"Calculated block_size: initial={initial_b_size}, "
-                f"after odd-check={b_size}, final(min=3)={final_b_size}. "
-                f"Injected c=7 into kwargs"
+                f"odd_corrected={b_size}, final_min_3={final_b_size}. "
+                f"Injected c=7"
             )
 
             kwargs["block_size"] = final_b_size
             kwargs["c"] = 7
+        else:
+            logger.debug(
+                f"[parameter_complement] auto_params=False. Using manual parameters: {kwargs}"
+            )
 
-        return func(self, matrix, *args, **kwargs)
+        result = func(self, matrix, *args, **kwargs)
+        logger.info(
+            f"[parameter_complement] Validated parameter injection for {h}x{w} matrix."
+        )
+        return result
 
     return cast(FunctionType, wrapper)
 
@@ -211,7 +234,6 @@ def apply_to_methods(decorators: list[FuncDec], method_names: str) -> ClsDec: ..
 def apply_to_methods(
     decorators: Union[FuncDec, list[FuncDec]], method_names: Union[str, list[str]]
 ) -> ClsDec:
-
     decs = decorators if isinstance(decorators, list) else [decorators]
     names = method_names if isinstance(method_names, list) else [method_names]
 
@@ -222,36 +244,49 @@ def apply_to_methods(
             if current_attr:
                 logger.debug(
                     f"[apply_to_methods] Target method '{name}' found in class '{cls.__name__}'. "
-                    f"Applying {len(decs)} decorator(s)."
+                    f"Applying decs_count={len(decs)}."
                 )
 
                 if isinstance(current_attr, (classmethod, staticmethod)):
                     func = current_attr.__func__
-
                     for decorator in decs:
+                        dec_name = getattr(decorator, "__name__", "unknown")
                         logger.debug(
-                            f"[apply_to_methods] Wrapping {type(current_attr).__name__} '{name}' with {decorator.__name__}"
+                            f"[apply_to_methods] Wrapping {type(current_attr).__name__} '{name}' with decorator='{dec_name}'"
                         )
                         func = decorator(func)
-
                     setattr(cls, name, type(current_attr)(func))
 
                 elif callable(current_attr):
+                    wrapped_func = current_attr
                     for decorator in decs:
+                        dec_name = getattr(decorator, "__name__", "unknown")
                         logger.debug(
-                            f"[apply_to_methods] Wrapping instance method '{name}' with {decorator.__name__}"
+                            f"[apply_to_methods] Wrapping instance method '{name}' with decorator='{dec_name}'"
                         )
-                        current_attr = decorator(current_attr)
+                        wrapped_func = decorator(wrapped_func)
 
-                    setattr(cls, name, current_attr)
+                    setattr(cls, name, wrapped_func)
             else:
-                logger.warning(
-                    f"[apply_to_methods] Method '{name}' not found in class '{cls.__name__}'. Skipping decoration."
+                logger.error(
+                    f"[apply_to_methods] Method mapping error: '{name}' not found in class '{cls.__name__}'"
                 )
 
+        logger.info(
+            f"[apply_to_methods] Validated decoration for class '{cls.__name__}' (methods_count={len(names)})."
+        )
         return cls
 
     return class_rebuilder
 
 
-__all__ = build_all(locals())
+__all__ = [
+    "auto_fill_color",
+    "with_dimensions",
+    "prepare_angle",
+    "prepare_values",
+    "get_number_repeats",
+    "kernel_data_processing",
+    "parameter_complement",
+    "apply_to_methods",
+]
