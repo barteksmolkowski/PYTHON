@@ -281,12 +281,12 @@ def apply_to_methods(
 
 
 __all__ = [
+    "apply_to_methods",
     "auto_fill_color",
-    "with_dimensions",
-    "prepare_angle",
-    "prepare_values",
     "get_number_repeats",
     "kernel_data_processing",
     "parameter_complement",
-    "apply_to_methods",
+    "prepare_angle",
+    "prepare_values",
+    "with_dimensions",
 ]

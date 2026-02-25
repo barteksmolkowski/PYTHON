@@ -1,7 +1,8 @@
+import logging
 from typing import Literal, Protocol, TypeAlias, overload
 
 import numpy as np
-import logging
+
 from common_utils import class_autologger
 
 Mtx: TypeAlias = np.ndarray

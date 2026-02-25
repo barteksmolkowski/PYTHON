@@ -1,5 +1,6 @@
-from typing import Any, Literal, Protocol, TypeAlias, overload
 import logging
+from typing import Any, Literal, Protocol, TypeAlias, overload
+
 import numpy as np
 
 from common_utils import class_autologger

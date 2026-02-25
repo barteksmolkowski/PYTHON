@@ -1,7 +1,8 @@
+import logging
 from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
-import logging
+
 from common_utils import class_autologger
 
 from .augmentation import DataAugmentation

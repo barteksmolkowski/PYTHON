@@ -1,5 +1,6 @@
-from typing import Literal, Optional, Protocol, TypeAlias, Union, overload
 import logging
+from typing import Literal, Optional, Protocol, TypeAlias, Union, overload
+
 import numpy as np
 from PIL import Image
 

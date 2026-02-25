@@ -1,3 +1,4 @@
+import logging
 import random
 from typing import (
     Any,
@@ -16,7 +17,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 from numpy.lib.stride_tricks import sliding_window_view
-import logging
+
 from common_utils import class_autologger
 
 from .decorators import (
@@ -356,7 +357,7 @@ class DataAugmentation:
         for i in range(len(result)):
             ax: Axes = axes_flat[i]
             ax.imshow(result[i], cmap="gray")
-            ax.set_title(f"NR: {i+1}", fontsize=9, fontweight="bold")
+            ax.set_title(f"NR: {i + 1}", fontsize=9, fontweight="bold")
             ax.axis("off")
 
         for j in range(len(result), len(axes_flat)):
@@ -387,24 +388,24 @@ class DataAugmentation:
                     int(x.strip()) - 1 for x in user_input.split(",") if x.strip()
                 ]
                 self.logger.debug(
-                    f"[_display_debug_plots] Parsed selected_indices={[i+1 for i in selected_indices]}"
+                    f"[_display_debug_plots] Parsed selected_indices={[i + 1 for i in selected_indices]}"
                 )
 
                 for idx in selected_indices:
                     if 0 <= idx < len(histories):
-                        print(f"\n[PLOT {idx+1}] Operation Trace:")
+                        print(f"\n[PLOT {idx + 1}] Operation Trace:")
                         steps = histories[idx]
                         formatted_history = " -> ".join(
-                            [f"[{i+1}] {name}" for i, name in enumerate(steps)]
+                            [f"[{i + 1}] {name}" for i, name in enumerate(steps)]
                         )
                         print(f"  {formatted_history}")
                         self.logger.debug(
-                            f"[_display_debug_plots] Trace displayed for index={idx+1}, steps={steps}"
+                            f"[_display_debug_plots] Trace displayed for index={idx + 1}, steps={steps}"
                         )
                     else:
-                        print(f"[!] Index {idx+1} is out of range.")
+                        print(f"[!] Index {idx + 1} is out of range.")
                         self.logger.warning(
-                            f"[_display_debug_plots] Out of bounds: index={idx+1} while histories_len={len(histories)}"
+                            f"[_display_debug_plots] Out of bounds: index={idx + 1} while histories_len={len(histories)}"
                         )
 
                 self.logger.info(

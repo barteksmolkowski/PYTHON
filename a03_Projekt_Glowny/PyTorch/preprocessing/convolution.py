@@ -1,9 +1,10 @@
+import logging
 from itertools import product
 from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
-import logging
+
 from common_utils import class_autologger
 
 from .geometry import ImageGeometry

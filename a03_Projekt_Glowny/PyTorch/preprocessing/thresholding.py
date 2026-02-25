@@ -1,5 +1,6 @@
-from typing import Literal, Protocol, TypeAlias, overload
 import logging
+from typing import Literal, Protocol, TypeAlias, overload
+
 import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 
