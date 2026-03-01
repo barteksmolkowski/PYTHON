@@ -9,7 +9,6 @@ class TestTransformPipeline:
     def test_apply(self, pipeline_engine, mock_28x28_sample):
         logger.info("[test_apply] ACTION: Testing TransformPipeline.apply")
 
-        # Konfiguracja mocków dla konkretnego przypadku testowego
         pipeline_engine.grayscale.convert_color_space.return_value = mock_28x28_sample
         pipeline_engine.geometry.prepare_standard_geometry.return_value = (
             mock_28x28_sample
@@ -54,7 +53,6 @@ class TestImageDataPreprocessing:
             "[test_preprocess_exception] ACTION: Testing ImageDataPreprocessing.preprocess [Exception]"
         )
 
-        # Symulacja krytycznego błędu konwertera
         idp_engine.converter.get_channels_from_file.side_effect = Exception(
             "Mock Error"
         )
@@ -69,7 +67,6 @@ class TestImageDataPreprocessing:
         assert result is None
         logger.info("[test_preprocess_exception] Validated 1 items.")
 
-        # Reset side_effect dla kolejnych testów w tej samej klasie
         idp_engine.converter.get_channels_from_file.side_effect = None
 
     def test_preprocess(self, idp_engine, mock_batch):
