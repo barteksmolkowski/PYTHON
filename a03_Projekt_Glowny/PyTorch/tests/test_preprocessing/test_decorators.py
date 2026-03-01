@@ -2,12 +2,9 @@ import logging
 from unittest.mock import MagicMock
 
 import numpy as np
-import pytest
-
 from preprocessing import (
     apply_to_methods,
     auto_fill_color,
-    get_number_repeats,
     kernel_data_processing,
     parameter_complement,
     prepare_angle,
@@ -15,113 +12,78 @@ from preprocessing import (
     with_dimensions,
 )
 
-logger = logging.getLogger(__name__)
-
-
-class MockBase:
-    def method(self, M, *args, **kwargs):
-        return M, args, kwargs
+logger = logging.getLogger("test_logger")
 
 
 class TestDecorators:
-    @pytest.fixture
-    def mock_mtx(self):
-        return np.array(
-            [[1, 1, 1, 0], [1, 1, 0, 0], [1, 0, 0, 0], [1, 1, 1, 1]], dtype=np.uint8
-        )
+    def test_prepare_angle(self, mock_base, decorator_mtx):
+        logger.info("[test_prepare_angle] ACTION: Testing prepare_angle")
+        decorated = prepare_angle(mock_base.method)
 
-    def test_auto_fill_color(self, mock_mtx):
-        logger.info("ACTION: Testing auto_fill_color")
-        decorated = auto_fill_color(MockBase().method)
-        _, _, kwargs = decorated(None, mock_mtx)
-
-        if kwargs.get("fill") != 1:
-            logger.error(
-                f"Assertion failed: fill {kwargs.get('fill')} is not dominant 1"
-            )
-        assert kwargs["fill"] == 1
-        logger.info("SUCCESS: auto_fill_color verified")
-
-    def test_with_dimensions(self, mock_mtx):
-        logger.info("ACTION: Testing with_dimensions")
-        decorated = with_dimensions(MockBase().method)
-        _, args, _ = decorated(None, mock_mtx)
-
-        if args[0] != 4 or args[1] != 4:
-            logger.error(f"Assertion failed: dims {args[0]}x{args[1]} != 4x4")
-        assert args[0] == 4 and args[1] == 4
-        logger.info("SUCCESS: with_dimensions verified")
-
-    def test_prepare_angle(self, mock_mtx):
-        logger.info("ACTION: Testing prepare_angle")
-        decorated = prepare_angle(MockBase().method)
-        _, _, kwargs = decorated(None, mock_mtx, is_right=True)
+        _, _, kwargs = decorated(mock_base, decorator_mtx, is_right=True)
         angle = kwargs.get("angle")
 
         if not (0 <= angle <= 30):
-            logger.error(f"Assertion failed: angle {angle} outside [0, 30]")
+            logger.error(
+                f"[test_prepare_angle] Out of bounds: angle {angle} outside [0, 30]"
+            )
+
         assert 0 <= angle <= 30
-        logger.info("SUCCESS: prepare_angle verified")
+        logger.info("[test_prepare_angle] Validated 1 items.")
 
-    def test_prepare_values(self, mock_mtx):
-        logger.info("ACTION: Testing prepare_values")
-        decorated = prepare_values(MockBase().method)
-        h, w, fill = 4, 4, 10
-        _, _, kwargs = decorated(None, mock_mtx, h=h, w=w, angle=0, fill=fill)
+    def test_kernel_data_processing(self, mock_base, decorator_mtx):
+        logger.info(
+            "[test_kernel_data_processing] ACTION: Testing kernel_data_processing"
+        )
+        decorated = kernel_data_processing(mock_base.method)
+        k_size = 5
+        _, _, kwargs = decorated(mock_base, decorator_mtx, kernel_size=k_size)
 
-        params = kwargs.get("params")
-        new_m = params["new_matrix"]
+        r_val = list(kwargs.get("r", []))
+        expected_range = [-2, -1, 0, 1, 2]
 
-        if new_m.shape != (4, 4) or new_m.dtype != np.uint8:
-            logger.error("Assertion failed: physical mismatch in generated matrix")
-        assert new_m.shape == (4, 4)
-        assert new_m.dtype == np.uint8
+        if r_val != expected_range:
+            logger.error(
+                f"[test_kernel_data_processing] Logic error: expected {expected_range}, got {r_val}"
+            )
 
-        expected_sum = h * w * fill
-        if np.sum(new_m) != expected_sum:
-            logger.error(f"Assertion failed: sum {np.sum(new_m)} != {expected_sum}")
-        assert np.sum(new_m) == expected_sum
-        logger.info("SUCCESS: prepare_values verified")
+        assert r_val == expected_range
+        logger.info("[test_kernel_data_processing] Validated 1 items.")
 
-    def test_get_number_repeats(self):
-        logger.info("ACTION: Testing get_number_repeats")
+    def test_parameter_complement(self, mock_base, decorator_mtx):
+        logger.info("[test_parameter_complement] ACTION: Testing parameter_complement")
+        decorated = parameter_complement(mock_base.method)
+        _, _, kwargs = decorated(mock_base, decorator_mtx, auto_params=True)
 
-        @get_number_repeats
-        def dummy_func(*args, **kwargs):
-            return kwargs
+        c_val = kwargs.get("c")
+        bs_val = kwargs.get("block_size")
 
-        res = dummy_func(None, "mtx")
-        repeats = res.get("repeats")
+        if c_val != 7 or bs_val is None:
+            logger.error(
+                f"[test_parameter_complement] Validation error: c={c_val}, block_size={bs_val}"
+            )
 
-        if not (2 <= repeats < 5):
-            logger.error(f"Assertion failed: repeats {repeats} out of range [2, 5)")
-        assert 2 <= repeats < 5
-        logger.info("SUCCESS: get_number_repeats verified")
+        assert c_val == 7
+        assert bs_val >= 3
+        logger.info("[test_parameter_complement] Validated 1 items.")
 
-    def test_kernel_data_processing(self, mock_mtx):
-        logger.info("ACTION: Testing kernel_data_processing")
-        decorated = kernel_data_processing(MockBase().method)
-        _, _, kwargs = decorated(None, mock_mtx, kernel_size=5)
+    def test_auto_fill_color(self, mock_base):
+        logger.info("[test_auto_fill_color] ACTION: Testing auto_fill_color")
+        M = np.array([[0, 0, 1], [0, 0, 0]], dtype=np.uint8)
+        decorated = auto_fill_color(mock_base.method)
+        _, _, kwargs = decorated(mock_base, M)
 
-        r_val = list(kwargs.get("r"))
-        if r_val != [-2, -1, 0, 1, 2]:
-            logger.error(f"Assertion failed: range {r_val} incorrect for k=5")
-        assert r_val == [-2, -1, 0, 1, 2]
-        logger.info("SUCCESS: kernel_data_processing verified")
+        fill = kwargs.get("fill")
+        if fill != 0:
+            logger.error(
+                f"[test_auto_fill_color] Logic error: expected fill 0, got {fill}"
+            )
 
-    def test_parameter_complement(self, mock_mtx):
-        logger.info("ACTION: Testing parameter_complement")
-        decorated = parameter_complement(MockBase().method)
-        _, _, kwargs = decorated(None, mock_mtx, auto_params=True)
-
-        if kwargs.get("c") != 7 or not isinstance(kwargs.get("block_size"), int):
-            logger.error("Assertion failed: auto_params complement failed")
-        assert kwargs["c"] == 7
-        assert kwargs["block_size"] >= 3
-        logger.info("SUCCESS: parameter_complement verified")
+        assert fill == 0
+        logger.info("[test_auto_fill_color] Validated 1 items.")
 
     def test_apply_to_methods(self):
-        logger.info("ACTION: Testing apply_to_methods")
+        logger.info("[test_apply_to_methods] ACTION: Testing apply_to_methods")
 
         class Target:
             def action(self, M):
@@ -132,6 +94,68 @@ class TestDecorators:
         rebuilder(Target)
 
         if not mock_dec.called:
-            logger.error("Assertion failed: decorator not applied to method")
+            logger.error(
+                "[test_apply_to_methods] Validation error: decorator was not called"
+            )
+
         assert mock_dec.called
-        logger.info("SUCCESS: apply_to_methods verified")
+        logger.info("[test_apply_to_methods] Validated 1 items.")
+
+    def test_with_dimensions(self, mock_base, decorator_mtx):
+        logger.info("[test_with_dimensions] ACTION: Testing with_dimensions")
+        decorated = with_dimensions(mock_base.method)
+        _, args, _ = decorated(mock_base, decorator_mtx)
+
+        h, w = args[0], args[1]
+        if h != 2 or w != 2:
+            logger.error(
+                f"[test_with_dimensions] Shape mismatch: expected 2x2, got {h}x{w}"
+            )
+
+        assert h == 2
+        assert w == 2
+        logger.info("[test_with_dimensions] Validated 1 items.")
+
+    def test_get_number_repeats(self, dummy_repeats_func):
+        logger.info("[test_get_number_repeats] ACTION: Testing get_number_repeats")
+
+        res = dummy_repeats_func(None, "mtx")
+        repeats = res.get("repeats")
+
+        if not (2 <= repeats < 5):
+            logger.error(
+                f"[test_get_number_repeats] Out of bounds: repeats {repeats} not in [2, 5)"
+            )
+
+        assert 2 <= repeats < 5
+        logger.info("[test_get_number_repeats] Validated 1 items.")
+
+    def test_prepare_values(self, mock_base, mock_mtx):
+        logger.info("[test_prepare_values] ACTION: Testing prepare_values")
+
+        decorated = prepare_values(mock_base.method)
+        h, w, fill = 4, 4, 10
+
+        _, _, kwargs = decorated(mock_base, mock_mtx, h=h, w=w, angle=0, fill=fill)
+
+        params = kwargs.get("params")
+        new_m = params.get("new_matrix")
+
+        if new_m is None or new_m.shape != (4, 4) or new_m.dtype != np.uint8:
+            logger.error(
+                f"[test_prepare_values] Physical mismatch: shape={getattr(new_m, 'shape', None)}, dtype={getattr(new_m, 'dtype', None)}"
+            )
+
+        assert new_m.shape == (4, 4)
+        assert new_m.dtype == np.uint8
+
+        expected_sum = h * w * fill
+        actual_sum = np.sum(new_m)
+
+        if actual_sum != expected_sum:
+            logger.error(
+                f"[test_prepare_values] Data loss: sum {actual_sum} != {expected_sum}"
+            )
+
+        assert actual_sum == expected_sum
+        logger.info("[test_prepare_values] Validated 1 items.")
