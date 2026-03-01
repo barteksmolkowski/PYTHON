@@ -15,10 +15,9 @@ from typing import (
 
 import matplotlib.pyplot as plt
 import numpy as np
+from common_utils import class_autologger
 from matplotlib.axes import Axes
 from numpy.lib.stride_tricks import sliding_window_view
-
-from common_utils import class_autologger
 
 from .decorators import (
     apply_to_methods,

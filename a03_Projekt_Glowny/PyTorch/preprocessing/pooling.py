@@ -2,9 +2,8 @@ import logging
 from typing import Optional, Protocol, TypeAlias
 
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
-
 from common_utils import class_autologger
+from numpy.lib.stride_tricks import sliding_window_view
 
 Mtx: TypeAlias = np.ndarray
 Kernel: TypeAlias = tuple[int, int]

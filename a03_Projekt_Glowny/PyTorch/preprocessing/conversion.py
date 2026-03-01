@@ -2,9 +2,8 @@ import logging
 from typing import Protocol, TypeAlias
 
 import numpy as np
-from PIL import Image
-
 from common_utils import class_autologger
+from PIL import Image
 
 Mtx: TypeAlias = np.ndarray
 MtxList: TypeAlias = list[np.ndarray]
