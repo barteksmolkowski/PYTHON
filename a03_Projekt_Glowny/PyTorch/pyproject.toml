@@ -5,9 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "neural-digit-recognizer"
 version = "0.1.0"
-description = "System do rozpoznawania cyfr z zaawansowaną augmentacją danych"
+description = "Proprietary Deep Learning Framework in NumPy: From Augmentation Engine to Inference and Training Engine"
 authors = [
-    {name = "Bartek", email = "twoj@email.com"}
+    {name = "Bartosz", email = "bartek.smolkowski@email.com"}
 ]
 dependencies = [
     "numpy",
@@ -21,7 +21,7 @@ requires-python = ">=3.10"
 
 [tool.setuptools]
 packages = ["preprocessing", "features", "data", "nn", "training"]
-py-modules = ["common_utils", "core", "main"]
+py-modules = ["common_utils", "core"]
 
 [tool.setuptools.package-data]
 "*" = ["config.json"]
@@ -39,22 +39,30 @@ ensure_newline_before_comments = true
 line-length = 88
 target-version = ['py310']
 include = '\.pyi?$'
+force-exclude = "tasks_for_leetcode.py"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+norecursedirs = ["tasks_for_leetcode.py"]
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
-
 [tool.ruff]
 line-length = 88
 select = ["E", "F", "B", "I", "RUF022"]
+exclude = ["tasks_for_leetcode.py"]
 
 [tool.pyright]
 reportUndefinedVariable = "error" 
+exclude = [
+    "tasks_for_leetcode.py",
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*"
+]
 
 executionEnvironments = [
   { root = "tests", reportUndefinedVariable = "none" }
