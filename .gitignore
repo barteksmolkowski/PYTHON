@@ -1,10 +1,28 @@
-engine_history.json
-How_add_to_a01_Nauka_aktualne.md
-DEVELOPMENT.MD
-*.log
-.pytest_cache/
-.ruff_cache/
+# --- System & IDE Specific (Global) ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+last_folder.tmp
+.env
+
+# --- Python Build & Cache (Global) ---
 __pycache__/
 *.pyc
-.vscode/
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+
+# --- Local Data & Logging (Global) ---
+*.log
+biuletyn_silnika.log
 tmp/
+pliki/
+data/
+STRUCTURE.txt
+
+# --- Personal Development Scripts ---
+tasks_for_leetcode.py
+How_add_to_a01_Nauka_aktualne.md
+DEVELOPMENT.MD
