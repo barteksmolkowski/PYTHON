@@ -53,9 +53,9 @@ def log_system_info():
 
 
 def setup_logging(
-    level: int = logging.DEBUG, 
-    file_name: str = "engine_history.log", 
-    log_to_file: bool = True
+    level: int = logging.DEBUG,
+    file_name: str = "engine_history.log",
+    log_to_file: bool = True,
 ) -> None:
     FILE_FORMAT = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
