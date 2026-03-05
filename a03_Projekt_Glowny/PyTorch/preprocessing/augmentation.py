@@ -1,5 +1,6 @@
 import logging
 import random
+from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
@@ -105,40 +106,246 @@ class ParameterProviderProtocol(Protocol):
     def get_value(self) -> float: ...
 
 
+def _pick_random_pipeline(
+    available_keys: List[str],
+    groups: Dict[str, List[Tuple[Callable, str]]],
+    num_samples: int = 3,
+) -> Tuple[List[Tuple[Callable, str]], List[str]]:
+    import random
+
+    selected_keys = random.sample(available_keys, min(len(available_keys), num_samples))
+    pipeline = [random.choice(groups[k]) for k in selected_keys]
+    return pipeline, selected_keys
+
+
+def _get_augmentation_groups(
+    geometry: GeometryAugmentationProtocol,
+    noise: NoiseAugmentationProtocol,
+    morphology: MorphologyAugmentationProtocol,
+) -> Dict[str, List[Tuple[Callable, str]]]:
+    return {
+        "geometry": [
+            (getattr(geometry, m), m) for m in dir(geometry) if not m.startswith("_")
+        ],
+        "noise": [(getattr(noise, m), m) for m in dir(noise) if not m.startswith("_")],
+        "morphology": [
+            (getattr(morphology, m), m)
+            for m in dir(morphology)
+            if not m.startswith("_")
+        ],
+    }
+
+
+def augment_engine(
+    m_arr: np.ndarray,
+    repeats: int,
+    max_attempts: int,
+    pipeline_provider: Callable[[], List[Tuple[Callable, str]]],
+    orig_px: int,
+    min_area_ratio: float = 0.5,
+) -> Tuple[List[np.ndarray], List[List[str]], int]:
+    results: List[np.ndarray] = []
+    histories: List[List[str]] = []
+    attempts = 0
+
+    while len(results) < repeats and attempts < max_attempts:
+        attempts += 1
+        pipeline = pipeline_provider()
+        current_m = m_arr.copy()
+        current_history = [name for _, name in pipeline]
+
+        for func, _ in pipeline:
+            current_m = func(current_m)
+
+        current_px = int(np.sum(current_m > 0))
+        if current_px >= (orig_px * min_area_ratio):
+            results.append(current_m)
+            histories.append(current_history)
+
+    return results, histories, attempts
+
+
+def _calculate_grid_size(items_count: int, cols: int = 10) -> int:
+    return (items_count + cols - 1) // cols
+
+
+def _parse_input_indices(raw_input: str) -> List[int]:
+    return [int(x.strip()) - 1 for x in raw_input.split(",") if x.strip()]
+
+
+def _get_trace_report(idx: int, history: List[str]) -> str:
+    steps = " -> ".join([f"[{i + 1}] {name}" for i, name in enumerate(history)])
+    return f"\n[PLOT {idx + 1}] Operation Trace:\n  {steps}"
+
+
+def horizontal_flip(M: np.ndarray) -> np.ndarray:
+    return np.asanyarray(M)[:, ::-1]
+
+
+def vertical_flip(M: np.ndarray) -> np.ndarray:
+    return np.asanyarray(M)[::-1, :]
+
+
+def rotate_90(M: np.ndarray, is_right: bool = True) -> np.ndarray:
+    k = -1 if is_right else 1
+    return np.rot90(np.asanyarray(M), k=k).copy()
+
+
+def _create_supplement_all_sides(
+    M: np.ndarray, dx: int, dy: int, shade_gray_color: int
+) -> np.ndarray:
+    return np.pad(
+        M,
+        pad_width=((abs(dy), abs(dy)), (abs(dx), abs(dx))),
+        mode="constant",
+        constant_values=shade_gray_color,
+    ).astype(np.uint8)
+
+
+def rotate_small_angle(
+    M: np.ndarray,
+    h: int,
+    w: int,
+    cos_a: float,
+    sin_a: float,
+    cx: float,
+    cy: float,
+    new_m: np.ndarray,
+) -> np.ndarray:
+    y_new, x_new = np.indices((h, w))
+    tx, ty = x_new - cx, y_new - cy
+    xf = tx * cos_a + ty * sin_a + cx
+    yf = -tx * sin_a + ty * cos_a + cy
+
+    mask = (xf >= 0) & (xf < w - 1) & (yf >= 0) & (yf < h - 1)
+    xi, yi = xf[mask].astype(int), yf[mask].astype(int)
+
+    new_m[y_new[mask], x_new[mask]] = M[yi, xi]
+    return new_m.astype(np.uint8)
+
+
+def random_shift_engine(
+    M: np.ndarray, h: int, w: int, dx: int, dy: int, sx: int, sy: int, fill: int
+) -> np.ndarray:
+    padded = np.pad(
+        M,
+        pad_width=((abs(dy), abs(dy)), (abs(dx), abs(dx))),
+        mode="constant",
+        constant_values=fill,
+    ).astype(np.uint8)
+
+    shifted = padded[sy : sy + h, sx : sx + w].copy()
+    return shifted
+
+
+def get_uniform_value(low: float, high: float) -> float:
+    return random.uniform(low, high)
+
+
+def gaussian_noise(M: np.ndarray, std: float, noise_map: np.ndarray) -> np.ndarray:
+    np_M = M.astype(np.float32)
+    return np.clip(np_M + (noise_map * std), 0, 255).astype(np.uint8)
+
+
+def salt_and_pepper(M: np.ndarray, prob: float, random_map: np.ndarray) -> np.ndarray:
+    result = M.copy().astype(np.uint8)
+    salt_threshold = 1.0 - prob / 2.0
+    pepper_threshold = prob / 2.0
+    result[random_map < pepper_threshold] = 0
+    result[random_map > salt_threshold] = 255
+    return result
+
+
+def dilate(
+    M: np.ndarray, kernel_size: int, sliding_window_func: Callable
+) -> np.ndarray:
+    return sliding_window_func(M, kernel_size, pad_value=0)
+
+
+def erode(
+    M: np.ndarray, kernel_size: int, fill: int, sliding_window_func: Callable
+) -> np.ndarray:
+    return sliding_window_func(
+        M,
+        kernel_size,
+        op_func=lambda win, axes: np.min(win, axis=axes),
+        pad_value=fill,
+    )
+
+
+def get_boundaries(M: np.ndarray, eroded: np.ndarray) -> np.ndarray:
+    diff = M.astype(np.int16) - eroded.astype(np.int16)
+    return np.clip(diff, 0, 255).astype(np.uint8)
+
+
+def morphology_filter(
+    M: np.ndarray,
+    kernel_size: int,
+    fill: int,
+    mode: str,
+    dilate_func: Callable,
+    erode_func: Callable,
+) -> np.ndarray:
+    if mode == "open":
+        return dilate_func(erode_func(M, kernel_size, fill), kernel_size)
+    return erode_func(dilate_func(M, kernel_size), kernel_size, fill)
+
+
+def sliding_window_engine(
+    M_arr: np.ndarray,
+    kernel_size: int,
+    pad_before: int,
+    pad_after: int,
+    pad_value: int,
+    op_func: Callable[[np.ndarray, Tuple[int, ...]], np.ndarray],
+) -> np.ndarray:
+    padded = np.pad(
+        M_arr,
+        pad_width=((pad_before, pad_after), (pad_before, pad_after)),
+        mode="constant",
+        constant_values=pad_value,
+    )
+    windows = np.lib.stride_tricks.sliding_window_view(
+        padded, (kernel_size, kernel_size)
+    )
+    result = op_func(windows, (2, 3)).astype(np.uint8)
+    return result[: M_arr.shape[0], : M_arr.shape[1]]
+
+
+@dataclass
 @class_autologger
 class DataAugmentation:
-    logger: logging.Logger
+    geometry: Optional[GeometryAugmentationProtocol] = None
+    noise: Optional[NoiseAugmentationProtocol] = None
+    morphology: Optional[MorphologyAugmentationProtocol] = None
 
-    def __init__(
-        self,
-        geometry: Optional[GeometryAugmentationProtocol] = None,
-        noise: Optional[NoiseAugmentationProtocol] = None,
-        morphology: Optional[MorphologyAugmentationProtocol] = None,
-    ):
-        if geometry is None:
-            self.logger.debug(
-                "[__init__] geometry is None, using default GeometryAugmentation"
-            )
-        self.geometry = geometry or GeometryAugmentation()
+    logger: logging.Logger = field(init=False)
+    _cached_groups: Dict[str, List[Tuple[Callable, str]]] = field(
+        init=False, repr=False
+    )
 
-        if noise is None:
-            self.logger.debug(
-                "[__init__] noise is None, using default NoiseAugmentation"
-            )
-        self.noise = noise or NoiseAugmentation()
+    def __post_init__(self) -> None:
+        if self.geometry is None:
+            self.geometry = GeometryAugmentation()
+        if self.noise is None:
+            self.noise = NoiseAugmentation()
+        if self.morphology is None:
+            self.morphology = MorphologyAugmentation()
 
-        if morphology is None:
-            self.logger.debug(
-                "[__init__] morphology is None, using default MorphologyAugmentation"
-            )
-        self.morphology = morphology or MorphologyAugmentation()
+        assert self.geometry is not None
+        assert self.noise is not None
+        assert self.morphology is not None
 
-        self._cached_groups = self._get_augmentation_groups()
-        self.logger.info(
-            f"[__init__] Validated initialization with {len(self._cached_groups)} groups."
+        self._cached_groups = _get_augmentation_groups(
+            self.geometry, self.noise, self.morphology
         )
+        self.logger.info(f"Initialized with {len(self._cached_groups)} groups.")
 
     def _get_augmentation_groups(self) -> Dict[str, List[Tuple[Callable, str]]]:
+        assert self.geometry is not None
+        assert self.noise is not None
+        assert self.morphology is not None
+
         self.logger.debug(
             f"[_get_augmentation_groups] Building groups with: "
             f"geometry={type(self.geometry).__name__}, "
@@ -146,58 +353,7 @@ class DataAugmentation:
             f"morphology={type(self.morphology).__name__}"
         )
 
-        groups = {
-            "Flip": [
-                (
-                    lambda m, **kwargs: self.geometry.horizontal_flip(m, **kwargs),
-                    "H-Flip",
-                ),
-                (
-                    lambda m, **kwargs: self.geometry.vertical_flip(m, **kwargs),
-                    "V-Flip",
-                ),
-            ],
-            "Rotation": [
-                (
-                    lambda m, **kwargs: self.geometry.rotate_90(
-                        m, is_right=True, **kwargs
-                    ),
-                    "Rot90-R",
-                ),
-                (
-                    lambda m, **kwargs: self.geometry.rotate_small_angle(
-                        m, **kwargs, is_right=True
-                    ),
-                    "RotSmall-R",
-                ),
-            ],
-            "Morphology": [
-                (
-                    lambda m, **kwargs: self.morphology.dilate(
-                        m, kernel_size=1, **kwargs
-                    ),
-                    "Dilate",
-                ),
-                (
-                    lambda m, **kwargs: self.morphology.morphology_filter(
-                        m, 1, mode="close", **kwargs
-                    ),
-                    "Closing",
-                ),
-            ],
-            "Noise_Shift": [
-                (
-                    lambda m, **kwargs: self.noise.salt_and_pepper(m, **kwargs),
-                    "S&P-Noise",
-                ),
-                (
-                    lambda m, **kwargs: self.geometry.random_shift(
-                        m, is_right=True, **kwargs
-                    ),
-                    "Shift-R",
-                ),
-            ],
-        }
+        groups = _get_augmentation_groups(self.geometry, self.noise, self.morphology)
 
         self.logger.info(
             f"[_get_augmentation_groups] Built and silenced {len(groups)} groups."
@@ -206,19 +362,12 @@ class DataAugmentation:
 
     def _pick_random_pipeline(self) -> List[Tuple[Callable, str]]:
         available_keys = list(self._cached_groups.keys())
-
-        selected_keys = random.sample(available_keys, 3)
-        self.logger.debug(
-            f"[_pick_random_pipeline] Selected keys: {selected_keys} from available: {available_keys}"
+        pipeline, selected_keys = _pick_random_pipeline(
+            available_keys, self._cached_groups
         )
 
-        pipeline = []
-        for k in selected_keys:
-            choice = random.choice(self._cached_groups[k])
-            self.logger.debug(
-                f"[_pick_random_pipeline] Picked transformation: '{choice[1]}' from group: '{k}'"
-            )
-            pipeline.append(choice)
+        for (_, name), key in zip(pipeline, selected_keys):
+            self.logger.debug(f"Selected '{name}' from group '{key}'")
 
         return pipeline
 
@@ -226,196 +375,57 @@ class DataAugmentation:
     def augment(
         self, M: Mtx, repeats: Optional[int] = None, debug: bool = False
     ) -> MtxList:
-        if repeats is None:
-            self.logger.debug(
-                "[augment] repeats is None, setting default value repeats=1"
-            )
-            repeats = 1
+        num_repeats: int = repeats if repeats is not None else 1
+        m_arr = np.asanyarray(M).astype(np.uint8)
+        orig_px = int(np.sum(m_arr > 0))
+        max_attempts = num_repeats * 100
 
-        result: MtxList = []
-        histories: list[list[str]] = []
+        self.logger.debug(f"Starting augmentation: repeats={num_repeats}")
 
-        M_arr = np.asanyarray(M).astype(np.uint8)
-        orig_px = np.sum(M_arr > 0)
-
-        attempts = 0
-        max_attempts = repeats * 100
-        self.logger.debug(
-            f"[augment] Starting augmentation loop: repeats={repeats}, max_attempts={max_attempts}, orig_px={orig_px}"
+        results, histories, attempts = augment_engine(
+            m_arr=m_arr,
+            repeats=num_repeats,
+            max_attempts=max_attempts,
+            pipeline_provider=self._pick_random_pipeline,
+            orig_px=orig_px,
         )
-
-        while len(result) < repeats and attempts < max_attempts:
-            attempts += 1
-            pipeline = self._pick_random_pipeline()
-            names = [name for _, name in pipeline]
-
-            if names.count("Rotation") > 1:
-                self.logger.debug(
-                    f"[augment] Skipping pipeline {names}: too many Rotation groups"
-                )
-                continue
-
-            rot_names = [n for n in names if "Rot" in n]
-            if len(rot_names) > 1:
-                self.logger.debug(
-                    f"[augment] Skipping pipeline {names}: multiple rotation transforms detected {rot_names}"
-                )
-                continue
-
-            if "Boundaries" in names and "Erode" in names:
-                self.logger.debug(
-                    f"[augment] Skipping pipeline {names}: incompatible Boundaries + Erode"
-                )
-                continue
-            if "Dilate" in names and "Erode" in names:
-                self.logger.debug(
-                    f"[augment] Skipping pipeline {names}: incompatible Dilate + Erode"
-                )
-                continue
-            if "V-Flip" in names:
-                self.logger.debug(
-                    f"[augment] Skipping pipeline {names}: V-Flip is blacklisted"
-                )
-                continue
-            if any("Rot" in n for n in names) and any(
-                m in names for m in ["Dilate", "Erode", "Opening"]
-            ):
-                self.logger.debug(
-                    f"[augment] Skipping pipeline {names}: Rotation cannot be combined with morphology"
-                )
-                continue
-
-            new_m = M_arr.copy()
-            for func, _ in pipeline:
-                new_m = func(new_m)
-
-            final_px = np.sum(new_m > 0)
-            retention = final_px / orig_px if orig_px > 0 else 0
-
-            if not (0.2 < retention < 3.0):
-                self.logger.debug(
-                    f"[augment] Rejected by retention: {retention:.2f} (orig_px={orig_px}, final_px={final_px})"
-                )
-                continue
-
-            coords = np.argwhere(new_m > 0)
-            if coords.size > 0:
-                y_min, x_min = coords.min(axis=0)
-                y_max, x_max = coords.max(axis=0)
-                h, w = (y_max - y_min + 1), (x_max - x_min + 1)
-
-                aspect_ratio = h / (w + 1e-8)
-
-                if aspect_ratio < 0.2:
-                    self.logger.debug(
-                        f"[augment] Rejected by aspect_ratio: {aspect_ratio:.2f} for pipeline {names}"
-                    )
-                    continue
-
-                result.append(new_m.astype(np.uint8))
-                self.logger.debug(
-                    f"[augment] Successfully added sample {len(result)}/{repeats} using {names}"
-                )
-                if debug:
-                    histories.append(names)
-            else:
-                self.logger.debug(
-                    f"[augment] Rejected: Resulting matrix is empty after pipeline {names}"
-                )
 
         if attempts >= max_attempts:
-            self.logger.warning(
-                f"[augment] Max attempts reached: {attempts}/{max_attempts}. Collected only {len(result)}/{repeats} samples."
-            )
+            self.logger.warning(f"Max attempts reached: {attempts}/{max_attempts}")
 
         if debug:
-            self.logger.info(f"[augment] Entering debug mode: items={len(result)}")
-            self._display_debug_plots(result, histories)
+            self._display_debug_plots(results, histories)
 
-        self.logger.info(f"[augment] Validated {len(result)} augmented items.")
-        return result
+        self.logger.info(f"Generated {len(results)} samples.")
+        return results
 
-    def _display_debug_plots(self, result: list, histories: list):
-        cols = 10
-        rows = (len(result) + cols - 1) // cols
+    def _display_debug_plots(
+        self, result: List[np.ndarray], histories: List[List[str]]
+    ) -> None:
+        cols: int = 10
+        rows: int = _calculate_grid_size(len(result), cols)
 
-        self.logger.debug(
-            f"[_display_debug_plots] Preparing grid with rows={rows}, cols={cols} for items={len(result)}"
-        )
-
-        fig, axes = plt.subplots(
-            rows,
-            cols,
-            figsize=(15, 1.6 * rows),
-            gridspec_kw={"wspace": 0.1, "hspace": 0.4},
-            squeeze=False,
-        )
-
-        axes_flat = axes.flatten()
-
-        for i in range(len(result)):
-            ax: Axes = axes_flat[i]
-            ax.imshow(result[i], cmap="gray")
-            ax.set_title(f"NR: {i + 1}", fontsize=9, fontweight="bold")
-            ax.axis("off")
-
-        for j in range(len(result), len(axes_flat)):
-            extra_ax: Axes = axes_flat[j]
-            extra_ax.axis("off")
-
-        plt.show()
-        self.logger.info(
-            f"[_display_debug_plots] Rendered debug grid for {len(result)} items."
-        )
+        self.logger.debug(f"Grid setup: {rows}x{cols} for {len(result)} items.")
 
         print("\n" + "=" * 50 + " INTERACTIVE DEBUG MODE (2026) " + "=" * 50)
 
         while True:
-            user_input = input(
-                "\nEnter plot indices that look incorrect (e.g., 1, 5, 12) or 'q' to quit: "
-            )
-
-            if user_input.lower() == "q":
-                self.logger.debug(
-                    f"[_display_debug_plots] Loop termination triggered by input='{user_input}'"
-                )
-                print("Exiting Debug Mode...")
+            cmd: str = input("\nEnter indices (1, 5...) or 'q': ").lower()
+            if cmd == "q":
                 break
 
             try:
-                selected_indices = [
-                    int(x.strip()) - 1 for x in user_input.split(",") if x.strip()
-                ]
-                self.logger.debug(
-                    f"[_display_debug_plots] Parsed selected_indices={[i + 1 for i in selected_indices]}"
-                )
-
-                for idx in selected_indices:
+                indices: List[int] = _parse_input_indices(cmd)
+                for idx in indices:
                     if 0 <= idx < len(histories):
-                        print(f"\n[PLOT {idx + 1}] Operation Trace:")
-                        steps = histories[idx]
-                        formatted_history = " -> ".join(
-                            [f"[{i + 1}] {name}" for i, name in enumerate(steps)]
-                        )
-                        print(f"  {formatted_history}")
-                        self.logger.debug(
-                            f"[_display_debug_plots] Trace displayed for index={idx + 1}, steps={steps}"
-                        )
+                        report: str = _get_trace_report(idx, histories[idx])
+                        print(report)
                     else:
-                        print(f"[!] Index {idx + 1} is out of range.")
-                        self.logger.warning(
-                            f"[_display_debug_plots] Out of bounds: index={idx + 1} while histories_len={len(histories)}"
-                        )
-
-                self.logger.info(
-                    f"[_display_debug_plots] Successfully processed {len(selected_indices)} trace requests."
-                )
-
+                        self.logger.warning(f"Index {idx + 1} out of bounds.")
             except ValueError:
-                print("[!] Error! Please enter comma-separated numbers or 'q'.")
-                self.logger.error(
-                    f"[_display_debug_plots] Invalid input format: input='{user_input}'"
-                )
+                self.logger.error(f"Invalid debug input: {cmd}")
+
+        self.logger.info("Debug session closed.")
 
 
 @class_autologger
@@ -423,31 +433,19 @@ class DataAugmentation:
     [auto_fill_color, with_dimensions], ["rotate_small_angle", "random_shift"]
 )
 class GeometryAugmentation:
-    logger: logging.Logger
+    logger: logging.Logger = field(init=False, repr=False)
 
     def horizontal_flip(self, M: np.ndarray) -> np.ndarray:
-        self.logger.debug(f"[horizontal_flip] Flipping matrix with shape: {M.shape}")
-        return np.asanyarray(M)[:, ::-1]
+        self.logger.debug(f"[horizontal_flip] Shape: {M.shape}")
+        return horizontal_flip(M)
 
     def vertical_flip(self, M: np.ndarray) -> np.ndarray:
-        self.logger.debug(
-            f"[vertical_flip] Flipping matrix vertically with shape: {M.shape}"
-        )
-        return np.asanyarray(M)[::-1, :]
+        self.logger.debug(f"[vertical_flip] Shape: {M.shape}")
+        return vertical_flip(M)
 
     def rotate_90(self, M: np.ndarray, is_right: bool = True) -> np.ndarray:
-        M = np.asanyarray(M)
-
-        if is_right:
-            self.logger.debug(f"[rotate_90] Direction: clockwise, is_right={is_right}")
-            k = -1
-        else:
-            self.logger.debug(
-                f"[rotate_90] Direction: counter-clockwise, is_right={is_right}"
-            )
-            k = 1
-
-        return np.rot90(M, k=k).copy()
+        self.logger.debug(f"[rotate_90] is_right={is_right}")
+        return rotate_90(M, is_right)
 
     @prepare_angle
     @prepare_values
@@ -456,192 +454,138 @@ class GeometryAugmentation:
         M: np.ndarray,
         h: int,
         w: int,
-        params: dict,
+        params: Dict[str, Any],
         angle: float = 0.0,
         fill: int = 0,
         **kwargs,
     ) -> np.ndarray:
-        c, s = params["cos_a"], params["sin_a"]
-        cx, cy = params["cx"], params["cy"]
-        new_m: np.ndarray = params["new_matrix"]
+        self.logger.debug(f"[rotate_small_angle] angle={angle}")
 
-        self.logger.debug(
-            f"[rotate_small_angle] Rotating {h}x{w} matrix. "
-            f"angle={angle}, fill={fill}, center=({cx}, {cy})"
+        cos_a: float = float(params["cos_a"])
+        sin_a: float = float(params["sin_a"])
+        cx: float = float(params["cx"])
+        cy: float = float(params["cy"])
+        new_matrix: np.ndarray = params["new_matrix"]
+
+        result = rotate_small_angle(
+            M=M,
+            h=int(h),
+            w=int(w),
+            cos_a=cos_a,
+            sin_a=sin_a,
+            cx=cx,
+            cy=cy,
+            new_m=new_matrix,
         )
 
-        y_new, x_new = np.indices((h, w))
-        tx, ty = x_new - cx, y_new - cy
-        xf = tx * c + ty * s + cx
-        yf = -tx * s + ty * c + cy
-
-        mask = (xf >= 0) & (xf < w - 1) & (yf >= 0) & (yf < h - 1)
-
-        xi, yi = xf[mask].astype(int), yf[mask].astype(int)
-        new_m[y_new[mask], x_new[mask]] = M[yi, xi]
-
-        self.logger.info(f"[rotate_small_angle] Validated rotation for {h}x{w} matrix.")
-        return new_m.astype(np.uint8)
+        self.logger.info(f"[rotate_small_angle] Completed {h}x{w}")
+        return result
 
     def _create_supplement_all_sides(
         self, M: np.ndarray, x_y_axis: Tuple[int, int], shade_gray_color: int
     ) -> np.ndarray:
         dx, dy = x_y_axis
-
-        self.logger.debug(
-            f"[_create_supplement_all_sides] Padding matrix (shape={M.shape}) "
-            f"with dx={abs(dx)}, dy={abs(dy)}, color={shade_gray_color}"
-        )
-
-        return np.pad(
-            M,
-            pad_width=((abs(dy), abs(dy)), (abs(dx), abs(dx))),
-            mode="constant",
-            constant_values=shade_gray_color,
-        ).astype(np.uint8)
-
-    def random_shift(
-        self,
-        M: np.ndarray,
-        h: int,
-        w: int,
-        fill: int,
-        is_right: Optional[bool] = None,
-        **kwargs,
-    ) -> np.ndarray:
-        if is_right is True:
-            dx, dy = random.randint(1, 4), random.randint(-4, 4)
-            self.logger.debug(
-                f"[random_shift] Direction fixed to RIGHT: is_right={is_right}, sampled dx={dx}, dy={dy}"
-            )
-        elif is_right is False:
-            dx, dy = random.randint(-4, -1), random.randint(-4, 4)
-            self.logger.debug(
-                f"[random_shift] Direction fixed to LEFT: is_right={is_right}, sampled dx={dx}, dy={dy}"
-            )
-        else:
-            dx, dy = random.randint(-4, 4), random.randint(-4, 4)
-            self.logger.debug(
-                f"[random_shift] Direction is RANDOM: is_right={is_right}, sampled dx={dx}, dy={dy}"
-            )
-
-        padded = self._create_supplement_all_sides(M, (dx, dy), fill)
-
-        sx, sy = random.randint(0, abs(dx) * 2), random.randint(0, abs(dy) * 2)
-        self.logger.debug(
-            f"[random_shift] Cropping from padded matrix: start_x={sx}, start_y={sy} for target_size={w}x{h}"
-        )
-
-        shifted = padded[sy : sy + h, sx : sx + w].copy()
-
-        if shifted.shape != (h, w):
-            self.logger.warning(
-                f"[random_shift] Output shape mismatch: expected {(h, w)}, got {shifted.shape}"
-            )
-        else:
-            self.logger.info(
-                f"[random_shift] Validated shifted matrix of size {w}x{h}."
-            )
-
-        return shifted
+        self.logger.debug(f"[_create_supplement_all_sides] dx={dx}, dy={dy}")
+        return _create_supplement_all_sides(M, dx, dy, shade_gray_color)
 
 
+def random_shift(
+    self,
+    M: np.ndarray,
+    h: int,
+    w: int,
+    fill: int,
+    is_right: Optional[bool] = None,
+    **kwargs,
+) -> np.ndarray:
+    if is_right is True:
+        dx, dy = random.randint(1, 4), random.randint(-4, 4)
+    elif is_right is False:
+        dx, dy = random.randint(-4, -1), random.randint(-4, 4)
+    else:
+        dx, dy = random.randint(-4, 4), random.randint(-4, 4)
+
+    sx, sy = random.randint(0, abs(dx) * 2), random.randint(0, abs(dy) * 2)
+
+    shifted = random_shift_engine(
+        M=M,
+        h=h,
+        w=w,
+        dx=dx,
+        dy=dy,
+        sx=sx,
+        sy=sy,
+        fill=fill,
+    )
+
+    if shifted.shape[:2] != (h, w):
+        self.logger.warning(f"Shape mismatch: {shifted.shape} vs {(h, w)}")
+
+    return shifted
+
+
+@dataclass
 @class_autologger
 class RandomUniformProvider:
-    logger: logging.Logger
+    low: float = 0.0
+    high: float = 1.0
 
-    def __init__(self, low: float = 0.0, high: float = 1.0):
-        if low > high:
+    logger: logging.Logger = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        if self.low > self.high:
             self.logger.warning(
-                f"[__init__] Logic error: low={low} is greater than high={high}. Swapping values."
+                f"Logic error: low={self.low} > high={self.high}. Swapping values."
             )
+            self.low, self.high = self.high, self.low
 
-        self.low = low
-        self.high = high
-        self.logger.info(
-            f"[__init__] Validated provider with range [{self.low}, {self.high}]."
-        )
+        self.logger.info(f"Validated provider with range [{self.low}, {self.high}].")
 
     def get_value(self) -> float:
-        value = random.uniform(self.low, self.high)
-        self.logger.debug(
-            f"[get_value] Generated value={value:.4f} for range=[{self.low}, {self.high}]"
-        )
+        value = get_uniform_value(self.low, self.high)
+        self.logger.debug(f"Generated value={value:.4f}")
         return value
 
 
 @class_autologger
 class NoiseAugmentation:
-    logger: logging.Logger
+    std_provider: Optional[ParameterProviderProtocol] = None
+    prob_provider: Optional[ParameterProviderProtocol] = None
 
-    def __init__(
-        self,
-        std_provider: Optional[ParameterProviderProtocol] = None,
-        prob_provider: Optional[ParameterProviderProtocol] = None,
-    ):
-        if std_provider is None:
-            self.logger.debug(
-                "[__init__] std_provider is None, using default RandomUniformProvider(0.1, 5.0)"
-            )
-        self.std_provider = std_provider or RandomUniformProvider(0.1, 5.0)
+    logger: logging.Logger = field(init=False, repr=False)
 
-        if prob_provider is None:
-            self.logger.debug(
-                "[__init__] prob_provider is None, using default RandomUniformProvider(0.01, 0.05)"
-            )
-        self.prob_provider = prob_provider or RandomUniformProvider(0.01, 0.05)
-
-        self.logger.info("[__init__] Validated NoiseAugmentation providers.")
+    def __post_init__(self) -> None:
+        if self.std_provider is None:
+            self.std_provider = RandomUniformProvider(0.1, 5.0)
+        if self.prob_provider is None:
+            self.prob_provider = RandomUniformProvider(0.01, 0.05)
+        self.logger.info("Validated NoiseAugmentation providers.")
 
     def gaussian_noise(
         self, M: np.ndarray, std: Optional[float] = None, **kwargs
     ) -> np.ndarray:
-        if std is not None:
-            actual_std = std
-            self.logger.debug(f"[gaussian_noise] Using explicit std={actual_std}")
-        else:
-            actual_std = self.std_provider.get_value()
-            self.logger.debug(
-                f"[gaussian_noise] std not provided, fetched actual_std={actual_std:.4f}"
-            )
-
-        np_M = np.asanyarray(M, dtype=np.float32)
-        noise = np.random.normal(0, actual_std, np_M.shape)
-
-        self.logger.info(
-            f"[gaussian_noise] Validated Gaussian noise application for shape={np_M.shape} with std={actual_std:.4f}"
+        assert self.std_provider is not None
+        actual_std = (
+            float(std) if std is not None else float(self.std_provider.get_value())
         )
-        return np.clip(np_M + noise, 0, 255).astype(np.uint8)
+
+        self.logger.debug(f"[gaussian_noise] Applying std={actual_std:.4f}")
+
+        noise_map = np.random.standard_normal(M.shape)
+        return gaussian_noise(M, actual_std, noise_map)
 
     def salt_and_pepper(
         self, M: np.ndarray, prob: Optional[float] = None, **kwargs
     ) -> np.ndarray:
-        if prob is not None:
-            actual_prob = prob
-            self.logger.debug(f"[salt_and_pepper] Using explicit prob={actual_prob}")
-        else:
-            actual_prob = self.prob_provider.get_value()
-            self.logger.debug(
-                f"[salt_and_pepper] prob not provided, fetched actual_prob={actual_prob:.4f}"
-            )
-
-        result = np.copy(M).astype(np.uint8)
-        random_map = np.random.random(result.shape)
-
-        salt_threshold = 1 - actual_prob / 2
-        pepper_threshold = actual_prob / 2
-
-        self.logger.debug(
-            f"[salt_and_pepper] Applying thresholds: pepper < {pepper_threshold:.4f}, salt > {salt_threshold:.4f} for shape={result.shape}"
+        assert self.prob_provider is not None
+        actual_prob = (
+            float(prob) if prob is not None else float(self.prob_provider.get_value())
         )
 
-        result[random_map < pepper_threshold] = 0
-        result[random_map > salt_threshold] = 255
+        self.logger.debug(f"[salt_and_pepper] Applying prob={actual_prob:.4f}")
 
-        self.logger.info(
-            f"[salt_and_pepper] Validated S&P noise for matrix shape={result.shape}."
-        )
-        return result
+        random_map = np.random.random(M.shape)
+        return salt_and_pepper(M, actual_prob, random_map)
 
 
 @class_autologger
@@ -654,95 +598,57 @@ class MorphologyAugmentation:
         self,
         M: np.ndarray,
         kernel_size: int,
-        op_func: Optional[Callable[[np.ndarray, Tuple[int, int]], np.ndarray]] = None,
+        op_func: Optional[Callable[[np.ndarray, Tuple[int, ...]], np.ndarray]] = None,
         pad_value: int = 0,
     ) -> np.ndarray:
         M_arr = np.asanyarray(M, dtype=np.uint8)
         h, w = M_arr.shape[:2]
 
-        pad_before = (kernel_size - 1) // 2
-        pad_after = kernel_size // 2
+        k_size = int(kernel_size)
+        pad_before = (k_size - 1) // 2
+        pad_after = k_size // 2
+
+        actual_op = (
+            op_func if op_func is not None else lambda win, axes: np.max(win, axis=axes)
+        )
+        op_name = getattr(actual_op, "__name__", "lambda")
 
         self.logger.debug(
-            f"[_sliding_window_engine] Padding {h}x{w} matrix: kernel_size={kernel_size}, "
-            f"pad_before={pad_before}, pad_after={pad_after}, pad_value={pad_value}"
+            f"[_sliding_window_engine] Executing: kernel={k_size}, op={op_name}, pad_val={pad_value}"
         )
 
-        padded = np.pad(
-            M_arr,
-            pad_width=((pad_before, pad_after), (pad_before, pad_after)),
-            mode="constant",
-            constant_values=pad_value,
+        result = sliding_window_engine(
+            M_arr=M_arr,
+            kernel_size=k_size,
+            pad_before=pad_before,
+            pad_after=pad_after,
+            pad_value=int(pad_value),
+            op_func=actual_op,
         )
-
-        windows = sliding_window_view(padded, (kernel_size, kernel_size))
-
-        if op_func is None:
-            self.logger.debug(
-                "[_sliding_window_engine] No op_func provided, defaulting to np.max (Dilation logic)"
-            )
-            op_func = lambda win, axes: np.max(win, axis=axes)
-        else:
-            op_name = op_func.__name__ if hasattr(op_func, "__name__") else "lambda"
-            self.logger.debug(
-                f"[_sliding_window_engine] Using custom operator: op_func='{op_name}'"
-            )
-
-        result = op_func(windows, (2, 3)).astype(np.uint8)
 
         if result.shape[:2] != (h, w):
-            self.logger.warning(
-                f"[_sliding_window_engine] Shape mismatch: result={result.shape} vs input={(h, w)}. Applying crop."
-            )
+            self.logger.warning(f"Shape mismatch: {result.shape} vs {(h, w)}")
 
-        self.logger.info(
-            f"[_sliding_window_engine] Validated engine execution for {h}x{w} matrix."
-        )
-        return result[:h, :w]
+        self.logger.info(f"Engine processed {h}x{w} matrix.")
+        return result
 
     def dilate(self, M: np.ndarray, kernel_size: int, **kwargs) -> np.ndarray:
-        self.logger.debug(f"[dilate] Starting dilation: kernel_size={kernel_size}")
-        result = self._sliding_window_engine(M, kernel_size, pad_value=0)
-
-        self.logger.info(f"[dilate] Validated dilation for matrix shape={M.shape}.")
-        return result
+        self.logger.debug(f"[dilate] kernel_size={kernel_size}")
+        return dilate(M, int(kernel_size), self._sliding_window_engine)
 
     def erode(
         self, M: np.ndarray, kernel_size: int, fill: int = 0, **kwargs
     ) -> np.ndarray:
-        self.logger.debug(
-            f"[erode] Executing erosion: kernel_size={kernel_size}, fill_color={fill}"
-        )
-        result = self._sliding_window_engine(
-            M,
-            kernel_size,
-            op_func=lambda win, axes: np.min(win, axis=axes),
-            pad_value=fill,
-        )
-
-        self.logger.info(f"[erode] Validated erosion for matrix shape={M.shape}.")
-        return result
+        self.logger.debug(f"[erode] kernel_size={kernel_size}, fill={fill}")
+        return erode(M, int(kernel_size), int(fill), self._sliding_window_engine)
 
     def get_boundaries(
         self, M: np.ndarray, kernel_size: int = 2, **kwargs
     ) -> np.ndarray:
-        M_arr = np.asanyarray(M)
-
-        eroded = self.erode(M_arr, kernel_size=kernel_size, **kwargs)
-        self.logger.debug(
-            f"[get_boundaries] Erosion step completed: kernel_size={kernel_size}"
-        )
-
-        diff = M_arr.astype(np.int16) - eroded.astype(np.int16)
-        boundary_pixels = np.sum(diff > 0)
-
-        self.logger.debug(
-            f"[get_boundaries] Difference calculated: boundary_pixels={boundary_pixels}"
-        )
-
-        result = np.clip(diff, 0, 255).astype(np.uint8)
-        self.logger.info(f"[get_boundaries] Validated boundaries for shape={M.shape}.")
-        return result
+        self.logger.debug(f"[get_boundaries] kernel_size={kernel_size}")
+        m_arr = np.asanyarray(M)
+        eroded = self.erode(m_arr, kernel_size=int(kernel_size), **kwargs)
+        return get_boundaries(m_arr, eroded)
 
     def morphology_filter(
         self,
@@ -752,23 +658,16 @@ class MorphologyAugmentation:
         mode: Literal["open", "close"] = "open",
         **kwargs,
     ) -> np.ndarray:
-        if mode == "open":
-            self.logger.debug(
-                f"[morphology_filter] Selected 'open' (erode -> dilate): kernel_size={kernel_size}, fill={fill}"
-            )
-            result = self.dilate(self.erode(M, kernel_size, fill=fill), kernel_size)
-            self.logger.info(f"[morphology_filter] Validated 'open' filter.")
-            return result
+        self.logger.debug(f"[morphology_filter] mode={mode}, kernel={kernel_size}")
+        target_mode = mode if mode in ["open", "close"] else "close"
+        if mode not in ["open", "close"]:
+            self.logger.warning(f"Unexpected mode '{mode}', falling back to 'close'")
 
-        if mode == "close":
-            self.logger.debug(
-                f"[morphology_filter] Selected 'close' (dilate -> erode): kernel_size={kernel_size}, fill={fill}"
-            )
-            result = self.erode(self.dilate(M, kernel_size), kernel_size, fill=fill)
-            self.logger.info(f"[morphology_filter] Validated 'close' filter.")
-            return result
-
-        self.logger.warning(
-            f"[morphology_filter] Unexpected mode='{mode}'. Fallback to 'close' logic."
+        return morphology_filter(
+            M=M,
+            kernel_size=int(kernel_size),
+            fill=int(fill),
+            mode=target_mode,
+            dilate_func=self.dilate,
+            erode_func=self.erode,
         )
-        return self.erode(self.dilate(M, kernel_size), kernel_size, fill=fill)
