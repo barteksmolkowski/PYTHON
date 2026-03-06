@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass, field
 from typing import Protocol, TypeAlias
 
 import numpy as np
@@ -14,40 +15,41 @@ class ImageConverterProtocol(Protocol):
     def get_channels_from_file(self, path: FilePath) -> MtxList: ...
 
 
+def separate_channels(M: Mtx) -> MtxList:
+    return [M[..., i] for i in range(3)]
+
+
+def convert_image_to_matrix(path: FilePath) -> Mtx:
+    with Image.open(path) as img:
+        return np.array(img.convert("RGB")).astype(np.uint8)
+
+
+@dataclass
 @class_autologger
 class ImageToMatrixConverter:
-    logger: logging.Logger
+    logger: logging.Logger = field(init=False, repr=False)
 
     def _convert_image_to_matrix(self, path: FilePath) -> Mtx:
-        with Image.open(path) as img:
-            matrix = np.array(img.convert("RGB")).astype(np.uint8)
+        matrix = convert_image_to_matrix(path)
 
-            if matrix.shape[2] != 3:
-                self.logger.warning(
-                    f"[_convert_image_to_matrix] Unexpected channel count: channels={matrix.shape[2]} for path='{path}'"
-                )
-
-            self.logger.debug(
-                f"[_convert_image_to_matrix] Converted image to RGB matrix: shape={matrix.shape}, path='{path}'"
+        if matrix.shape[2] != 3:
+            self.logger.warning(
+                f"Unexpected channel count: {matrix.shape[2]} at {path}"
             )
-            return matrix
+
+        self.logger.debug(f"Converted {path} to RGB matrix: {matrix.shape}")
+        return matrix
 
     def _separate_channels(self, M: Mtx) -> MtxList:
-        channels = [M[..., i] for i in range(3)]
-        self.logger.debug(
-            f"[_separate_channels] Separated matrix (shape={M.shape}) into {len(channels)} channels"
-        )
-        return channels
+        self.logger.debug(f"Separating matrix with shape {M.shape}")
+        return separate_channels(M)
 
     def get_channels_from_file(self, path: FilePath) -> MtxList:
         matrix = self._convert_image_to_matrix(path)
 
         if matrix is None or matrix.size == 0:
-            self.logger.error(
-                f"[get_channels_from_file] Data loss: Failed to create matrix from path='{path}'"
-            )
+            self.logger.error(f"Data loss: Failed to create matrix from {path}")
+            return []
 
-        self.logger.info(
-            f"[get_channels_from_file] Validated 1 items. Matrix created from path='{path}'"
-        )
+        self.logger.info(f"Validated matrix creation from {path}")
         return self._separate_channels(matrix)

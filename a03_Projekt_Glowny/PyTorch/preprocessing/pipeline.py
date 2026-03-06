@@ -1,18 +1,30 @@
 import logging
-from typing import Optional, Protocol, TypeAlias
+from dataclasses import dataclass, field
+from typing import Callable, Optional, Protocol, TypeAlias
 
 import numpy as np
 from common_utils import class_autologger
-
-from .augmentation import DataAugmentation
-from .conversion import ImageToMatrixConverter
-from .convolution import ConvolutionActions
-from .geometry import ImageGeometry
-from .grayscale import GrayScaleProcessing
-from .io_image import ImageHandler
-from .normalization import Normalization
-from .pooling import Pooling
-from .thresholding import Thresholding
+from preprocessing import (
+    ConvolutionActions,
+    ConvolutionProtocol,
+    DataAugmentation,
+    DataAugmentationProtocol,
+    GrayScaleProcessing,
+    GrayScaleProtocol,
+    ImageConverterProtocol,
+    ImageGeometry,
+    ImageGeometryProtocol,
+    ImageHandler,
+    ImageHandlerProtocol,
+    ImageToMatrixConverter,
+    Normalization,
+    NormalizationProtocol,
+    Pooling,
+    PoolingProtocol,
+    Thresholding,
+    ThresholdingProtocol,
+    TransformPipeline,
+)
 
 Mtx: TypeAlias = np.ndarray
 MtxList: TypeAlias = list[np.ndarray]
@@ -26,126 +38,111 @@ class ImageDataPreprocessingProtocol(Protocol):
     def preprocess(self, path: str) -> Optional[list[MtxList]]: ...
 
 
+def apply_pipeline_logic(
+    matrix: np.ndarray,
+    grayscale_func: Callable[[np.ndarray], np.ndarray],
+    geometry_func: Callable[[np.ndarray, tuple[int, int]], np.ndarray],
+    augment_func: Callable[[np.ndarray], list[np.ndarray]],
+    normalize_func: Callable[[np.ndarray], np.ndarray],
+) -> list[np.ndarray]:
+    x = grayscale_func(matrix)
+    x = geometry_func(x, (28, 28))
+    augmented_samples = augment_func(x)
+    return [normalize_func(sample) for sample in augmented_samples]
+
+
+def preprocess_logic(
+    channels: list[np.ndarray], apply_func: Callable[[np.ndarray], list[np.ndarray]]
+) -> list[list[np.ndarray]]:
+    return [apply_func(ch) for ch in channels]
+
+
+@dataclass
 @class_autologger
 class TransformPipeline:
-    logger: logging.Logger
+    geometry: Optional[ImageGeometryProtocol] = None
+    normalization: Optional[NormalizationProtocol] = None
+    grayscale: Optional[GrayScaleProtocol] = None
+    thresholding: Optional[ThresholdingProtocol] = None
+    convolution: Optional[ConvolutionProtocol] = None
+    pooling: Optional[PoolingProtocol] = None
+    augmentation: Optional[DataAugmentationProtocol] = None
 
-    def __init__(
-        self,
-        geometry: Optional[ImageGeometry] = None,
-        normalization: Optional[Normalization] = None,
-        grayscale: Optional[GrayScaleProcessing] = None,
-        thresholding: Optional[Thresholding] = None,
-        convolution: Optional[ConvolutionActions] = None,
-        pooling: Optional[Pooling] = None,
-        augmentation: Optional[DataAugmentation] = None,
-    ):
-        if geometry is None:
-            self.logger.debug(
-                "[__init__] geometry is None, selecting default ImageGeometry"
-            )
-        self.geometry = geometry or ImageGeometry()
+    logger: logging.Logger = field(init=False, repr=False)
 
-        if normalization is None:
-            self.logger.debug(
-                "[__init__] normalization is None, selecting default Normalization"
-            )
-        self.normalization = normalization or Normalization()
-
-        if grayscale is None:
-            self.logger.debug(
-                "[__init__] grayscale is None, selecting default GrayScaleProcessing"
-            )
-        self.grayscale = grayscale or GrayScaleProcessing()
-
-        if thresholding is None:
-            self.logger.debug(
-                "[__init__] thresholding is None, selecting default Thresholding"
-            )
-        self.thresholding = thresholding or Thresholding()
-
-        if convolution is None:
-            self.logger.debug(
-                "[__init__] convolution is None, selecting default ConvolutionActions"
-            )
-        self.convolution = convolution or ConvolutionActions(geometry=self.geometry)
-
-        if pooling is None:
-            self.logger.debug("[__init__] pooling is None, selecting default Pooling")
-        self.pooling = pooling or Pooling()
-
-        if augmentation is None:
-            self.logger.debug(
-                "[__init__] augmentation is None, selecting default DataAugmentation"
-            )
-        self.augmentation = augmentation or DataAugmentation()
-
-        self.logger.info(
-            "[__init__] Validated initialization of all pipeline components."
+    def __post_init__(self) -> None:
+        self.geometry = self.geometry or ImageGeometry()
+        self.normalization = self.normalization or Normalization()
+        self.grayscale = self.grayscale or GrayScaleProcessing()
+        self.thresholding = self.thresholding or Thresholding()
+        self.convolution = self.convolution or ConvolutionActions(
+            geometry=self.geometry
         )
+        self.pooling = self.pooling or Pooling()
+        self.augmentation = self.augmentation or DataAugmentation()
 
     def apply(self, matrix: Mtx) -> MtxList:
-        x = self.grayscale.convert_color_space(matrix, to_gray=True)
-        self.logger.debug(
-            f"[apply] Initial grayscale conversion complete: shape={x.shape}"
+        grayscale = self.grayscale
+        geometry = self.geometry
+        augmentation = self.augmentation
+        normalization = self.normalization
+
+        assert grayscale is not None
+        assert geometry is not None
+        assert augmentation is not None
+        assert normalization is not None
+
+        self.logger.debug(f"[apply] Starting pipeline for matrix shape={matrix.shape}")
+
+        final_batch = apply_pipeline_logic(
+            matrix=matrix,
+            grayscale_func=lambda m: grayscale.convert_color_space(m, to_gray=True),
+            geometry_func=lambda m, s: geometry.prepare_standard_geometry(
+                m, target_size=s
+            ),
+            augment_func=lambda m: augmentation.augment(m),
+            normalize_func=lambda m: normalization.process(m, use_z_score=True),
         )
 
-        x = self.geometry.prepare_standard_geometry(x, target_size=(28, 28))
-        self.logger.debug(f"[apply] Geometry standardized to target_size=(28, 28)")
-
-        augmented_samples = self.augmentation.augment(x)
-        sample_count = len(augmented_samples)
-
-        if sample_count == 0:
-            self.logger.warning(
-                f"[apply] Logic error: Augmentation returned 0 samples for input_shape={x.shape}"
-            )
+        if not final_batch:
+            self.logger.warning("[apply] Augmentation returned 0 samples.")
         else:
-            self.logger.info(
-                f"[apply] Validated {sample_count} augmented samples for processing."
-            )
+            self.logger.info(f"[apply] Validated {len(final_batch)} final matrices.")
 
-        final_batch = []
-        for i, sample in enumerate(augmented_samples):
-            normalized = self.normalization.process(sample, use_z_score=True)
-            final_batch.append(normalized)
-
-            if (i + 1) % 5 == 0 or (i + 1) == sample_count:
-                self.logger.debug(
-                    f"[apply] Batch progress: normalized={i + 1}, total_expected={sample_count}"
-                )
-
-        if len(final_batch) != sample_count:
-            self.logger.error(
-                f"[apply] Data loss: processed={len(final_batch)} vs expected={sample_count}"
-            )
-
-        self.logger.info(
-            f"[apply] Validated {len(final_batch)} final matrices in batch."
-        )
         return final_batch
 
 
+@dataclass
 @class_autologger
 class ImageDataPreprocessing:
-    logger: logging.Logger
+    pipeline: Optional[TransformPipelineProtocol] = None
 
-    def __init__(self, pipeline: Optional[TransformPipeline] = None):
+    handler: ImageHandlerProtocol = field(init=False, repr=False)
+    converter: ImageConverterProtocol = field(init=False, repr=False)
+    logger: logging.Logger = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
         self.handler = ImageHandler()
         self.converter = ImageToMatrixConverter()
 
-        if pipeline is None:
+        if self.pipeline is None:
             self.logger.debug(
-                "[__init__] pipeline is None, selecting default TransformPipeline"
+                "[__post_init__] pipeline is None, selecting default TransformPipeline"
             )
-        self.pipeline = pipeline or TransformPipeline()
+            self.pipeline = TransformPipeline()
 
         self.logger.info(
-            "[__init__] Validated initialization of ImageDataPreprocessing components."
+            "[__post_init__] Validated initialization of ImageDataPreprocessing components."
         )
 
     def preprocess(self, path: str) -> Optional[list[MtxList]]:
-        channels = self.converter.get_channels_from_file(path)
+        converter = self.converter
+        pipeline = self.pipeline
+
+        assert converter is not None
+        assert pipeline is not None
+
+        channels = converter.get_channels_from_file(path)
 
         if not channels:
             self.logger.error(
@@ -154,17 +151,19 @@ class ImageDataPreprocessing:
             return None
 
         self.logger.info(
-            f"[preprocess] Validated {len(channels)} channels from path='{path}'. Starting pipeline transformation."
+            f"[preprocess] Validated {len(channels)} channels from path='{path}'."
         )
 
-        processed_channels: list[MtxList] = [self.pipeline.apply(ch) for ch in channels]
+        processed_channels = preprocess_logic(
+            channels=channels, apply_func=lambda ch: pipeline.apply(ch)
+        )
 
         if len(processed_channels) != len(channels):
             self.logger.error(
-                f"[preprocess] Pipeline mismatch: processed_count={len(processed_channels)} vs original_count={len(channels)}"
+                f"[preprocess] Pipeline mismatch: {len(processed_channels)} vs {len(channels)}"
             )
 
         self.logger.info(
-            f"[preprocess] Validated {len(processed_channels)} processed channel batches."
+            f"[preprocess] Validated {len(processed_channels)} processed batches."
         )
         return processed_channels

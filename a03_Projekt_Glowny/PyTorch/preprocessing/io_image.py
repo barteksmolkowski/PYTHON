@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass, field
 from typing import Literal, Optional, Protocol, TypeAlias, Union, overload
 
 import numpy as np
@@ -35,40 +36,47 @@ class ImageHandlerProtocol(Protocol):
     ) -> Optional[Mtx]: ...
 
 
+def open_image(path: str) -> tuple[np.ndarray, int, int]:
+    from PIL import Image
+
+    with Image.open(path) as img:
+        img_rgb = img.convert("RGB")
+        width, height = img_rgb.size
+        return np.array(img_rgb).astype(np.uint8), width, height
+
+
+def save_image(data: np.ndarray, path: str) -> None:
+    from PIL import Image
+
+    array = np.asanyarray(data).astype(np.uint8)
+    mode = "RGB" if array.ndim == 3 else "L"
+    img_pil = Image.fromarray(array, mode=mode)
+    img_pil.save(path)
+
+
+@dataclass
 @class_autologger
 class ImageHandler:
-    logger: logging.Logger
+    logger: logging.Logger = field(init=False, repr=False)
 
     def open_image(self, path: FilePath) -> tuple[Mtx, int, int]:
-        with Image.open(path) as img:
-            img_rgb = img.convert("RGB")
-            width, height = img_rgb.size
-            array = np.array(img_rgb).astype(np.uint8)
-
-            self.logger.debug(
-                f"[open_image] Loaded resource: path='{path}', size={width}x{height}, mode='{img.mode}'"
-            )
-            self.logger.info(
-                f"[open_image] Validated 1 items. Image loaded from '{path}'"
-            )
-            return array, width, height
+        str_path = str(path)
+        array, width, height = open_image(str_path)
+        self.logger.debug(f"Loaded: {str_path}, {width}x{height}")
+        self.logger.info(f"Validated 1 items. Image loaded from '{str_path}'")
+        return array, int(width), int(height)
 
     def save(self, data: ImgData, path: FilePath) -> None:
+        str_path = str(path)
         array = np.asanyarray(data).astype(np.uint8)
-        mode = "RGB" if array.ndim == 3 else "L"
 
         if array.size == 0:
-            self.logger.error(
-                f"[save] Data loss: Attempting to save empty matrix to '{path}'"
-            )
+            self.logger.error(f"Data loss: Empty matrix for '{str_path}'")
+            return
 
-        self.logger.debug(
-            f"[save] Saving to path='{path}': shape={array.shape}, pil_mode='{mode}'"
-        )
-
-        img_pil = Image.fromarray(array, mode=mode)
-        img_pil.save(path)
-        self.logger.info(f"[save] Validated 1 items. Image saved to '{path}'")
+        self.logger.debug(f"Saving to '{str_path}': shape={array.shape}")
+        save_image(array, str_path)
+        self.logger.info(f"Validated 1 items. Image saved to '{str_path}'")
 
     @overload
     def handle_file(
@@ -83,18 +91,16 @@ class ImageHandler:
     def handle_file(
         self, path: FilePath, data: Optional[Mtx] = None, is_save_mode: bool = False
     ) -> Optional[Mtx]:
+        str_path = str(path)
         if is_save_mode:
             if data is None:
-                self.logger.error(
-                    f"[handle_file] Validation error: data is None while is_save_mode={is_save_mode} for path='{path}'"
-                )
-                raise ValueError(
-                    "[ERROR] The 'data' parameter is required in write mode!"
-                )
+                self.logger.error(f"Validation error: data is None for '{str_path}'")
+                raise ValueError("The 'data' parameter is required in write mode!")
 
-            self.logger.debug(f"[handle_file] Switching to SAVE mode: path='{path}'")
+            self.logger.debug(f"Switching to SAVE mode: '{str_path}'")
             self.save(data, path)
             return None
 
-        self.logger.debug(f"[handle_file] Switching to READ mode: path='{path}'")
-        return self.open_image(path)[0]
+        self.logger.debug(f"Switching to READ mode: '{str_path}'")
+        matrix, _, _ = self.open_image(path)
+        return matrix

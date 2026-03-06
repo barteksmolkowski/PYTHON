@@ -1,5 +1,6 @@
 import logging
-from typing import Optional, Protocol, TypeAlias
+from dataclasses import dataclass, field
+from typing import Optional, Protocol, Tuple, TypeAlias
 
 import numpy as np
 from common_utils import class_autologger
@@ -20,48 +21,53 @@ class PoolingProtocol(Protocol):
     ) -> Mtx: ...
 
 
+def max_pool_logic(
+    matrix: np.ndarray,
+    kernel_size: Tuple[int, int],
+    stride: int,
+    pad_width: int,
+    pad_values: int,
+) -> np.ndarray:
+    m_np = np.asanyarray(matrix, dtype=np.float32)
+    if pad_width > 0:
+        m_np = np.pad(
+            m_np, pad_width=pad_width, mode="constant", constant_values=pad_values
+        )
+
+    windows = np.lib.stride_tricks.sliding_window_view(m_np, window_shape=kernel_size)
+    view = windows[::stride, ::stride]
+    return np.max(view, axis=(2, 3)).astype(np.uint8)
+
+
+@dataclass
 @class_autologger
 class Pooling:
-    logger: logging.Logger
+    logger: logging.Logger = field(init=False, repr=False)
 
     def max_pool(
         self,
         matrix: Mtx,
-        kernel_size: Kernel = (2, 2),
+        kernel_size: Tuple[int, int] = (2, 2),
         stride: Optional[int] = None,
         pad_width: int = 0,
         pad_values: int = 0,
     ) -> Mtx:
-        M = np.asanyarray(matrix, dtype=np.float32)
-
-        if stride is None:
-            stride = kernel_size[0]
-            self.logger.debug(
-                f"[max_pool] stride is None, defaulting to kernel_size[0]: {stride}"
-            )
-
-        if pad_width > 0:
-            self.logger.debug(
-                f"[max_pool] Applying padding: width={pad_width}, value={pad_values}. input_shape={M.shape}"
-            )
-            M = np.pad(
-                M, pad_width=pad_width, mode="constant", constant_values=pad_values
-            )
-            self.logger.debug(f"[max_pool] Padded matrix shape: {M.shape}")
-
-        windows = sliding_window_view(M, window_shape=kernel_size)
-        view = windows[::stride, ::stride]
+        actual_stride = int(stride) if stride is not None else int(kernel_size[0])
 
         self.logger.debug(
-            f"[max_pool] Pooling configuration: kernel={kernel_size}, stride={stride}, view_grid={view.shape[:2]}"
+            f"[max_pool] Config: kernel={kernel_size}, stride={actual_stride}, pad={pad_width}"
         )
 
-        result = np.max(view, axis=(2, 3)).astype(np.uint8)
+        result = max_pool_logic(
+            matrix=matrix,
+            kernel_size=kernel_size,
+            stride=actual_stride,
+            pad_width=int(pad_width),
+            pad_values=int(pad_values),
+        )
 
         if result.size == 0:
-            self.logger.error(
-                f"[max_pool] Data loss: Resulting matrix is empty for input_shape={M.shape}"
-            )
+            self.logger.error(f"[max_pool] Data loss: Empty output for {matrix.shape}")
 
-        self.logger.info(f"[max_pool] Validated 1 items. Output shape={result.shape}")
+        self.logger.info(f"[max_pool] Validated pooling. Output shape={result.shape}")
         return result
