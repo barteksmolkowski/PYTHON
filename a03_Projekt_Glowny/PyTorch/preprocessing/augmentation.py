@@ -14,10 +14,8 @@ from typing import (
     overload,
 )
 
-import matplotlib.pyplot as plt
 import numpy as np
 from common_utils import class_autologger
-from matplotlib.axes import Axes
 from numpy.lib.stride_tricks import sliding_window_view
 
 from .decorators import (
@@ -111,8 +109,6 @@ def _pick_random_pipeline(
     groups: Dict[str, List[Tuple[Callable, str]]],
     num_samples: int = 3,
 ) -> Tuple[List[Tuple[Callable, str]], List[str]]:
-    import random
-
     selected_keys = random.sample(available_keys, min(len(available_keys), num_samples))
     pipeline = [random.choice(groups[k]) for k in selected_keys]
     return pipeline, selected_keys
@@ -305,9 +301,7 @@ def sliding_window_engine(
         mode="constant",
         constant_values=pad_value,
     )
-    windows = np.lib.stride_tricks.sliding_window_view(
-        padded, (kernel_size, kernel_size)
-    )
+    windows = sliding_window_view(padded, (kernel_size, kernel_size))
     result = op_func(windows, (2, 3)).astype(np.uint8)
     return result[: M_arr.shape[0], : M_arr.shape[1]]
 
