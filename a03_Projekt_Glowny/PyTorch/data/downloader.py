@@ -120,11 +120,13 @@ def _prepare_items_for_processing(raw_data: DataResult) -> List[Any]:
 class DataDownloader:
     timeout: int = 10
 
-    logger: logging.Logger = field(init=False)
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug(f"DataDownloader initialized (timeout={self.timeout}s).")
+
+        if self.timeout > 60:
+            self.logger.warning(f"High timeout detected: {self.timeout}s")
 
     def save_to_disk(self, data: JsonData, filename: FilePath = "data.json") -> bool:
         success = save_json_to_disk_logic(data, filename)
@@ -164,13 +166,10 @@ class DataDownloader:
 @class_autologger
 @dataclass
 class DataProcessor:
-    logger: logging.Logger = field(init=False)
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug(
-            "DataProcessor initialized with stateless normalization engines."
-        )
 
     def process_batch(
         self, items: List[Any], grayscale: bool = True
@@ -202,17 +201,13 @@ class DataProcessor:
 @class_autologger
 @dataclass
 class ProjectManager:
-    downloader: DataDownloaderProtocol = field(default_factory=DataDownloader)
-    processor: DataProcessorProtocol = field(default_factory=DataProcessor)
+    downloader: DataDownloaderProtocol = field(default_factory=lambda: DataDownloader())
+    processor: DataProcessorProtocol = field(default_factory=lambda: DataProcessor())
 
-    logger: logging.Logger = field(init=False)
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug("ProjectManager initialized as High-Level Orchestrator.")
-
-        assert self.downloader is not None
-        assert self.processor is not None
 
     @overload
     def run_pipeline(self, source_url: str, fast_mode: Literal[True]) -> bool: ...

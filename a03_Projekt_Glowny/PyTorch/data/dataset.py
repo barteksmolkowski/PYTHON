@@ -43,18 +43,16 @@ class Dataset:
     data: BatchData
     labels: LabelsMtx
 
-    logger: logging.Logger = field(init=False)
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
 
         if not validate_dataset_integrity_logic(self.data, self.labels):
             self.logger.error(
-                f"[Dataset] Integrity check failed: data_len={len(self.data)}, labels_len={len(self.labels)}"
+                f"Integrity check failed: data_len={len(self.data)}, labels_len={len(self.labels)}"
             )
             raise ValueError("Dataset integrity mismatch or empty data provided.")
-
-        self.logger.info(f"Dataset initialized with {len(self.data)} samples.")
 
     @silent
     def __len__(self) -> int:

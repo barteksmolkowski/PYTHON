@@ -65,15 +65,13 @@ class BatchProcessingProtocol(Protocol):
 @class_autologger
 class BatchProcessing:
     preprocessor: ImageDataPreprocessingProtocol = field(
-        default_factory=ImageDataPreprocessing
+        default_factory=lambda: ImageDataPreprocessing()
     )
 
-    logger: logging.Logger = field(init=False)
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
-        assert self.preprocessor is not None
-        self.logger.debug("BatchProcessing initialized with stateless engines.")
 
     def create_batches(
         self,

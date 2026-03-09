@@ -26,11 +26,10 @@ def save_cache_logic(data: BatchData, path: FilePath) -> bool:
 @class_autologger
 @dataclass
 class CacheManager:
-    logger: logging.Logger = field(init=False)
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.debug("CacheManager orchestrator initialized.")
 
     def load(self, path: FilePath) -> OptBatchData:
         self.logger.debug(f"[load] Attempting to load cache from: {path}")
