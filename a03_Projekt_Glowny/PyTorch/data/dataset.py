@@ -1,14 +1,13 @@
 import logging
-from typing import Protocol, Union
+from dataclasses import dataclass, field
+from typing import Any, Protocol, Tuple, Union, cast
 
 import numpy as np
-from common_utils import autologger
+from common_utils import class_autologger, silent
 
 from .types import (
     BatchData,
     LabelsMtx,
-    OptBatchData,
-    OptLabelsMtx,
     Sample,
 )
 
@@ -19,33 +18,58 @@ class DatasetProtocol(Protocol):
     def __getitem__(self, index: int) -> Union[np.ndarray, BatchData, Sample]: ...
 
 
-@autologger
+def validate_dataset_integrity_logic(data: BatchData, labels: LabelsMtx) -> bool:
+    if not data or not labels:
+        return False
+    if len(data) != len(labels):
+        return False
+    if len(data) == 0:
+        return False
+    return True
+
+
+def get_dataset_item_logic(
+    data: BatchData, labels: LabelsMtx, index: int
+) -> Tuple[Sample, Any]:
+    sample_item = cast(Sample, data[index])
+    label_item = labels[index]
+
+    return sample_item, label_item
+
+
+@class_autologger
+@dataclass
 class Dataset:
-    logger: logging.Logger
+    data: BatchData
+    labels: LabelsMtx
 
-    def __init__(self, data: OptBatchData, labels: OptLabelsMtx) -> None:
-        if data is None or labels is None:
-            self.logger.error("[Dataset] Failed to initialize: data or labels is None.")
-            raise ValueError("Dataset requires both data and labels to be provided.")
+    logger: logging.Logger = field(init=False)
 
-        assert len(data) > 0, "[Dataset] Data list is empty."
-        assert len(data) == len(labels), (
-            f"[Dataset] Mismatch: {len(data)} images vs {len(labels)} labels."
-        )
+    def __post_init__(self) -> None:
+        self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.data: BatchData = data
-        self.labels: LabelsMtx = labels
-        self.logger.info(f"[Dataset] Successfully loaded {len(self)} samples.")
+        if not validate_dataset_integrity_logic(self.data, self.labels):
+            self.logger.error(
+                f"[Dataset] Integrity check failed: data_len={len(self.data)}, labels_len={len(self.labels)}"
+            )
+            raise ValueError("Dataset integrity mismatch or empty data provided.")
 
+        self.logger.info(f"Dataset initialized with {len(self.data)} samples.")
+
+    @silent
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, index: Union[int, slice]) -> Union[Sample, "Dataset"]:
+    def __getitem__(
+        self, index: Union[int, slice]
+    ) -> Union[Tuple[Sample, Any], "Dataset"]:
         if isinstance(index, slice):
             return Dataset(data=self.data[index], labels=self.labels[index])
 
         try:
-            return (self.data[index], self.labels[index])
+            return get_dataset_item_logic(self.data, self.labels, index)
         except IndexError:
-            self.logger.error(f"[Dataset] Out of bounds: {index}")
+            self.logger.error(
+                f"[Dataset] Index {index} is out of bounds (size: {len(self)})"
+            )
             raise
