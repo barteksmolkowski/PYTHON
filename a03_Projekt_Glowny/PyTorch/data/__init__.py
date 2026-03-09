@@ -1,6 +1,21 @@
-from .batch import BatchProcessing, BatchProcessingProtocol
-from .cache import CacheManager, CacheManagerProtocol
-from .dataset import Dataset, DatasetProtocol
+from .batch import (
+    BatchProcessing,
+    BatchProcessingProtocol,
+    create_batches_logic,
+    process_single_path_logic,
+)
+from .cache import (
+    CacheManager,
+    CacheManagerProtocol,
+    load_cache_logic,
+    save_cache_logic,
+)
+from .dataset import (
+    Dataset,
+    DatasetProtocol,
+    get_dataset_item_logic,
+    validate_dataset_integrity_logic,
+)
 from .downloader import (
     DataDownloader,
     DataDownloaderProtocol,
@@ -8,6 +23,13 @@ from .downloader import (
     DataProcessorProtocol,
     ProjectManager,
     ProjectManagerProtocol,
+    _prepare_items_for_processing,
+    batch_transform_engine,
+    determine_pipeline_result_logic,
+    fetch_remote_data_logic,
+    load_local_json_logic,
+    save_json_to_disk_logic,
+    transform_image_to_normalized_logic,
 )
 from .types import (
     BatchData,
@@ -30,7 +52,6 @@ from .types import (
 
 __all__ = [
     "BatchData",
-    "BatchData",
     "BatchProcessing",
     "BatchProcessingProtocol",
     "CacheManager",
@@ -40,23 +61,15 @@ __all__ = [
     "DataProcessor",
     "DataProcessorProtocol",
     "DataResult",
-    "DataResult",
     "Dataset",
     "DatasetBatch",
     "DatasetProtocol",
     "FilePath",
-    "FilePath",
-    "ImageBytes",
     "ImageBytes",
     "JsonData",
-    "JsonData",
-    "JsonDict",
     "JsonDict",
     "JsonList",
-    "JsonList",
     "Label",
-    "Label",
-    "LabelsMtx",
     "LabelsMtx",
     "OptBatchData",
     "OptFilePath",
@@ -66,4 +79,17 @@ __all__ = [
     "ProjectManager",
     "ProjectManagerProtocol",
     "Sample",
+    "_prepare_items_for_processing",
+    "batch_transform_engine",
+    "create_batches_logic",
+    "determine_pipeline_result_logic",
+    "fetch_remote_data_logic",
+    "get_dataset_item_logic",
+    "load_cache_logic",
+    "load_local_json_logic",
+    "process_single_path_logic",
+    "save_cache_logic",
+    "save_json_to_disk_logic",
+    "transform_image_to_normalized_logic",
+    "validate_dataset_integrity_logic",
 ]
