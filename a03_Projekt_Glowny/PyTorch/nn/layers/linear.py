@@ -4,10 +4,10 @@ from typing import Tuple
 
 import numpy as np
 from common_utils import class_autologger
-from nn import Mtx, Tensor2D, validate_shape
+from nn import T2D, Mtx, validate_shape
 
 
-def apply_linear_forward_logic(x: Tensor2D, weights: Mtx, bias: Mtx) -> Tensor2D:
+def linear_fwd(x: T2D, weights: Mtx, bias: Mtx) -> T2D:
     validate_shape(x, (-1, 2))
 
     if x.shape[1] != weights.shape[0]:
@@ -17,9 +17,7 @@ def apply_linear_forward_logic(x: Tensor2D, weights: Mtx, bias: Mtx) -> Tensor2D
     return np.dot(x, weights) + bias
 
 
-def apply_linear_backward_logic(
-    grad: Tensor2D, x_cache: Tensor2D, weights: Mtx
-) -> Tuple[Tensor2D, Mtx, Mtx]:
+def linear_bwd(grad: T2D, x_cache: T2D, weights: Mtx) -> Tuple[T2D, Mtx, Mtx]:
     validate_shape(grad, (-1, 2))
 
     grad_input = np.dot(grad, weights.T)
@@ -37,7 +35,7 @@ class LinearLayer:
     weights: Mtx = field(default_factory=lambda: np.array([]))
     bias: Mtx = field(default_factory=lambda: np.array([]))
 
-    _x_cache: Tensor2D = field(
+    _x_cache: T2D = field(
         init=False, repr=False, default_factory=lambda: np.array([[]])
     )
 
@@ -55,12 +53,10 @@ class LinearLayer:
         if self.bias.size == 0:
             self.bias = np.zeros(self.out_features)
 
-    def forward(self, x: Tensor2D) -> Tensor2D:
+    def forward(self, x: T2D) -> T2D:
         self._x_cache = x
-        return apply_linear_forward_logic(x, self.weights, self.bias)
+        return linear_fwd(x, self.weights, self.bias)
 
-    def backward(self, grad: Tensor2D) -> Tensor2D:
-        grad_input, grad_w, grad_b = apply_linear_backward_logic(
-            grad, self._x_cache, self.weights
-        )
+    def backward(self, grad: T2D) -> T2D:
+        grad_input, grad_w, grad_b = linear_bwd(grad, self._x_cache, self.weights)
         return grad_input

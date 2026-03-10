@@ -4,27 +4,25 @@ from typing import Dict, List, Optional
 
 import numpy as np
 from common_utils import class_autologger
-from nn import LayerProtocol, Mtx, Sequential, Tensor, validate_shape
+from nn import LayerProtocol, Mtx, Sequential, T, validate_shape
 
 
-def execute_forward_chain(layers: List[LayerProtocol], x: Mtx) -> Mtx: ...
+def chain_fwd(layers: List[LayerProtocol], x: Mtx) -> Mtx: ...
 
 
-def execute_backward_chain(layers: List[LayerProtocol], grad: Mtx) -> Mtx: ...
+def chain_bwd(layers: List[LayerProtocol], grad: Mtx) -> Mtx: ...
 
 
-def insert_layer_into_stack(
-    layers: List[LayerProtocol], layer: LayerProtocol
-) -> None: ...
+def add_layer(layers: List[LayerProtocol], layer: LayerProtocol) -> None: ...
 
 
-def run_network_prediction(model: Sequential, x: Mtx) -> Mtx: ...
+def predict(model: Sequential, x: Mtx) -> Mtx: ...
 
 
-def persist_network_state(model: Sequential, path: str) -> None: ...
+def save(model: Sequential, path: str) -> None: ...
 
 
-def restore_network_state(model: Sequential, path: str) -> None: ...
+def load(model: Sequential, path: str) -> None: ...
 
 
 @class_autologger
@@ -37,13 +35,13 @@ class Sequential:
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def add(self, layer: LayerProtocol) -> None:
-        insert_layer_into_stack(self.layers, layer)
+        add_layer(self.layers, layer)
 
     def forward(self, x: Mtx) -> Mtx:
-        return execute_forward_chain(self.layers, x)
+        return chain_fwd(self.layers, x)
 
     def backward(self, grad: Mtx) -> Mtx:
-        return execute_backward_chain(self.layers, grad)
+        return chain_bwd(self.layers, grad)
 
 
 @class_autologger
@@ -56,12 +54,12 @@ class NeuralNetwork:
         self.logger = logging.getLogger(self.__class__.__name__)
 
     def predict(self, x: Mtx) -> Mtx:
-        return run_network_prediction(self.model, x)
+        return predict(self.model, x)
 
     def save(self, path: str) -> None:
         """save zrobić w .npz"""
-        persist_network_state(self.model, path)
+        save(self.model, path)
 
     def load(self, path: str) -> None:
         """load zrobić w .npz"""
-        restore_network_state(self.model, path)
+        load(self.model, path)

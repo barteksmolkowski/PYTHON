@@ -4,12 +4,10 @@ from typing import Tuple
 
 import numpy as np
 from common_utils import class_autologger
-from nn import Mtx, Tensor, validate_shape
+from nn import Mtx, T, validate_shape
 
 
-def apply_dropout_forward_logic(
-    x: Tensor, probability: float, training: bool = True
-) -> Tuple[Tensor, Tensor]:
+def dropout_fwd(x: T, probability: float, training: bool = True) -> Tuple[T, T]:
     validate_shape(x, (-1, x.ndim))
 
     if not training or probability <= 0:
@@ -22,7 +20,7 @@ def apply_dropout_forward_logic(
     return result, mask
 
 
-def apply_dropout_backward_logic(grad: Mtx, mask: Mtx, probability: float) -> Mtx:
+def dropout_bwd(grad: Mtx, mask: Mtx, probability: float) -> Mtx:
     x = np.array([]).astype(Mtx)
     return x
 
@@ -33,7 +31,7 @@ class DropoutLayer:
     probability: float = 0.5
     training: bool = True
 
-    _mask: Tensor = field(
+    _mask: T = field(
         init=False, repr=False, default_factory=lambda: np.array([], dtype=bool)
     )
 
@@ -45,11 +43,9 @@ class DropoutLayer:
             self.logger.error(f"Invalid dropout probability: {self.probability}")
             raise ValueError("Probability must be in range [0, 1)")
 
-    def forward(self, x: Tensor) -> Tensor:
-        result, self._mask = apply_dropout_forward_logic(
-            x, self.probability, self.training
-        )
+    def forward(self, x: T) -> T:
+        result, self._mask = dropout_fwd(x, self.probability, self.training)
         return result
 
-    def backward(self, grad: Tensor) -> Tensor:
-        return apply_dropout_backward_logic(grad, self._mask, self.probability)
+    def backward(self, grad: T) -> T:
+        return dropout_bwd(grad, self._mask, self.probability)

@@ -4,19 +4,17 @@ from typing import Tuple
 
 import numpy as np
 from common_utils import class_autologger
-from nn import Mtx, Tensor4D, validate_shape
+from nn import T4D, Mtx, validate_shape
 
 
-def apply_conv2d_forward_logic(
-    x: Tensor4D, kernels: Mtx, biases: Mtx, stride: int
-) -> Tensor4D:
+def conv2d_fwd(x: T4D, kernels: Mtx, biases: Mtx, stride: int) -> T4D:
     validate_shape(x, (-1, 4))
     return np.zeros_like(x)
 
 
-def apply_conv2d_backward_logic(
-    grad: Tensor4D, x_cache: Tensor4D, kernels: Mtx, stride: int
-) -> Tuple[Tensor4D, Mtx, Mtx]:
+def conv2d_bwd(
+    grad: T4D, x_cache: T4D, kernels: Mtx, stride: int
+) -> Tuple[T4D, Mtx, Mtx]:
     validate_shape(grad, (-1, 4))
     validate_shape(x_cache, (-1, 4))
 
@@ -38,7 +36,7 @@ class Conv2DLayer:
     kernels: Mtx = field(default_factory=lambda: np.array([]))
     biases: Mtx = field(default_factory=lambda: np.array([]))
 
-    _input_cache: Tensor4D = field(
+    _input_cache: T4D = field(
         init=False, repr=False, default_factory=lambda: np.array([])
     )
 
@@ -55,12 +53,12 @@ class Conv2DLayer:
         if self.biases.size == 0:
             self.biases = np.zeros(self.out_channels)
 
-    def forward(self, x: Tensor4D) -> Tensor4D:
+    def forward(self, x: T4D) -> T4D:
         self._input_cache = x
-        return apply_conv2d_forward_logic(x, self.kernels, self.biases, self.stride)
+        return conv2d_fwd(x, self.kernels, self.biases, self.stride)
 
-    def backward(self, grad: Tensor4D) -> Tensor4D:
-        d_x, d_kernels, d_biases = apply_conv2d_backward_logic(
+    def backward(self, grad: T4D) -> T4D:
+        d_x, d_kernels, d_biases = conv2d_bwd(
             grad, self._input_cache, self.kernels, self.stride
         )
         return d_x
