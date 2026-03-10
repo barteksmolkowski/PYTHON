@@ -27,7 +27,7 @@ def conv2d_bwd(
 
 @class_autologger
 @dataclass
-class Conv2DLayer:
+class Conv2D:
     in_channels: int
     out_channels: int
     kernel_size: int

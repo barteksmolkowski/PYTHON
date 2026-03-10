@@ -47,7 +47,7 @@ def softmax_bwd(grad: T2D, last_output: T2D) -> T2D:
 
 @class_autologger
 @dataclass
-class ReLULayer:
+class ReLU:
     _input_mask: T = field(
         init=False, repr=False, default_factory=lambda: np.array([], dtype=bool)
     )
@@ -67,7 +67,7 @@ class ReLULayer:
 
 @class_autologger
 @dataclass
-class SigmoidLayer:
+class Sigmoid:
     _last_output: T = field(
         init=False, repr=False, default_factory=lambda: np.array([])
     )
@@ -87,7 +87,7 @@ class SigmoidLayer:
 
 @class_autologger
 @dataclass
-class SoftmaxLayer(LayerProtocol):
+class Softmax(LayerProtocol):
     _last_output: T2D = field(
         init=False, repr=False, default_factory=lambda: np.array([[]])
     )

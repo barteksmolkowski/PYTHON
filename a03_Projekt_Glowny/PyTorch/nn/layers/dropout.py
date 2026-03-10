@@ -27,7 +27,7 @@ def dropout_bwd(grad: Mtx, mask: Mtx, probability: float) -> Mtx:
 
 @class_autologger
 @dataclass
-class DropoutLayer:
+class Dropout:
     probability: float = 0.5
     training: bool = True
 

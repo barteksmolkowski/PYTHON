@@ -23,7 +23,7 @@ def flatten_bwd(grad: T2D, original_shape: Shape) -> T4D:
 
 @class_autologger
 @dataclass
-class FlattenLayer:
+class Flatten:
     _original_shape: Shape = field(init=False, repr=False, default_factory=tuple)
 
     logger: logging.Logger = field(init=False, repr=False)

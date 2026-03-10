@@ -28,7 +28,7 @@ def linear_bwd(grad: T2D, x_cache: T2D, weights: Mtx) -> Tuple[T2D, Mtx, Mtx]:
 
 @class_autologger
 @dataclass
-class LinearLayer:
+class Linear:
     in_features: int
     out_features: int
 
