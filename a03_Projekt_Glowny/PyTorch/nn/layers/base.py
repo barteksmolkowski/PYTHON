@@ -1,8 +1,6 @@
 from typing import Protocol
 
-import numpy as np
-
-Mtx = np.ndarray
+from nn import Mtx
 
 
 class LayerProtocol(Protocol):
