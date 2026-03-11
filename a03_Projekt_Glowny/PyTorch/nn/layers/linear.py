@@ -32,8 +32,8 @@ class Linear:
     in_features: int
     out_features: int
 
-    weights: Mtx = field(default_factory=lambda: np.array([]))
-    bias: Mtx = field(default_factory=lambda: np.array([]))
+    weights: Mtx = field(default_factory=lambda: np.array([]), repr=False)
+    bias: Mtx = field(default_factory=lambda: np.array([]), repr=False)
 
     _x_cache: T2D = field(
         init=False, repr=False, default_factory=lambda: np.array([[]])

@@ -33,8 +33,8 @@ class Conv2D:
     kernel_size: int
     stride: int = 1
 
-    kernels: Mtx = field(default_factory=lambda: np.array([]))
-    biases: Mtx = field(default_factory=lambda: np.array([]))
+    kernels: Mtx = field(init=False, repr=False, default_factory=lambda: np.array([]))
+    biases: Mtx = field(init=False, repr=False, default_factory=lambda: np.array([]))
 
     _input_cache: T4D = field(
         init=False, repr=False, default_factory=lambda: np.array([])

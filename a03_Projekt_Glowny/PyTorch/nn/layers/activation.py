@@ -69,7 +69,7 @@ class ReLU:
 @dataclass
 class Sigmoid:
     _last_output: T = field(
-        init=False, repr=False, default_factory=lambda: np.array([])
+        init=False, repr=False, default_factory=lambda: np.array([], dtype=float)
     )
 
     logger: logging.Logger = field(init=False, repr=False)
@@ -89,7 +89,7 @@ class Sigmoid:
 @dataclass
 class Softmax(LayerProtocol):
     _last_output: T2D = field(
-        init=False, repr=False, default_factory=lambda: np.array([[]])
+        init=False, repr=False, default_factory=lambda: np.array([[]], dtype=float)
     )
 
     logger: logging.Logger = field(init=False, repr=False)

@@ -40,8 +40,8 @@ class Dropout:
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         if not (0 <= self.probability < 1):
-            self.logger.error(f"Invalid dropout probability: {self.probability}")
-            raise ValueError("Probability must be in range [0, 1)")
+            self.logger.error(f"Invalid probability: {self.probability}")
+            raise ValueError(f"Probability {self.probability} must be in range [0, 1)")
 
     def forward(self, x: T) -> T:
         result, self._mask = dropout_fwd(x, self.probability, self.training)

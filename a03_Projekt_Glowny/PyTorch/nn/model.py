@@ -19,17 +19,20 @@ def add_layer(layers: List[LayerProtocol], layer: LayerProtocol) -> None: ...
 def predict(model: Sequential, x: Mtx) -> Mtx: ...
 
 
-def save(model: Sequential, path: str) -> None: ...
+def save(model: Sequential, path: str) -> None:
+    """save zrobić w .npz"""
 
 
-def load(model: Sequential, path: str) -> None: ...
+def load(model: Sequential, path: str) -> None:
+    """load zrobić w .npz"""
 
 
 @class_autologger
 @dataclass
 class Sequential:
     layers: List[LayerProtocol] = field(default_factory=list)
-    logger: logging.Logger = field(init=False)
+
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -48,7 +51,8 @@ class Sequential:
 @dataclass
 class NeuralNetwork:
     model: Sequential = field(default_factory=Sequential)
-    logger: logging.Logger = field(init=False)
+
+    logger: logging.Logger = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -57,9 +61,9 @@ class NeuralNetwork:
         return predict(self.model, x)
 
     def save(self, path: str) -> None:
-        """save zrobić w .npz"""
+        self.logger.info(f"Saving model to {path}")
         save(self.model, path)
 
     def load(self, path: str) -> None:
-        """load zrobić w .npz"""
+        self.logger.info(f"Loading model from {path}")
         load(self.model, path)
