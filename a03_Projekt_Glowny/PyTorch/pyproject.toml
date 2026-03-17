@@ -55,6 +55,14 @@ line-length = 88
 select = ["E", "F", "B", "I", "RUF022"]
 exclude = ["tasks_for_leetcode.py"]
 
+[tool.ruff.lint.isort]
+known-first-party = [
+    "PyTorch",
+    "common_utils",
+    "core"
+]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
 [tool.pyright]
 reportUndefinedVariable = "error" 
 exclude = [
