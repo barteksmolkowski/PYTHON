@@ -1,12 +1,12 @@
 {
     "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "astral-sh.ruff",
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": "always",
-            "source.fixAll": "explicit"
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
         }
     },
-    "black-formatter.args": ["--line-length", "88"],
-    "isort.args": ["--settings-path", "./pyproject.toml"]
+    "ruff.nativeServer": "on",
+    "ruff.importStrategy": "fromEnvironment"
 }
