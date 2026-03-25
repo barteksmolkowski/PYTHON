@@ -1,55 +1,34 @@
 import inspect
 import logging
 import platform
-import types
 from functools import wraps
 from time import perf_counter
+from typing import Any, Callable, ParamSpec, cast
 
 import psutil
 from rich.logging import RichHandler
 
+from PyTorch import ClassType, MetricsDict, T
 
-def build_all(local_vars: dict) -> list[str]:
-    base_attrs = dir(types.ModuleType("base"))
-    base_attrs.extend(
-        [
-            "__annotations__",
-            "__builtins__",
-            "__file__",
-            "__cached__",
-            "types",
-            "__path__",
-            "__loader__",
-            "__spec__",
-            "base_attrs",
-        ]
-    )
-
-    return [
-        n
-        for n, obj in local_vars.items()
-        if n not in base_attrs
-        and not isinstance(obj, types.ModuleType)
-        and (n.startswith("__") or "_" in n or n.isupper())
-    ]
+P = ParamSpec("P")
 
 
-def log_system_info():
+def log_system_info() -> None:
     log = logging.getLogger("NeuralRecognizer")
 
-    log.info("[bold cyan]" + "=" * 40)
-    log.info("[bold white] SYSTEM ENVIRONMENT INFO [/bold white]")
-    log.info("[bold cyan]" + "=" * 40)
-    log.info(
-        f"OS: {platform.system()} {platform.release()} ({platform.architecture()[0]})"
-    )
-    log.info(f"CPU: {platform.processor()}")
-
     total_ram = round(psutil.virtual_memory().total / (1024**3), 2)
-    log.info(f"RAM: {total_ram} GB")
+    sys_info = (
+        "[bold cyan]" + "=" * 40 + "\n"
+        "[bold white] SYSTEM ENVIRONMENT INFO [/bold white]\n"
+        "[bold cyan]" + "=" * 40 + "\n"
+        f"OS: {platform.system()} {platform.release()} ({platform.architecture()[0]})\n"
+        f"CPU: {platform.processor()}\n"
+        f"RAM: {total_ram} GB\n"
+        f"Python: {platform.python_version()}\n"
+        "[bold cyan]" + "=" * 40 + "[/bold cyan]"
+    )
 
-    log.info(f"Python: {platform.python_version()}")
-    log.info("[bold cyan]" + "=" * 40 + "[/bold cyan]")
+    log.info(sys_info)
 
 
 def setup_logging(
@@ -59,16 +38,13 @@ def setup_logging(
 ) -> None:
     FILE_FORMAT = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-
     active_handlers: list[logging.Handler] = [
         RichHandler(rich_tracebacks=True, markup=True, show_path=True)
     ]
-
     if log_to_file:
         file_h = logging.FileHandler(file_name, encoding="utf-8")
         file_h.setFormatter(logging.Formatter(FILE_FORMAT, DATE_FORMAT))
         active_handlers.append(file_h)
-
     logging.basicConfig(
         level=level,
         format="%(message)s",
@@ -76,66 +52,55 @@ def setup_logging(
         handlers=active_handlers,
         force=True,
     )
-
     for handler in logging.root.handlers:
         if isinstance(handler, logging.FileHandler):
             handler.setFormatter(logging.Formatter(FILE_FORMAT, DATE_FORMAT))
 
 
-def _format_args(sig, *args, **kwargs):
-    if not sig:
-        return f"args: {args}, kwargs: {kwargs}"
+def _format_args(sig: inspect.Signature, *args: Any, **kwargs: Any) -> MetricsDict:
     try:
         bound = sig.bind(*args, **kwargs)
         bound.apply_defaults()
-
-        filtered = {}
+        filtered = cast(MetricsDict, {})
         for k, v in bound.arguments.items():
             if k in ("self", "cls"):
                 continue
-
-            if hasattr(v, "shape") and hasattr(v, "ndim") and v.ndim > 0:
-                filtered[k] = f"Array{v.shape}"
-
-            elif hasattr(v, "item") and hasattr(v, "ndim") and v.ndim == 0:
-                filtered[k] = v.item()
-
+            if hasattr(v, "shape") and hasattr(v, "ndim") and getattr(v, "ndim") > 0:
+                filtered[k] = f"Array{getattr(v, 'shape')}"
+            elif hasattr(v, "item") and hasattr(v, "ndim") and getattr(v, "ndim") == 0:
+                filtered[k] = cast(float | int | str, getattr(v, "item")())
             elif callable(v):
                 filtered[k] = f"func:{getattr(v, '__name__', 'lambda')}"
-
-            else:
+            elif isinstance(v, (float, int, str)):
                 filtered[k] = v
-
+            else:
+                filtered[k] = str(v)
         return filtered
     except Exception:
-        return "error parsing args"
+        return cast(MetricsDict, {"error": "parsing_failed"})
 
 
-def autologger(func):
-    module_name = func.__module__
-    func_name = getattr(func, "__name__", str(func))
-    line_def = getattr(getattr(func, "__code__", {}), "co_firstlineno", 0)
+def autologger(func: Callable[P, T]) -> Callable[P, T]:
+    module_name: str = func.__module__
+    func_name: str = getattr(func, "__name__", str(func))
+    line_def: int = getattr(getattr(func, "__code__", {}), "co_firstlineno", 0)
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
-        instance = None
-        if len(args) > 0:
-            first_arg = args[0]
-            if hasattr(first_arg, "logger"):
-                instance = first_arg
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+        instance = args[0] if args and hasattr(args[0], "logger") else None
+        logger = getattr(instance, "logger", logging.getLogger(module_name))
 
-        logger = instance.logger if instance else logging.getLogger(module_name)
-
-        formatted_args = _format_args(inspect.signature(func), *args, **kwargs)
+        sig = inspect.signature(func)
+        formatted_args = _format_args(sig, *args, **kwargs)
 
         logger.info(
             f"[bold blue]START[/] | [cyan]{func_name}[/] (line:{line_def}) | Args: {formatted_args}"
         )
 
-        start = perf_counter()
+        start: float = perf_counter()
         try:
             result = func(*args, **kwargs)
-            duration = perf_counter() - start
+            duration: float = perf_counter() - start
 
             logger.info(
                 f"[bold green]DONE[/]  | [cyan]{func_name}[/] | Time: [yellow]{duration:.4f}s[/]"
@@ -151,29 +116,42 @@ def autologger(func):
     return wrapper
 
 
-def silent(func):
-    func._is_silent = True
-    return func
+def silent(func: Callable[P, T]) -> Callable[P, T]:
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+        return func(*args, **kwargs)
+
+    setattr(wrapper, "_is_silent", True)
+    return wrapper
 
 
-def class_autologger(cls):
-    cls.logger = logging.getLogger(cls.__module__)
+def class_autologger(cls: ClassType) -> ClassType:
+    cls_logger = logging.getLogger(cls.__module__)
+    setattr(cls, "logger", cls_logger)
+
+    def _wrap(f: Callable[P, T]) -> Callable[P, T]:
+        return autologger(f)
 
     for name, attr in list(vars(cls).items()):
         if isinstance(attr, (classmethod, staticmethod)):
-            func = attr.__func__
-            if getattr(func, "_is_silent", False):
-                continue
-
-            setattr(cls, name, type(attr)(autologger(func)))
+            original_func = attr.__func__
+            if not getattr(original_func, "_is_silent", False):
+                decorated = _wrap(cast(Callable[..., Any], original_func))
+                setattr(cls, name, cast(Any, type(attr))(decorated))
 
         elif callable(attr) and not name.startswith("__"):
             if not hasattr(attr, "__name__"):
-                attr.__name__ = name
+                setattr(attr, "__name__", name)
 
-            if getattr(attr, "_is_silent", False):
-                continue
+            if not getattr(attr, "_is_silent", False):
+                setattr(cls, name, _wrap(cast(Callable[..., Any], attr)))
 
-            setattr(cls, name, autologger(attr))
+    return cast(ClassType, cls)
 
-    return cls
+
+__all__ = [
+    "class_autologger",
+    "log_system_info",
+    "setup_logging",
+    "silent",
+]
