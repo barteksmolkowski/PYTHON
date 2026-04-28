@@ -1,7 +1,7 @@
 # random można z czasem zrobić i mnożyć milisekundy (jakąś część) razy wielkość tabeli i modulo 10 aby 0-9 liczby
 import math
-from datetime import datetime
 import time
+from datetime import datetime
 
 
 class Losowanie:
@@ -137,7 +137,6 @@ class KombinacjeSum:
         kombinacja = list(range(dlugosc))
 
         while True:
-
             yield kombinacja[:]
             i = dlugosc - 1
 
@@ -157,9 +156,7 @@ class KombinacjeSum:
         znalezione = 0
 
         for dlugosc in range(1, n + 1):
-
             for el in self.kombinacje_dlugosci_k(n, dlugosc):
-
                 if sum(self.losowe[i] for i in el) == target:
                     nowa_lista = tuple((i, self.losowe[i]) for i in el)
                     yield nowa_lista
