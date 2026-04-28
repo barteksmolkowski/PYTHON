@@ -1,0 +1,142 @@
+{
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "terminal.integrated.enableMultiLinePasteWarning": "never",
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    "database-client.autoSync": true,
+    "mssql.connectionGroups": [
+        { "name": "ROOT", "id": "ROOT" }
+    ],
+    "python.analysis.extraPaths": [
+        "/Users/bsmolkowski/Library/Python/3.9/lib/python/site-packages"
+    ],
+    "editor.colorDecorators": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportUnusedImport": "none" 
+    },
+    "python.analysis.mockImports": [
+        "psutil",
+        "rich"
+    ],
+    "python.analysis.indexing": true,
+    "python.analysis.packageIndexDepths": [
+        { "name": "numpy", "depth": 2 },
+        { "name": "psutil", "depth": 1 }
+    ],
+    "autoDocstring.docstringFormat": "google",
+    "autoDocstring.guessTypes": true,
+    "autoDocstring.includeExtendedSummary": true,
+    "isort.check": false,
+    "python.analysis.importFormat": "absolute",
+    "ruff.configuration": {
+        "lint": {
+            "select": ["I", "RUF022"]
+        }
+    },
+    "ruff.nativeServer": "on",
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "always",
+            "source.fixAll.ruff": "always"
+        },
+        "editor.defaultFormatter": "astral-sh.ruff",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true
+    },
+    "editor.unicodeHighlight.allowedCharacters": {
+        " ": true
+    },
+    "editor.semanticTokenColorCustomizations": {
+        "enabled": true,
+        "rules": {
+            "class, type, namespace, module, typeParameter, stubs": "#4EC9B0",
+            "function, method, method.static, method.async, decorator": "#DCDCAA",
+            "method.magic": "#4FC1FF",
+            "variable, parameter, property, selfParameter, clsParameter, member": "#9CDCFE",
+            "keyword, storage.type, builtinConstant": "#569CD6",
+            "operator, punctuation": "#D4D4D4",
+            "keyword.control": "#C586C0",
+            "variable.readonly": "#4FC1FF",
+            "number": "#B5CEA8",
+            "string": "#CE9178",
+            "comment": "#6A9955"
+        }
+    },
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                "name": "SYMBOL POLICE (NO OVERRIDE)",
+                "scope": [
+                    "punctuation.separator.period.python",
+                    "punctuation.separator.element.python",
+                    "punctuation.parenthesis.begin.python",
+                    "punctuation.parenthesis.end.python",
+                    "punctuation.bracket.begin.python",
+                    "punctuation.bracket.end.python",
+                    "keyword.operator.assignment.python"
+                ],
+                "settings": {
+                    "foreground": "#D4D4D4",
+                    "fontStyle": ""
+                }
+            },
+            {
+                "name": "LAMBDA EXPRESSION KEYWORD OVERRIDE",
+                "scope": [
+                    "keyword.control.flow.lambda.python",
+                    "storage.type.function.lambda.python"
+                ],
+                "settings": { "foreground": "#C586C0" }
+            },
+            {
+                "name": "DECORATOR AT-SYMBOL FIX (YELLOW)",
+                "scope": ["punctuation.definition.decorator.python"],
+                "settings": { "foreground": "#DCDCAA" }
+            },
+            {
+                "name": "COLON AND DICT SEPARATOR FIX",
+                "scope": [
+                    "punctuation.section.function.begin.python",
+                    "punctuation.section.class.begin.python",
+                    "punctuation.separator.dict.python"
+                ],
+                "settings": { "foreground": "#D4D4D4" }
+            },
+            {
+                "name": "COMMENT PUNCTUATION OVERRIDE",
+                "scope": ["punctuation.definition.comment"],
+                "settings": { "foreground": "#6A9955" }
+            },
+            {
+                "name": "MANDATORY DEF/CLASS KEYWORD OVERRIDE",
+                "scope": [
+                    "storage.type.function.python",
+                    "storage.type.class.python",
+                    "storage.modifier.declaration.python",
+                    "keyword.declaration.python"
+                ],
+                "settings": {
+                    "foreground": "#569CD6" 
+                }
+            },
+            {
+                "name": "DOCSTRING AND QUOTES UNIFICATION (ORANGE)",
+                "scope": [
+                    "string.quoted.docstring.multi.python",
+                    "string.quoted.double.block.python",
+                    "string.quoted.single.block.python",
+                    "punctuation.definition.string.begin.python",
+                    "punctuation.definition.string.end.python"
+                ],
+                "settings": { "foreground": "#CE9178" }
+            }
+        ]
+    }
+}

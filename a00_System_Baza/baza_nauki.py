@@ -29,7 +29,8 @@ class __BazaNauki__:
             return
 
         wszystkie_publiczne = [
-            n for n in dir(self)
+            n
+            for n in dir(self)
             if callable(getattr(self, n))
             and not n.startswith("_")
             and n not in ["run", "Edukator"]
@@ -41,18 +42,19 @@ class __BazaNauki__:
             for line in self.__doc__.strip().split("\n"):
                 if " - " in line:
                     part = line.split(" - ")[0]
-                    clean_name = part.replace("│", "").replace("║", "").strip().split()[-1]
+                    clean_name = (
+                        part.replace("│", "").replace("║", "").strip().split()[-1]
+                    )
                     kolejnosc_z_opisu.append(clean_name)
 
         if wybrane_metody_f:
             filtr_clean = [s.strip() for s in wybrane_metody_f]
-            
+
             self.wybrane_metody = [n for n in filtr_clean if n in wszystkie_publiczne]
         else:
             finalna_lista = [n for n in kolejnosc_z_opisu if n in wszystkie_publiczne]
             reszta = sorted([n for n in wszystkie_publiczne if n not in finalna_lista])
             self.wybrane_metody = finalna_lista + reszta
-
 
         if tylko_dane:
             return
@@ -173,40 +175,49 @@ class Edukator:
 
         while True:
             menu_wyswietlane = []
-            mapa_danych = [] 
+            mapa_danych = []
 
-            MAX_OPIS = 50 
+            MAX_OPIS = 50
 
             for k in lista_klas:
-                pelny_opis = getattr(k, 'opis_menu', "brak opisu")
+                pelny_opis = getattr(k, "opis_menu", "brak opisu")
                 slowa = [s.strip() for s in pelny_opis.split(",")]
-                
+
                 czesci_slow = []
                 aktualna = []
                 for s in slowa:
-                    if not s: continue
+                    if not s:
+                        continue
                     if len(", ".join(aktualna + [s])) <= MAX_OPIS:
                         aktualna.append(s)
                     else:
                         czesci_slow.append(aktualna)
                         aktualna = [s]
-                if aktualna: czesci_slow.append(aktualna)
+                if aktualna:
+                    czesci_slow.append(aktualna)
 
                 for i, grupa in enumerate(czesci_slow):
-                    licznik = f" {i+1}/{len(czesci_slow)}" if len(czesci_slow) > 1 else ""
+                    licznik = (
+                        f" {i+1}/{len(czesci_slow)}" if len(czesci_slow) > 1 else ""
+                    )
                     nazwa_menu = (k.__name__ + licznik).ljust(20)
                     tekst_opisu = ", ".join(grupa)
-                    
+
                     menu_wyswietlane.append(f"{nazwa_menu} # {tekst_opisu}")
                     mapa_danych.append((k, grupa))
 
-            wybrany_idx = cls.nawiguj("BIBLIOTEKA WIEDZY", menu_wyswietlane, start_idx=idx_glowne)
-            if wybrany_idx == -1: break
-            
+            wybrany_idx = cls.nawiguj(
+                "BIBLIOTEKA WIEDZY", menu_wyswietlane, start_idx=idx_glowne
+            )
+            if wybrany_idx == -1:
+                break
+
             idx_glowne = wybrany_idx
             klasa_obj, filtr_metod = mapa_danych[wybrany_idx]
-            
-            instancja = klasa_obj(aktywne=True, tylko_dane=True, wybrane_metody_f=filtr_metod)
+
+            instancja = klasa_obj(
+                aktywne=True, tylko_dane=True, wybrane_metody_f=filtr_metod
+            )
             nazwa_r = klasa_obj.__name__
 
             while True:
@@ -227,6 +238,7 @@ class Edukator:
                 print(f"\033[1;33m>>> URUCHOMIONO: {metoda_nazwa} <<<\033[0m\n")
 
                 import builtins
+
                 stary_print = builtins.print
                 builtins.print = cls.koloruj_tekst
                 try:
@@ -234,9 +246,12 @@ class Edukator:
                 finally:
                     builtins.print = stary_print
 
-                print("\n\033[90m" + "─" * 50 + "\n[Naciśnij dowolny klawisz, aby wrócić]\033[0m")
+                print(
+                    "\n\033[90m"
+                    + "─" * 50
+                    + "\n[Naciśnij dowolny klawisz, aby wrócić]\033[0m"
+                )
                 msvcrt.getch()
-
 
     @staticmethod
     def koloruj_tekst(*args, **kwargs):

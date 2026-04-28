@@ -286,7 +286,9 @@ class GitUndo(__BazaNauki__, GitUndo_Protocol):
     """
 
     def quick_commit(self):
-        print("Szybki zapis (wszystkie śledzone zmiany + opis):\n-> git commit -am 'wiadomość'")
+        print(
+            "Szybki zapis (wszystkie śledzone zmiany + opis):\n-> git commit -am 'wiadomość'"
+        )
 
     def revert_changes(self):
         print("Odwrócenie zmian nowym zapisem:\n-> git revert <hash>")
@@ -298,7 +300,9 @@ class GitUndo(__BazaNauki__, GitUndo_Protocol):
         print("Przywrócenie konkretnej wersji pliku:\n-> git restore -s <hash> <plik>")
 
     def reset_soft(self):
-        print("Cofnięcie zapisu (bezpieczne, zostawia stage):\n-> git reset --soft HEAD~1")
+        print(
+            "Cofnięcie zapisu (bezpieczne, zostawia stage):\n-> git reset --soft HEAD~1"
+        )
 
     def reset_mixed(self):
         print("Cofnięcie zapisu do edycji (domyślne):\n-> git reset --mixed HEAD~1")
@@ -328,10 +332,14 @@ class GitRefactor(__BazaNauki__, GitRefactor_Protocol):
     """
 
     def commit_amend(self):
-        print("Poprawa ostatniego zapisu (nazwa lub pliki):\n-> git commit --amend -m 'nowa_nazwa'")
+        print(
+            "Poprawa ostatniego zapisu (nazwa lub pliki):\n-> git commit --amend -m 'nowa_nazwa'"
+        )
 
     def rebase_interactive(self):
-        print("Wejście w tryb interaktywnej edycji ostatnich n zapisów:\n-> git rebase -i HEAD~3")
+        print(
+            "Wejście w tryb interaktywnej edycji ostatnich n zapisów:\n-> git rebase -i HEAD~3"
+        )
 
     def rebase_pick(self):
         print("Pozostawienie zapisu bez zmian (standard):\n-> p / pick")
@@ -343,22 +351,32 @@ class GitRefactor(__BazaNauki__, GitRefactor_Protocol):
         print("Połączenie zapisu z poprzednim (edycja wspólnego opisu):\n-> s / squash")
 
     def rebase_fixup(self):
-        print("Połączenie zapisu z poprzednim po cichu (zostawia opis starszego):\n-> f / fixup")
+        print(
+            "Połączenie zapisu z poprzednim po cichu (zostawia opis starszego):\n-> f / fixup"
+        )
 
     def rebase_drop(self):
         print("Całkowite usunięcie wybranego zapisu z historii:\n-> d / drop")
 
     def rebase_main(self):
-        print("Zmiana bazy gałęzi:\n-> git rebase main # Przesuwa commity bieżącej gałęzi na szczyt gałęzi main")
+        print(
+            "Zmiana bazy gałęzi:\n-> git rebase main # Przesuwa commity bieżącej gałęzi na szczyt gałęzi main"
+        )
 
     def rebase_interactive_head(self):
-        print("Interaktywny rebase względem HEAD:\n-> git rebase -i HEAD~3 # HEAD~1 (ostatni), HEAD~3 (trzy wstecz)")
+        print(
+            "Interaktywny rebase względem HEAD:\n-> git rebase -i HEAD~3 # HEAD~1 (ostatni), HEAD~3 (trzy wstecz)"
+        )
 
     def rebase_continue(self):
-        print("Kontynuacja rebase:\n-> git rebase --continue # Wywołaj po rozwiązaniu konfliktów i git add")
+        print(
+            "Kontynuacja rebase:\n-> git rebase --continue # Wywołaj po rozwiązaniu konfliktów i git add"
+        )
 
     def rebase_abort(self):
-        print("Anulowanie rebase:\n-> git rebase --abort # Przerywa proces i wraca do stanu sprzed startu")
+        print(
+            "Anulowanie rebase:\n-> git rebase --abort # Przerywa proces i wraca do stanu sprzed startu"
+        )
 
 
 class GitBranchMerge(__BazaNauki__, GitBranchMerge_Protocol):
@@ -469,6 +487,15 @@ class GitCherryPick(__BazaNauki__, GitCherryPick_Protocol):
 
 
 if __name__ == "__main__":
-    moje_lekcje = [GitBasic, GitDiff, GitLog, GitUndo, GitRefactor, GitBranchMerge, GitTag, GitCherryPick]
+    moje_lekcje = [
+        GitBasic,
+        GitDiff,
+        GitLog,
+        GitUndo,
+        GitRefactor,
+        GitBranchMerge,
+        GitTag,
+        GitCherryPick,
+    ]
 
     __BazaNauki__(interaktywne=True, lista_klas=moje_lekcje)

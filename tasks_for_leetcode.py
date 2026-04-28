@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import statistics
 import time
 import tracemalloc
 from functools import wraps
+from typing import List
 
 
 def make_wrapper(method_to_wrap, test_input, n_repeats):
@@ -55,13 +58,32 @@ def pack_class(test_input: tuple = (), n_repeats: int = 1000):
     return decorator
 
 
-@pack_class(test_input=(43261596,), n_repeats=10000)
-class Solution:
-    def method1(self, n: int) -> int:
-        return 1 + n
+# @pack_class(test_input=("s", "p"), n_repeats=10000)
+# class Solution:
+#     def isMatch(self, s: str, p: str) -> None:  # baarteeek -> ba*rte*. :  ->
+#         if "." not in p and "*" not in p:
+#             if s == p:
+#                 return True
+#             else:
+#                 return False
+#         """
+#         .* -> koniec while wszystko git
+#         . sama to pomija znak
+#         zwykly znak to sprawdza równość z p w równym idx
+#         """
+#         i = 0
+#         while i <= len(p):
+#             if s[i] == p[i]:
+#                 if p[i + 1] == "*":
+#                     0
+#                 else:
+#                     i += 1
 
-    def method2(self, n: int) -> int:
-        return 50 + n
+
+@pack_class(test_input=("s", "p"), n_repeats=10000)
+class Solution:
+    def romanToInt(self, s: str) -> int:
+        return 0
 
 
 if __name__ == "__main__":

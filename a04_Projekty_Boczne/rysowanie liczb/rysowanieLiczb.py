@@ -1,8 +1,9 @@
+import json
+import re
 from abc import ABC, abstractmethod
 from typing import Literal
-import json
+
 import pygame
-import re
 
 
 class __rysowanie__(ABC):

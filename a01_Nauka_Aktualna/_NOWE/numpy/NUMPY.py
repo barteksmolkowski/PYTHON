@@ -91,7 +91,7 @@ class AnalizaIZbiory_Protocol(Protocol):
 
 class WalidacjaIDetekcja(__BazaNauki__, WalidacjaIDetekcja_Protocol):
     opis_menu = "weryfikacja_logiczna_all, weryfikacja_logiczna_any, detekcja_brakow_isnan, porownanie_bliskosci_allclose, operacje_logiczne_greater"
-    
+
     """
     weryfikacja_logiczna_all - sprawdzanie czy wszystkie elementy spełniają warunek,
     weryfikacja_logiczna_any - sprawdzanie czy jakikolwiek element spełnia warunek,
@@ -160,8 +160,10 @@ class WalidacjaIDetekcja(__BazaNauki__, WalidacjaIDetekcja_Protocol):
 
 
 class GeneratorStaly(__BazaNauki__, GeneratorStaly_Protocol):
-    opis_menu = "inicjalizacja_zeros_ones_full, sekwencje_arange_reshape_eye, podzial_linspace"
-    
+    opis_menu = (
+        "inicjalizacja_zeros_ones_full, sekwencje_arange_reshape_eye, podzial_linspace"
+    )
+
     """
     inicjalizacja_zeros_ones_full - tworzenie macierzy zer, jedynek i stałych
     sekwencje_arange_reshape_eye - generowanie sekwencji i macierzy jednostkowej
@@ -208,8 +210,10 @@ class GeneratorStaly(__BazaNauki__, GeneratorStaly_Protocol):
 
 
 class GeneratorLosowy(__BazaNauki__, GeneratorLosowy_Protocol):
-    opis_menu = "rozklady_rand_normal, losowosc_default_rng_choice, struktury_diagonalne_diag"
-    
+    opis_menu = (
+        "rozklady_rand_normal, losowosc_default_rng_choice, struktury_diagonalne_diag"
+    )
+
     """
     rozklady_rand_normal - generowanie danych z rozkładów statystycznych
     losowosc_default_rng_choice - nowoczesna losowość i wybór próbek
@@ -259,7 +263,7 @@ class GeneratorLosowy(__BazaNauki__, GeneratorLosowy_Protocol):
 
 class MagazynDanych(__BazaNauki__, MagazynDanych_Protocol):
     opis_menu = "trwalosc_save_load_savetxt"
-    
+
     """
     trwalosc_save_load_savetxt - serializacja i eksport danych do plików
     """
@@ -290,7 +294,7 @@ class MagazynDanych(__BazaNauki__, MagazynDanych_Protocol):
 
 class MacierzowaGeometria(__BazaNauki__, MacierzowaGeometria_Protocol):
     opis_menu = "otaczanie_marginesem_pad, zmiana_ukladu_reshape_view, okna_przesuwne_sliding_window_view, ekstrakcja_sliding_window_view, zarzadzanie_pamiecia_copy"
-    
+
     """
     otaczanie_marginesem_pad - tworzenie marginesów (padding) dla macierzy
     zmiana_ukladu_reshape_view - edycja sub-regionów przez widoki 4D
@@ -360,7 +364,7 @@ class MacierzowaGeometria(__BazaNauki__, MacierzowaGeometria_Protocol):
 
 class ProcesorAlgorytmow(__BazaNauki__, ProcesorAlgorytmow_Protocol):
     opis_menu = "mnozenie_macierzowe_einsum, pooling_window_plus_einsum"
-    
+
     """
     mnozenie_macierzowe_einsum - implementacja splotu notacją Einsteina
     pooling_window_plus_einsum - agregacja danych i pooling przestrzenny
@@ -405,7 +409,7 @@ class ProcesorAlgorytmow(__BazaNauki__, ProcesorAlgorytmow_Protocol):
 
 class AnalizaIZbiory(__BazaNauki__, AnalizaIZbiory_Protocol):
     opis_menu = "detekcja_maksimow_argmax, unikalnosc_unique_all, czesci_wspolne_intersect1d, laczenie_macierzy_append"
-    
+
     """
     detekcja_maksimow_argmax - wyszukiwanie indeksów maksimów
     unikalnosc_unique_all - znalezienie unikalnych kolumn i indeksów
