@@ -1,0 +1,17 @@
+# --- Python Standard ---
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# --- Project Data & Models ---
+datasets/
+models/*.pth
+models/*.h5
+models/*.onnx
+engine_history.json
+engine_history.log
+
+# --- Dev Tools ---
+TOOLS/PROMPTS/
+generator__init__.py

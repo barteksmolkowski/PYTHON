@@ -1,0 +1,10 @@
+{
+    "input_size": 784,
+    "learning_rate": 0.001,
+    "epochs": 10,
+    "batch_size": 32,
+    "paths": {
+        "data": "data/imgs",
+        "model": "data/m.npz"
+    }
+}
