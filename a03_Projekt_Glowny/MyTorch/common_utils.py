@@ -166,6 +166,7 @@ def get_v(kwargs: dict[str, Any], key: str, default: T_Val) -> T_Val:
 
 __all__ = [
     "class_autologger",
+    "get_v",
     "log_system_info",
     "setup_logging",
     "silent",

@@ -7,7 +7,7 @@ from common_utils import log_system_info, setup_logging
 from core import BrainEngine
 
 
-def main():
+def main_logic():
     setup_logging(
         level=logging.DEBUG, file_name="biuletyn_silnika.log", log_to_file=True
     )
@@ -33,4 +33,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_logic()

@@ -1,0 +1,16 @@
+{
+    "python.languageServer": "Pylance",
+    "files.associations": {
+        "*.py": "python"
+    },
+    "[python]": {
+        "editor.defaultFormatter": "astral-sh.ruff",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "always",
+            "source.organizeImports.ruff": "always"
+        }
+    },
+    "ruff.nativeServer": "on",
+    "ruff.importStrategy": "fromEnvironment"
+}
