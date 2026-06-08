@@ -135,7 +135,7 @@ class GitBasic(__BazaNauki__, GitBasic_Protocol):
 
     def restore_checkout_switch(self):
         print(
-            f"Cofanie i podróże w czasie:\n-> git restore <plik>     # Przywraca plik/cofa usunięcie\n-> git checkout <hash>    # Przejście do konkretnej wersji\n-> git switch -{" " * 11}# Powrót na główną gałąź"
+            f"Cofanie i podróże w czasie:\n-> git restore <plik>     # Przywraca plik/cofa usunięcie\n-> git checkout <hash>    # Przejście do konkretnej wersji\n-> git switch -{' ' * 11}# Powrót na główną gałąź"
         )
 
 

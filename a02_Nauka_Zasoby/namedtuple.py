@@ -12,7 +12,7 @@ x, y, z = p
 print(f"x={x}, y={y}, z={z}")
 print(p.x + p.y + p.z)
 d = p._asdict()
-print(f"d['x']: {d["x"]}")
+print(f"d['x']: {d['x']}")
 
 Point(**d)
 Point(x=11, y=22)

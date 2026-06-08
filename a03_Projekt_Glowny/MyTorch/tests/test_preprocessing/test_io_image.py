@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 from PIL import Image
+
 from preprocessing import ImageHandler
 
 logger = logging.getLogger("test_logger")

@@ -1,7 +1,6 @@
 from typing import Protocol
 
 import numpy as np
-from numpy.lib.stride_tricks import sliding_window_view
 
 from a00_System_Baza.baza_nauki import __BazaNauki__
 
@@ -21,6 +20,8 @@ class WalidacjaIDetekcja_Protocol(Protocol):
     def detekcja_brakow_isnan(self) -> None: ...
     def porownanie_bliskosci_allclose(self) -> None: ...
     def operacje_logiczne_greater(self) -> None: ...
+
+
 class GeneratorStaly_Protocol(Protocol):
     """
     GENEROWANIE DANYCH PRZEWIDYWALNYCH:
@@ -32,6 +33,8 @@ class GeneratorStaly_Protocol(Protocol):
     def inicjalizacja_zeros_ones_full(self) -> None: ...
     def sekwencje_arange_reshape_eye(self) -> None: ...
     def podzial_linspace(self) -> None: ...
+
+
 class GeneratorLosowy_Protocol(Protocol):
     """
     GENEROWANIE DANYCH NIEPRZEWIDYWALNYCH I SPECJALNYCH:
@@ -43,6 +46,8 @@ class GeneratorLosowy_Protocol(Protocol):
     def rozklady_rand_normal(self) -> None: ...
     def losowosc_default_rng_choice(self) -> None: ...
     def struktury_diagonalne_diag(self) -> None: ...
+
+
 class MagazynDanych_Protocol(Protocol):
     """
     SEKCJA PLIKÓW:
@@ -50,6 +55,8 @@ class MagazynDanych_Protocol(Protocol):
     """
 
     def trwalosc_save_load_savetxt(self) -> None: ...
+
+
 class MacierzowaGeometria_Protocol(Protocol):
     """
     SEKCJA STRUKTURY:
@@ -64,6 +71,8 @@ class MacierzowaGeometria_Protocol(Protocol):
     def okna_przesuwne_sliding_window_view(self) -> None: ...
     def ekstrakcja_sliding_window_view(self) -> None: ...
     def zarzadzanie_pamiecia_copy(self) -> None: ...
+
+
 class ProcesorAlgorytmow_Protocol(Protocol):
     """
     SEKCJA ALGORYTMÓW:
@@ -74,6 +83,8 @@ class ProcesorAlgorytmow_Protocol(Protocol):
 
     def mnozenie_macierzowe_einsum(self) -> None: ...
     def pooling_window_plus_einsum(self) -> None: ...
+
+
 class AnalizaIZbiory_Protocol(Protocol):
     """
     INSPEKCJA WARTOŚCI I OPERACJE ZBIOROWE:
@@ -420,9 +431,9 @@ class AnalizaIZbiory(__BazaNauki__, AnalizaIZbiory_Protocol):
     def detekcja_maksimow_argmax(self):
         print("Analiza ekstremów w macierzy (np.argmax):")
         print("-> A = np.array([[1, 8, 5], [3, 2, 9]])")
-        print(f"-> Globalny max (indeks): 5")
-        print(f"-> Max w kolumnach: [1 0 1]  # axis=0")
-        print(f"-> Max w wierszach: [1 2]    # axis=1")
+        print("-> Globalny max (indeks): 5")
+        print("-> Max w kolumnach: [1 0 1]  # axis=0")
+        print("-> Max w wierszach: [1 2]    # axis=1")
         print("---")
         print("INFO: argmax zwraca indeks spłaszczony, jeśli nie określono osi.")
 
@@ -435,14 +446,14 @@ class AnalizaIZbiory(__BazaNauki__, AnalizaIZbiory_Protocol):
         print("---")
         print("Wynik czyszczenia danych:")
         print("-> Unikalne kolumny:\n[[0 1]\n [2 5]]")
-        print(f"-> Indeksy: [1 0]  # Pozycje pierwszych wystąpień")
+        print("-> Indeksy: [1 0]  # Pozycje pierwszych wystąpień")
 
     def czesci_wspolne_intersect1d(self):
         print("Operacje na zbiorach (np.intersect1d):")
         print("-> A = np.arange(8)           # [0 1 2 3 4 5 6 7]")
         print("-> B = np.array([6, 7, 8, 9])")
         print("---")
-        print(f"-> Część wspólna <A> i <B>: [6 7]")
+        print("-> Część wspólna <A> i <B>: [6 7]")
         print("UWAGA: Funkcja zawsze zwraca posortowaną tablicę wyników.")
 
     def laczenie_macierzy_append(self):

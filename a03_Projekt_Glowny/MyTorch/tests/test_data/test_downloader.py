@@ -1,6 +1,7 @@
 from typing import TypeAlias
 
 import numpy as np
+
 from common_utils import class_autologger, silent
 from data.downloader import DataDownloader, DataProcessor, ProjectManager
 
@@ -29,7 +30,7 @@ class TestProjectPipeline:
 
         if len(data) == 0:
             self.logger.debug(
-                f"[test_downloader_fetch_logic] Received empty dataset as expected from mock-like source."
+                "[test_downloader_fetch_logic] Received empty dataset as expected from mock-like source."
             )
 
         assert isinstance(data, (list, dict))

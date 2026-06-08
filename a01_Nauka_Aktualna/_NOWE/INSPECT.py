@@ -19,7 +19,7 @@ def dekorator(func):
 def przykladowa_funkcja(a, b=10, *args):
     """To jest docstring naszej funkcji."""
     stos = inspect.stack()
-    print(f"--- Kto mnie wywołał? (inspect.stack) ---")
+    print("--- Kto mnie wywołał? (inspect.stack) ---")
     print(f"Wywołano z: {stos[1].function} w linii {stos[1].lineno}\n")
     return a + b
 

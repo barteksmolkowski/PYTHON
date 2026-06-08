@@ -41,8 +41,6 @@ except ZeroDivisionError:
     logger.exception("nie dzieli sie na zero")
 
 import logging
-import os
-from logging.handlers import RotatingFileHandler
 
 # 1. FILTRACJA BIBLIOTEK (Często biblioteki jak 'requests' śmiecą w konsoli)
 # Ustawiamy, że od requests chcemy widzieć tylko WARNING i wyżej

@@ -65,6 +65,6 @@ class CrossEntropy:
         grad /= y_pred.size
 
         self.logger.debug(
-            f"[derivative] Gradient computed for CrossEntropy with clipped y_pred"
+            "[derivative] Gradient computed for CrossEntropy with clipped y_pred"
         )
         return grad

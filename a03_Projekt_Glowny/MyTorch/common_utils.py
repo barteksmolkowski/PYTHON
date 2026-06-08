@@ -65,10 +65,10 @@ def _format_args(sig: inspect.Signature, *args: Any, **kwargs: Any) -> MetricsDi
         for k, v in bound.arguments.items():
             if k in ("self", "cls"):
                 continue
-            if hasattr(v, "shape") and hasattr(v, "ndim") and getattr(v, "ndim") > 0:
-                filtered[k] = f"Array{getattr(v, 'shape')}"
-            elif hasattr(v, "item") and hasattr(v, "ndim") and getattr(v, "ndim") == 0:
-                filtered[k] = cast(float | int | str, getattr(v, "item")())
+            if hasattr(v, "shape") and hasattr(v, "ndim") and v.ndim > 0:
+                filtered[k] = f"Array{v.shape}"
+            elif hasattr(v, "item") and hasattr(v, "ndim") and v.ndim == 0:
+                filtered[k] = cast(float | int | str, v.item())
             elif callable(v):
                 filtered[k] = f"func:{getattr(v, '__name__', 'lambda')}"
             elif isinstance(v, (float, int, str)):
@@ -121,13 +121,13 @@ def silent(func: Callable[P, T]) -> Callable[P, T]:
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
         return func(*args, **kwargs)
 
-    setattr(wrapper, "_is_silent", True)
+    wrapper._is_silent = True
     return wrapper
 
 
 def class_autologger(cls: ClassType) -> ClassType:
     cls_logger = logging.getLogger(cls.__module__)
-    setattr(cls, "logger", cls_logger)
+    cls.logger = cls_logger
 
     def _wrap(f: Callable[P, T]) -> Callable[P, T]:
         return autologger(f)
@@ -141,7 +141,7 @@ def class_autologger(cls: ClassType) -> ClassType:
 
         elif callable(attr) and not name.startswith("__"):
             if not hasattr(attr, "__name__"):
-                setattr(attr, "__name__", name)
+                attr.__name__ = name
 
             if not getattr(attr, "_is_silent", False):
                 setattr(cls, name, _wrap(cast(Callable[..., Any], attr)))

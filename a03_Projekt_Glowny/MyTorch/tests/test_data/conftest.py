@@ -32,14 +32,10 @@ def batch_proc():
     return BatchProcessing()
 
 
-import logging
-
 import numpy as np
 
 #################### test cache
 import pytest
-
-from data.cache import CacheManager
 
 
 @pytest.fixture(scope="class")

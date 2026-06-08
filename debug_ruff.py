@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 
 
 def check_step(name, condition, error_msg):

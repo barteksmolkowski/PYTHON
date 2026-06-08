@@ -44,7 +44,7 @@ class TestNormalization:
         res = norm_engine.z_score_normalization(mock_norm_mtx)
 
         if res.shape != (2, 2):
-            logger.error(f"[test_z_score_normalization] Out of bounds: shape mismatch")
+            logger.error("[test_z_score_normalization] Out of bounds: shape mismatch")
         assert res.shape == (2, 2)
 
         mean_val = np.mean(res)

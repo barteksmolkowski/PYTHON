@@ -1,5 +1,3 @@
-from typing import Any
-
 import numpy as np
 from a03_Projekt_Glowny.MyTorch.nn.layers.interfaces import LayerProtocol
 
@@ -18,7 +16,7 @@ class ReLULayer(LayerProtocol):
 
         if np.all(x <= 0):
             self.logger.debug(
-                f"[forward] All input values are <= 0; ReLU will output zeros"
+                "[forward] All input values are <= 0; ReLU will output zeros"
             )
 
         output = x * self._input_mask
@@ -46,7 +44,7 @@ class SigmoidLayer(LayerProtocol):
     def forward(self, x: Mtx) -> Mtx:
         if np.any(x < -709) or np.any(x > 709):
             self.logger.debug(
-                f"[forward] Extreme input values detected (x < -709 or x > 709); exp(x) might overflow"
+                "[forward] Extreme input values detected (x < -709 or x > 709); exp(x) might overflow"
             )
 
         output = 1 / (1 + np.exp(-x))

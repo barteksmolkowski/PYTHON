@@ -23,7 +23,7 @@ class ISilnikJIT(Protocol):
 
 class SilnikObliczeniowyJIT(__BazaNauki__):
     def optymalizacja_jit_numba_podstawy(self):
-        print(f"\n=> PODSTAWY OPTYMALIZACJI JIT (NUMBA) <=")
+        print("\n=> PODSTAWY OPTYMALIZACJI JIT (NUMBA) <=")
 
         @njit
         def fast_sum_logic(matrix, threshold):
@@ -44,7 +44,7 @@ class SilnikObliczeniowyJIT(__BazaNauki__):
         """
         Różnica między trybem nopython (wydajność) a object mode (kompatybilność).
         """
-        print(f"\n=> TRYBY KOMPILACJI: NJIT VS JIT <=")
+        print("\n=> TRYBY KOMPILACJI: NJIT VS JIT <=")
 
         # @njit (skrót od @jit(nopython=True))
         # Wymaga, aby cały kod mógł być skompilowany do postaci maszynowej.
@@ -69,7 +69,7 @@ class SilnikObliczeniowyJIT(__BazaNauki__):
         """
         Zasada 'Fail Fast' w inżynierii oprogramowania.
         """
-        print(f"\n=> ZASADA PROJEKTOWA: DLACZEGO @NJIT? <=")
+        print("\n=> ZASADA PROJEKTOWA: DLACZEGO @NJIT? <=")
         # Używając @njit masz pewność, że Twój kod jest szybki.
         # Jeśli Numba zgłosi błąd kompilacji, to informuje Cię, że dana operacja
         # spowolniłaby cały proces. Wymusza to pisanie czystego, wydajnego kodu.
@@ -82,7 +82,7 @@ class SilnikObliczeniowyJIT(__BazaNauki__):
         """
         Analiza kodu asemblerowego (LLVM IR) wygenerowanego przez JIT.
         """
-        print(f"\n=> INSPEKCJA KODU MASZYNOWEGO (Dla zaawansowanych) <=")
+        print("\n=> INSPEKCJA KODU MASZYNOWEGO (Dla zaawansowanych) <=")
 
         # Wymaga wcześniejszego wywołania funkcji, aby kompilacja zaszła
         # fast_sum_logic.inspect_asm(fast_sum_logic.signatures[0])

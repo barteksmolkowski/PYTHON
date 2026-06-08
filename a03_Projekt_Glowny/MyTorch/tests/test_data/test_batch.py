@@ -2,6 +2,7 @@ import logging
 from typing import TypeAlias
 
 import numpy as np
+
 from common_utils import class_autologger, silent
 
 Mtx: TypeAlias = np.ndarray

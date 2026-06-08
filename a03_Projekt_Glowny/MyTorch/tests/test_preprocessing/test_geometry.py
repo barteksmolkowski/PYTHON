@@ -2,6 +2,7 @@ import logging
 from unittest.mock import patch
 
 import numpy as np
+
 from preprocessing import ImageGeometry
 
 logger = logging.getLogger("test_logger")

@@ -3,6 +3,7 @@ from typing import TypeAlias
 
 import numpy as np
 import pytest
+
 from common_utils import class_autologger, silent
 from data.dataset import Dataset
 

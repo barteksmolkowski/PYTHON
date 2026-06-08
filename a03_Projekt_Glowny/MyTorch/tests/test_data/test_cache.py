@@ -2,6 +2,7 @@ import logging
 from typing import TypeAlias
 
 import numpy as np
+
 from common_utils import class_autologger, silent
 
 MtxList: TypeAlias = list[np.ndarray]
@@ -20,7 +21,7 @@ class TestCacheManager:
                 f"[test_cache_empty_input] Logic failed: expected False, got {result}."
             )
 
-        self.logger.info(f"[test_cache_empty_input] Verified empty list rejection.")
+        self.logger.info("[test_cache_empty_input] Verified empty list rejection.")
         assert result is False
 
     def test_cache_with_empty_matrix(self, cache_manager, cache_data_sets):
@@ -29,7 +30,7 @@ class TestCacheManager:
 
         if result:
             self.logger.debug(
-                f"[test_cache_with_empty_matrix] Cache operation returned True for mixed data."
+                "[test_cache_with_empty_matrix] Cache operation returned True for mixed data."
             )
 
         assert result is True
@@ -38,7 +39,7 @@ class TestCacheManager:
         loaded = cache_manager.load()
 
         if isinstance(loaded, list) and len(loaded) == 0:
-            self.logger.warning(f"[test_load_empty_source] load() returned empty list.")
+            self.logger.warning("[test_load_empty_source] load() returned empty list.")
 
         assert loaded == []
 
@@ -48,6 +49,6 @@ class TestCacheManager:
         result = cache_manager.cache(valid_data)
 
         if not result:
-            self.logger.error(f"[test_cache_success_flow] Failed to cache valid data.")
+            self.logger.error("[test_cache_success_flow] Failed to cache valid data.")
 
         assert result is True

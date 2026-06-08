@@ -76,9 +76,9 @@ class __BazaNauki__:
             print("┌" + "─" * 10 + " OPIS SEKCJI " + "─" * 38 + "\033[K")
             for idx, line in enumerate(lines):
                 if idx == aktywny_idx:
-                    print(f"│ \033[1;32m{idx+1:2} ║ {line}\033[0m\033[K")
+                    print(f"│ \033[1;32m{idx + 1:2} ║ {line}\033[0m\033[K")
                 else:
-                    print(f"│ {idx+1:2} ║ {line}\033[K")
+                    print(f"│ {idx + 1:2} ║ {line}\033[K")
             print("└" + "─" * 56 + "\033[K")
 
     def _silnik_standardowy(self, pokaz_docstring, czysc_ekran, czekaj_na_enter):
@@ -145,10 +145,10 @@ class Edukator:
                 for i, opcja in enumerate(opcje):
                     if i == idx:
                         sys.stdout.write(
-                            f"\r \033[1;30;42m {i+1:2} ║ {opcja.ljust(60)} \033[0m\033[K\n"
+                            f"\r \033[1;30;42m {i + 1:2} ║ {opcja.ljust(60)} \033[0m\033[K\n"
                         )
                     else:
-                        sys.stdout.write(f"\r    {i+1:2} ║ {opcja.ljust(60)}\033[K\n")
+                        sys.stdout.write(f"\r    {i + 1:2} ║ {opcja.ljust(60)}\033[K\n")
 
                 sys.stdout.write("\033[J")
                 sys.stdout.flush()
@@ -198,7 +198,7 @@ class Edukator:
 
                 for i, grupa in enumerate(czesci_slow):
                     licznik = (
-                        f" {i+1}/{len(czesci_slow)}" if len(czesci_slow) > 1 else ""
+                        f" {i + 1}/{len(czesci_slow)}" if len(czesci_slow) > 1 else ""
                     )
                     nazwa_menu = (k.__name__ + licznik).ljust(20)
                     tekst_opisu = ", ".join(grupa)

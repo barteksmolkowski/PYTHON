@@ -15,7 +15,6 @@
 # Python -> interpreter -> C/C++
 def czyJestSuma(nums: list, target: int) -> bool:
     for i in range(len(nums)):
-
         for j in range(i + 1, len(nums)):
             if i + j == target:
                 return True

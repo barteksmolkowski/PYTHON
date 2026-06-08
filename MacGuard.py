@@ -70,7 +70,7 @@ class MacGuard:
                     time.sleep(5)
                 else:
                     time.sleep(1)
-            except Exception as e:
+            except Exception:
                 time.sleep(5)
 
 

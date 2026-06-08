@@ -89,7 +89,6 @@ def przeszukiwanie(
 
 
 if __name__ == "__main__":
-
     wynik_koncowy = przeszukiwanie(
         lista_fraz=["git"], odKonca="", zaczynaOd="C:/", maxWynikow=100, pamiec=None
     )
@@ -100,4 +99,4 @@ if __name__ == "__main__":
     print(f"WYNIKI (Czas: {czas:.2f}s)")
     print(f"Sprawdzono plików: {sprawdzone}")
     for i, sciezka in enumerate(katalogi):
-        print(f"{i+1}. {sciezka}")
+        print(f"{i + 1}. {sciezka}")
