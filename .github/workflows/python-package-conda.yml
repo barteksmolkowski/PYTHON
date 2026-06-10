@@ -1,0 +1,45 @@
+name: Automated CI Test Pipeline (Python + Conda)
+
+on: [push]
+
+jobs:
+  build-linux:
+    name: System Verification (Ubuntu Linux)
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - name: Downloading code from the repository
+      uses: actions/checkout@v4
+
+    - name: Environment configuration Python 3.10
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Conda System Path Configuration
+      run: |
+        echo $CONDA/bin >> $GITHUB_PATH
+
+    - name: Cache Management (Conda Cache)
+      uses: actions/cache@v4
+      with:
+        path: ~/conda_pkgs_dir
+        key: ${{ runner.os }}-conda-${{ hashFiles('environment.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-conda-
+
+    - name: Installing libraries from a file environment.yml
+      run: |
+        conda env update --file environment.yml --name base
+        conda install flake8 pytest
+
+    - name: Static code analysis (Flake8 Linter)
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Running automated tests (PyTest)
+      run: |
+        pytest
